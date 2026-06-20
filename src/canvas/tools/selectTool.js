@@ -1,7 +1,7 @@
 import paper from 'paper';
 import {
   createSelection,
-  isOverlayItem,
+  pickItem,
   computeResizeBounds,
 } from '../operations/selection.js';
 
@@ -22,16 +22,6 @@ export function createSelectTool(ctx = {}) {
   let mode = null; // 'move' | 'resize' | null
   let activeHandle = null;
   let originalBounds = null;
-
-  const pickItem = (point) => {
-    const hit = paper.project.hitTest(point, {
-      fill: true,
-      stroke: true,
-      tolerance: 6 / paper.view.zoom,
-      match: (r) => !isOverlayItem(r.item),
-    });
-    return hit ? hit.item : null;
-  };
 
   return {
     cursor: 'default',

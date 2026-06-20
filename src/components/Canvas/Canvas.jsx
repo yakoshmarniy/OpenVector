@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
+import { pickItem } from '../../canvas/operations/selection.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createPenTool } from '../../canvas/tools/penTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
@@ -150,12 +151,9 @@ export default function Canvas({
 
     // Double-click a text item → edit it (works from any tool).
     const onDblClick = (e) => {
-      const hit = paper.project.hitTest(toProject(e), {
-        fill: true,
-        tolerance: 5 / paper.view.zoom,
-      });
-      if (hit && hit.item.className === 'PointText') {
-        onEditTextRef.current?.(hit.item);
+      const item = pickItem(toProject(e));
+      if (item && item.className === 'PointText') {
+        onEditTextRef.current?.(item);
       }
     };
 

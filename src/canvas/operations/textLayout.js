@@ -44,7 +44,7 @@ function wrap(raw, width, fontSize, fontFamily) {
   return lines.join('\n');
 }
 
-export function createTextItem({ point, areaWidth = null }) {
+export function createTextItem({ point, areaWidth = null, areaHeight = null }) {
   const item = new paper.PointText({
     point: [point.x, point.y + DEFAULT_FONT_SIZE], // baseline sits below the click
     content: '',
@@ -56,9 +56,26 @@ export function createTextItem({ point, areaWidth = null }) {
   });
   item.data.rawText = '';
   item.data.areaWidth = areaWidth; // null = point text
+  item.data.areaHeight = areaHeight; // drawn box height (area text only)
   item.data.originX = point.x; // box left / point anchor x
   item.data.originY = point.y; // box top / click y
   return item;
+}
+
+// The clickable region: the glyph bounds, plus the full drawn frame for area
+// text (so empty parts of the box can still be selected, like Illustrator).
+export function hitRegion(item) {
+  let region = item.bounds;
+  if (item.data && item.data.areaWidth) {
+    const box = new paper.Rectangle(
+      item.data.originX,
+      item.data.originY,
+      item.data.areaWidth,
+      item.data.areaHeight || 0,
+    );
+    region = region.unite(box);
+  }
+  return region;
 }
 
 export function setRawText(item, raw) {

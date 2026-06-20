@@ -6,6 +6,7 @@ import {
   isTextItem,
   caretSegment,
 } from '../operations/textLayout.js';
+import { pickItem } from '../operations/selection.js';
 
 /**
  * Text tool.
@@ -72,15 +73,12 @@ export function createTextTool(ctx = {}) {
     cursor: 'text',
 
     onMouseDown(point) {
-      // Re-edit an existing text item.
-      const hit = paper.project.hitTest(point, {
-        fill: true,
-        tolerance: 5 / paper.view.zoom,
-      });
-      if (hit && isTextItem(hit.item)) {
-        if (hit.item === editing) return; // clicking the text being edited: keep editing
+      // Click an existing text item → edit it (anywhere within its box).
+      const item = pickItem(point);
+      if (item && isTextItem(item)) {
+        if (item === editing) return; // clicking the text being edited: keep editing
         commit();
-        beginEdit(hit.item);
+        beginEdit(item);
         return;
       }
       commit();
@@ -106,7 +104,9 @@ export function createTextTool(ctx = {}) {
       if (isAreaDrag) {
         const rect = new paper.Rectangle(startPoint, point);
         if (rect.width > 5 && rect.height > 5) {
-          beginEdit(createTextItem({ point: rect.topLeft, areaWidth: rect.width }));
+          beginEdit(
+            createTextItem({ point: rect.topLeft, areaWidth: rect.width, areaHeight: rect.height }),
+          );
         }
       } else {
         beginEdit(createTextItem({ point: startPoint }));

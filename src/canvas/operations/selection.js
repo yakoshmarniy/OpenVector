@@ -1,4 +1,5 @@
 import paper from 'paper';
+import { hitRegion } from './textLayout.js';
 
 // On-screen size of resize handles, in pixels (kept constant across zoom).
 const HANDLE_PX = 8;
@@ -13,6 +14,25 @@ export function isOverlayItem(item) {
     if (cur.data && cur.data[OVERLAY_FLAG]) return true;
   }
   return false;
+}
+
+// Topmost user item under a point. Paper's hit-test barely registers PointText
+// (only on glyph fills), so text is unreliable to click — fall back to its
+// bounding box, which lets you click anywhere in the text like in Illustrator.
+export function pickItem(point) {
+  const hit = paper.project.hitTest(point, {
+    fill: true,
+    stroke: true,
+    tolerance: 6 / paper.view.zoom,
+    match: (r) => !isOverlayItem(r.item),
+  });
+  if (hit) return hit.item;
+
+  const texts = paper.project.getItems({ class: paper.PointText });
+  for (let i = texts.length - 1; i >= 0; i -= 1) {
+    if (!isOverlayItem(texts[i]) && hitRegion(texts[i]).contains(point)) return texts[i];
+  }
+  return null;
 }
 
 function handlePoint(bounds, name) {
