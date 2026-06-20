@@ -1,27 +1,11 @@
-import { TOOL_ITEMS } from '../toolItems.jsx';
 import styles from './TopBar.module.css';
 
-// Labelled tool boxes across the top — easier to recognise and pick than the
-// icon-only left rail. Both reflect the same active tool.
-export default function TopBar({ activeTool, onSelectTool }) {
+// Slim header. Tools live in the left rail (grouped flyouts) — the top bar no
+// longer duplicates them. Top-level actions (File/Edit/export) will land here.
+export default function TopBar() {
   return (
-    <div className={styles.bar} role="toolbar" aria-label="Tools (top)">
+    <div className={styles.bar}>
       <span className={styles.brand}>OpenVector</span>
-      <div className={styles.group}>
-        {TOOL_ITEMS.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            type="button"
-            aria-label={label}
-            aria-pressed={activeTool === id}
-            className={activeTool === id ? `${styles.box} ${styles.active}` : styles.box}
-            onClick={() => onSelectTool(id)}
-          >
-            <Icon />
-            <span className={styles.label}>{label}</span>
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

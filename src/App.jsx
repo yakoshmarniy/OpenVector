@@ -45,7 +45,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar activeTool={activeTool} onSelectTool={setActiveTool} />
+      <TopBar />
       <div className="app-body">
         <Toolbar activeTool={activeTool} onSelectTool={setActiveTool} />
         <Canvas

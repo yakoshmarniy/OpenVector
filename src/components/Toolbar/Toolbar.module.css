@@ -32,3 +32,79 @@
   background: var(--ov-accent-active);
   color: #f0f1f2;
 }
+
+.slot {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+/* Small corner triangle that opens the group's flyout. */
+.flyoutToggle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  cursor: pointer;
+}
+
+.tri {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-bottom: 5px solid var(--ov-text-dim);
+}
+
+.slot:hover .tri {
+  border-bottom-color: var(--ov-text);
+}
+
+.flyout {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.flyItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ov-text-dim);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flyItem:hover {
+  background: var(--ov-accent);
+  color: var(--ov-text);
+}
+
+.flyActive {
+  background: var(--ov-accent-active);
+  color: #f0f1f2;
+}
+
+.flyLabel {
+  font-size: 12px;
+}
