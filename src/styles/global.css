@@ -1,0 +1,35 @@
+:root {
+  /* Dark theme — muted, desaturated, never neon. */
+  --ov-bg: #1f2123;
+  --ov-panel: #2a2c2f;
+  --ov-panel-border: #34373b;
+  --ov-text: #c7c9cc;
+  --ov-text-dim: #80848a;
+  --ov-accent: #5b6b78;
+  --ov-accent-active: #6f8595;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
