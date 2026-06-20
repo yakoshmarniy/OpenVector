@@ -152,7 +152,7 @@ export default function Canvas({
     // Double-click a text item → edit it (works from any tool).
     const onDblClick = (e) => {
       const item = pickItem(toProject(e));
-      if (item && item.className === 'PointText') {
+      if (item && item.data && item.data.isText) {
         onEditTextRef.current?.(item);
       }
     };

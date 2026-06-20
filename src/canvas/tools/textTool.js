@@ -13,6 +13,7 @@ import { pickItem } from '../operations/selection.js';
  *   click            → point text at the cursor
  *   drag             → area text (typed text wraps inside the box)
  *   click a text     → re-edit it
+ *   click a path     → type on that path
  *   type             → edit content (Enter = newline, Backspace = delete)
  *   Escape / switch  → commit (empty text is discarded)
  * Points arrive in project coordinates.
@@ -73,12 +74,18 @@ export function createTextTool(ctx = {}) {
     cursor: 'text',
 
     onMouseDown(point) {
-      // Click an existing text item → edit it (anywhere within its box).
       const item = pickItem(point);
+      // Click an existing text item → edit it (anywhere within its box).
       if (item && isTextItem(item)) {
         if (item === editing) return; // clicking the text being edited: keep editing
         commit();
         beginEdit(item);
+        return;
+      }
+      // Click a plain path → type along it.
+      if (item && item.className === 'Path' && !(item.data && item.data.glyph)) {
+        commit();
+        beginEdit(createTextItem({ path: item }));
         return;
       }
       commit();

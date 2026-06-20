@@ -1,5 +1,5 @@
 import paper from 'paper';
-import { hitRegion } from './textLayout.js';
+import { hitRegion, isTextItem, textEntity } from './textLayout.js';
 
 // On-screen size of resize handles, in pixels (kept constant across zoom).
 const HANDLE_PX = 8;
@@ -26,9 +26,10 @@ export function pickItem(point) {
     tolerance: 6 / paper.view.zoom,
     match: (r) => !isOverlayItem(r.item),
   });
-  if (hit) return hit.item;
+  if (hit) return textEntity(hit.item) || hit.item; // a glyph resolves to its text group
 
-  const texts = paper.project.getItems({ class: paper.PointText });
+  // Text hit-tests poorly by glyph — accept a click anywhere in its region.
+  const texts = paper.project.getItems((it) => isTextItem(it));
   for (let i = texts.length - 1; i >= 0; i -= 1) {
     if (!isOverlayItem(texts[i]) && hitRegion(texts[i]).contains(point)) return texts[i];
   }

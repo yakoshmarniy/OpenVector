@@ -87,6 +87,16 @@ export default function Properties({ style, onChange }) {
               onChange={(e) => onChange({ leading: Math.max(0, Number(e.target.value)) })}
             />
           </div>
+          <div className={styles.row}>
+            <span className={styles.label}>Tracking</span>
+            <input
+              type="number"
+              className={styles.number}
+              step="0.5"
+              value={Math.round((style.tracking ?? 0) * 10) / 10}
+              onChange={(e) => onChange({ tracking: Number(e.target.value) })}
+            />
+          </div>
         </div>
       )}
 
