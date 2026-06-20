@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import TopBar from './components/TopBar/TopBar.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
@@ -10,6 +11,7 @@ export default function App() {
   const [selStyle, setSelStyle] = useState(null);
   const selItemRef = useRef(null);
   const refreshSelRef = useRef(null);
+  const pendingEditRef = useRef(null); // text item queued for editing (double-click)
 
   const handleSelectionChange = useCallback((item) => {
     selItemRef.current = item || null;
@@ -31,15 +33,30 @@ export default function App() {
     refreshSelRef.current?.();
   }, []);
 
+  // Double-clicking a text item enters edit mode: queue it and switch to Text.
+  const handleEditText = useCallback(
+    (item) => {
+      if (activeTool === TOOLS.TEXT) return; // text tool already edits on click
+      pendingEditRef.current = item;
+      setActiveTool(TOOLS.TEXT);
+    },
+    [activeTool],
+  );
+
   return (
     <div className="app">
-      <Toolbar activeTool={activeTool} onSelectTool={setActiveTool} />
-      <Canvas
-        activeTool={activeTool}
-        onSelectionChange={handleSelectionChange}
-        refreshRef={refreshSelRef}
-      />
-      <Properties style={selStyle} onChange={handleStyleChange} />
+      <TopBar activeTool={activeTool} onSelectTool={setActiveTool} />
+      <div className="app-body">
+        <Toolbar activeTool={activeTool} onSelectTool={setActiveTool} />
+        <Canvas
+          activeTool={activeTool}
+          onSelectionChange={handleSelectionChange}
+          onEditText={handleEditText}
+          pendingEditRef={pendingEditRef}
+          refreshRef={refreshSelRef}
+        />
+        <Properties style={selStyle} onChange={handleStyleChange} />
+      </div>
     </div>
   );
 }

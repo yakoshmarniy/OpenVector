@@ -64,6 +64,10 @@ export function createTextTool(ctx = {}) {
     }
   };
 
+  // Resume editing an item queued by a double-click elsewhere.
+  const pending = ctx.consumePendingEdit?.();
+  if (pending) beginEdit(pending);
+
   return {
     cursor: 'text',
 
@@ -73,7 +77,8 @@ export function createTextTool(ctx = {}) {
         fill: true,
         tolerance: 5 / paper.view.zoom,
       });
-      if (hit && isTextItem(hit.item) && hit.item !== editing) {
+      if (hit && isTextItem(hit.item)) {
+        if (hit.item === editing) return; // clicking the text being edited: keep editing
         commit();
         beginEdit(hit.item);
         return;

@@ -22,14 +22,22 @@ const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 50;
 const ZOOM_STEP = 1.1;
 
-export default function Canvas({ activeTool, onSelectionChange, refreshRef }) {
+export default function Canvas({
+  activeTool,
+  onSelectionChange,
+  onEditText,
+  pendingEditRef,
+  refreshRef,
+}) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const toolRef = useRef(null);
-  // Latest selection callback, kept in a ref so tools can call through to the
-  // current prop without re-creating the tool.
+  // Latest callbacks, kept in refs so the mount-once listeners read the current
+  // prop without re-binding.
   const onSelChangeRef = useRef(onSelectionChange);
   onSelChangeRef.current = onSelectionChange;
+  const onEditTextRef = useRef(onEditText);
+  onEditTextRef.current = onEditText;
 
   // Let the parent ask the active tool to redraw its selection overlay after an
   // external change (e.g. a Properties edit).
@@ -140,6 +148,17 @@ export default function Canvas({ activeTool, onSelectionChange, refreshRef }) {
       }
     };
 
+    // Double-click a text item → edit it (works from any tool).
+    const onDblClick = (e) => {
+      const hit = paper.project.hitTest(toProject(e), {
+        fill: true,
+        tolerance: 5 / paper.view.zoom,
+      });
+      if (hit && hit.item.className === 'PointText') {
+        onEditTextRef.current?.(hit.item);
+      }
+    };
+
     const onKeyDown = (e) => {
       // Ignore shortcuts while typing in a form field (e.g. Properties panel).
       const t = e.target;
@@ -175,6 +194,7 @@ export default function Canvas({ activeTool, onSelectionChange, refreshRef }) {
 
     canvas.addEventListener('wheel', onWheel, { passive: false });
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('dblclick', onDblClick);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('keydown', onKeyDown);
@@ -184,6 +204,7 @@ export default function Canvas({ activeTool, onSelectionChange, refreshRef }) {
       resizeObserver.disconnect();
       canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('dblclick', onDblClick);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('keydown', onKeyDown);
@@ -198,6 +219,11 @@ export default function Canvas({ activeTool, onSelectionChange, refreshRef }) {
     const factory = TOOL_FACTORIES[activeTool];
     const toolCtx = {
       onSelectionChange: (item) => onSelChangeRef.current?.(item),
+      consumePendingEdit: () => {
+        const item = pendingEditRef?.current ?? null;
+        if (pendingEditRef) pendingEditRef.current = null;
+        return item;
+      },
     };
     toolRef.current = factory ? factory(toolCtx) : null;
     const canvas = canvasRef.current;
