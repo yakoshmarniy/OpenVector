@@ -76,6 +76,41 @@
   border-bottom: 1px solid var(--ov-panel-border);
 }
 
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.heading {
+  margin: 0 0 2px;
+  font-size: 12px;
+  color: var(--ov-text-dim);
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.action {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 6px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.action:hover {
+  background: var(--ov-accent);
+  border-color: var(--ov-accent);
+}
+
 .alignGroup {
   display: flex;
   gap: 4px;

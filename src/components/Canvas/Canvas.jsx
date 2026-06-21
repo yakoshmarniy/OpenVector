@@ -29,6 +29,7 @@ export default function Canvas({
   onEditText,
   pendingEditRef,
   refreshRef,
+  actionRef,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -43,6 +44,8 @@ export default function Canvas({
   // Let the parent ask the active tool to redraw its selection overlay after an
   // external change (e.g. a Properties edit).
   if (refreshRef) refreshRef.current = () => toolRef.current?.refreshSelection?.();
+  // Let Properties buttons trigger group/boolean actions on the current tool.
+  if (actionRef) actionRef.current = (name) => toolRef.current?.runAction?.(name);
 
   // Interaction state kept in refs so the (mount-once) DOM listeners
   // always read the latest values without re-binding.
@@ -175,6 +178,12 @@ export default function Canvas({
           spaceDownRef.current = true;
           updateCursor();
         }
+        return;
+      }
+      // Group / ungroup (Cmd/Ctrl+G, +Shift to ungroup).
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG') {
+        e.preventDefault();
+        toolRef.current?.runAction?.(e.shiftKey ? 'ungroup' : 'group');
         return;
       }
       // Avoid Backspace navigating the browser back (no text inputs here).

@@ -1,9 +1,9 @@
-import paper from 'paper';
 import {
   createSelection,
   pickItem,
   computeResizeBounds,
 } from '../operations/selection.js';
+import { groupItems, ungroupItems, booleanOp } from '../operations/booleans.js';
 
 const HANDLE_CURSOR = {
   nw: 'nwse-resize', se: 'nwse-resize',
@@ -13,9 +13,10 @@ const HANDLE_CURSOR = {
 };
 
 /**
- * Select tool — click to select, drag the body to move, drag a handle to
- * resize. Shift keeps aspect ratio while resizing a corner. Delete/Backspace
- * removes the selection, Escape deselects.
+ * Select tool — click to select, Shift+click to add/remove from the selection,
+ * drag the body to move (all selected), drag a handle to resize (single).
+ * Shift keeps aspect ratio while resizing. Delete removes, Escape deselects.
+ * runAction() performs group/ungroup and the boolean operations.
  */
 export function createSelectTool(ctx = {}) {
   const selection = createSelection(ctx.onSelectionChange);
@@ -26,7 +27,7 @@ export function createSelectTool(ctx = {}) {
   return {
     cursor: 'default',
 
-    onMouseDown(point) {
+    onMouseDown(point, e) {
       const handle = selection.hitHandle(point);
       if (handle && selection.target) {
         mode = 'resize';
@@ -36,21 +37,29 @@ export function createSelectTool(ctx = {}) {
       }
 
       const item = pickItem(point);
+      const additive = !!(e && e.shiftKey);
+
       if (item) {
-        if (item !== selection.target) selection.setTarget(item);
-        mode = 'move';
-      } else {
+        if (additive) {
+          selection.toggle(item);
+          mode = null;
+        } else {
+          if (!selection.has(item)) selection.setTarget(item);
+          mode = 'move';
+        }
+      } else if (!additive) {
         selection.clear();
         mode = null;
       }
     },
 
     onMouseDrag(point, delta, e) {
-      if (mode === 'move' && selection.target) {
-        selection.target.position = selection.target.position.add(delta);
+      if (mode === 'move' && selection.targets.length) {
+        selection.targets.forEach((t) => {
+          t.position = t.position.add(delta);
+        });
         selection.draw();
       } else if (mode === 'resize' && selection.target && originalBounds) {
-        // Degenerate bounds (e.g. an axis-aligned line) can't be scaled.
         if (originalBounds.width < 1e-3 || originalBounds.height < 1e-3) return;
         selection.target.bounds = computeResizeBounds(
           activeHandle,
@@ -68,7 +77,6 @@ export function createSelectTool(ctx = {}) {
       originalBounds = null;
     },
 
-    // Hover feedback: resize cursor over a handle, move cursor over an item.
     onMouseHover(point) {
       const handle = selection.hitHandle(point);
       if (handle) return HANDLE_CURSOR[handle];
@@ -76,23 +84,35 @@ export function createSelectTool(ctx = {}) {
     },
 
     onKeyDown(e) {
-      if (!selection.target) return;
+      if (!selection.targets.length) return;
       if (e.code === 'Delete' || e.code === 'Backspace') {
         e.preventDefault();
-        selection.target.remove();
+        selection.targets.forEach((t) => t.remove());
         selection.clear();
       } else if (e.code === 'Escape') {
         selection.clear();
       }
     },
 
-    // Handles are sized in screen pixels, so they must be rebuilt on zoom.
+    // group | ungroup | unite | subtract | intersect | exclude
+    runAction(name) {
+      const items = selection.targets.slice();
+      if (name === 'group') {
+        const g = groupItems(items);
+        if (g) selection.setTarget(g);
+      } else if (name === 'ungroup') {
+        const kids = ungroupItems(items[0]);
+        if (kids) selection.setTargets(kids);
+      } else {
+        const result = booleanOp(items, name);
+        if (result) selection.setTarget(result);
+      }
+    },
+
     onViewChange() {
       selection.draw();
     },
 
-    // Redraw handles after an external change (e.g. a Properties edit that
-    // changed the item's bounds).
     refreshSelection() {
       selection.draw();
     },

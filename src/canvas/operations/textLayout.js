@@ -64,6 +64,9 @@ function wrap(raw, width, fs, ff, tr) {
 
 export function createTextItem({ point, areaWidth = null, areaHeight = null, path = null }) {
   const group = new paper.Group();
+  // Keep moves in the group's matrix (glyphs stay in local coords) so a
+  // re-layout after dragging the text doesn't snap it back to the origin.
+  group.applyMatrix = false;
   const d = group.data;
   d.isText = true;
   d.rawText = '';

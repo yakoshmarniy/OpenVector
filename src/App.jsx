@@ -6,37 +6,47 @@ import Properties from './components/Properties/Properties.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
 
+const emptySel = { count: 0, isGroup: false, style: null };
+
 export default function App() {
   const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
-  const [selStyle, setSelStyle] = useState(null);
-  const selItemRef = useRef(null);
+  const [sel, setSel] = useState(emptySel);
+  const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
+  const actionRef = useRef(null);
   const pendingEditRef = useRef(null); // text item queued for editing (double-click)
 
-  const handleSelectionChange = useCallback((item) => {
-    selItemRef.current = item || null;
-    setSelStyle(item ? readStyle(item) : null);
+  const handleSelectionChange = useCallback((arg) => {
+    const items = Array.isArray(arg) ? arg : arg ? [arg] : [];
+    selItemsRef.current = items;
+    const single = items.length === 1 ? items[0] : null;
+    const isGroup = !!(single && single.className === 'Group' && !(single.data && single.data.isText));
+    setSel({ count: items.length, isGroup, style: single ? readStyle(single) : null });
   }, []);
 
   const handleStyleChange = useCallback((patch) => {
-    const item = selItemRef.current;
+    const item = selItemsRef.current[0];
     if (!item) return;
     applyStyle(item, patch);
     const fresh = readStyle(item);
-    // Keep the chosen swatch colour visible even when fill/stroke is toggled off.
-    setSelStyle((prev) => ({
-      ...fresh,
-      fillColor: fresh.hasFill ? fresh.fillColor : patch.fillColor ?? prev?.fillColor ?? fresh.fillColor,
-      strokeColor: fresh.hasStroke ? fresh.strokeColor : patch.strokeColor ?? prev?.strokeColor ?? fresh.strokeColor,
+    setSel((prev) => ({
+      ...prev,
+      style: {
+        ...fresh,
+        fillColor: fresh.hasFill ? fresh.fillColor : patch.fillColor ?? prev.style?.fillColor ?? fresh.fillColor,
+        strokeColor: fresh.hasStroke ? fresh.strokeColor : patch.strokeColor ?? prev.style?.strokeColor ?? fresh.strokeColor,
+      },
     }));
-    // The change may have altered the item's bounds — refresh selection handles.
     refreshSelRef.current?.();
   }, []);
 
-  // Double-clicking a text item enters edit mode: queue it and switch to Text.
+  const handleAction = useCallback((name) => {
+    actionRef.current?.(name);
+  }, []);
+
   const handleEditText = useCallback(
     (item) => {
-      if (activeTool === TOOLS.TEXT) return; // text tool already edits on click
+      if (activeTool === TOOLS.TEXT) return;
       pendingEditRef.current = item;
       setActiveTool(TOOLS.TEXT);
     },
@@ -54,8 +64,9 @@ export default function App() {
           onEditText={handleEditText}
           pendingEditRef={pendingEditRef}
           refreshRef={refreshSelRef}
+          actionRef={actionRef}
         />
-        <Properties style={selStyle} onChange={handleStyleChange} />
+        <Properties sel={sel} onChange={handleStyleChange} onAction={handleAction} />
       </div>
     </div>
   );
