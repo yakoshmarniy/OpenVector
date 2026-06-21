@@ -8,6 +8,12 @@ import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
 import { createHandTool } from '../../canvas/tools/handTool.js';
 import { createZoomTool } from '../../canvas/tools/zoomTool.js';
 import { createPenTool } from '../../canvas/tools/penTool.js';
+import {
+  createAddAnchorTool,
+  createDeleteAnchorTool,
+  createConvertAnchorTool,
+} from '../../canvas/tools/anchorTools.js';
+import { createCurvatureTool } from '../../canvas/tools/curvatureTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
 import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
@@ -27,6 +33,10 @@ const TOOL_FACTORIES = {
   [TOOLS.HAND]: createHandTool,
   [TOOLS.ZOOM]: createZoomTool,
   [TOOLS.PEN]: createPenTool,
+  [TOOLS.ADD_ANCHOR]: createAddAnchorTool,
+  [TOOLS.DELETE_ANCHOR]: createDeleteAnchorTool,
+  [TOOLS.CONVERT_ANCHOR]: createConvertAnchorTool,
+  [TOOLS.CURVATURE]: createCurvatureTool,
   [TOOLS.TEXT]: createTextTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
   [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,

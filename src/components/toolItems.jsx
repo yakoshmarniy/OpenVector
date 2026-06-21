@@ -73,6 +73,44 @@ function PenIcon() {
   );
 }
 
+function AddAnchorIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 3l3 6-3 2-3-2 3-6z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <line x1="9" y1="11" x2="9" y2="17" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M15 17h6M18 14v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DeleteAnchorIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 3l3 6-3 2-3-2 3-6z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <line x1="9" y1="11" x2="9" y2="17" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M15 17h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ConvertAnchorIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 18a8 8 0 0 1 8-8 8 8 0 0 0 8-8" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <rect x="10" y="8" width="4" height="4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function CurvatureIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 17C8 17 9 5 14 5s6 12 7 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="14" cy="5" r="1.8" fill="currentColor" />
+    </svg>
+  );
+}
+
 function TextIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -169,6 +207,10 @@ export const TOOL_ITEMS = [
   { id: TOOLS.DIRECT_SELECT, label: 'Direct Selection', Icon: DirectSelectIcon },
   { id: TOOLS.GROUP_SELECT, label: 'Group Selection', Icon: GroupSelectIcon },
   { id: TOOLS.PEN, label: 'Pen', Icon: PenIcon },
+  { id: TOOLS.ADD_ANCHOR, label: 'Add Anchor Point', Icon: AddAnchorIcon },
+  { id: TOOLS.DELETE_ANCHOR, label: 'Delete Anchor Point', Icon: DeleteAnchorIcon },
+  { id: TOOLS.CONVERT_ANCHOR, label: 'Convert Anchor Point', Icon: ConvertAnchorIcon },
+  { id: TOOLS.CURVATURE, label: 'Curvature', Icon: CurvatureIcon },
   { id: TOOLS.TEXT, label: 'Text', Icon: TextIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
   { id: TOOLS.ROUNDED_RECTANGLE, label: 'Rounded Rectangle', Icon: RoundedRectangleIcon },

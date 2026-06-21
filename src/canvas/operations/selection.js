@@ -33,7 +33,7 @@ export function pickItem(point) {
   });
   if (hit) return topLevel(hit.item);
 
-  const texts = paper.project.getItems((it) => isTextItem(it));
+  const texts = paper.project.getItems({ match: (it) => isTextItem(it) });
   for (let i = texts.length - 1; i >= 0; i -= 1) {
     if (!isOverlayItem(texts[i]) && hitRegion(texts[i]).contains(point)) return texts[i];
   }
