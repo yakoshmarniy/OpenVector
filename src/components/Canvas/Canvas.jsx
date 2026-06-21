@@ -3,6 +3,10 @@ import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
 import { pickItem } from '../../canvas/operations/selection.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
+import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
+import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
+import { createHandTool } from '../../canvas/tools/handTool.js';
+import { createZoomTool } from '../../canvas/tools/zoomTool.js';
 import { createPenTool } from '../../canvas/tools/penTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
@@ -18,6 +22,10 @@ import styles from './Canvas.module.css';
 
 const TOOL_FACTORIES = {
   [TOOLS.SELECT]: createSelectTool,
+  [TOOLS.DIRECT_SELECT]: createDirectSelectTool,
+  [TOOLS.GROUP_SELECT]: createGroupSelectTool,
+  [TOOLS.HAND]: createHandTool,
+  [TOOLS.ZOOM]: createZoomTool,
   [TOOLS.PEN]: createPenTool,
   [TOOLS.TEXT]: createTextTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
@@ -257,6 +265,19 @@ export default function Canvas({
         return item;
       },
       getSnap: () => snapRef?.current ?? { grid: false, objects: false },
+      zoomAt: (point, dir) => {
+        const view = paper.view;
+        const oldZoom = view.zoom;
+        const factor = dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+        const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom * factor));
+        if (newZoom === oldZoom) return;
+        const beta = oldZoom / newZoom;
+        const offset = point.subtract(view.center);
+        view.zoom = newZoom;
+        view.center = view.center.add(offset.multiply(1 - beta));
+        toolRef.current?.onViewChange?.();
+        onZoomChangeRef.current?.(view.zoom);
+      },
     };
     toolRef.current = factory ? factory(toolCtx) : null;
     const canvas = canvasRef.current;

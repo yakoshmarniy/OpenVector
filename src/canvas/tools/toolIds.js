@@ -2,6 +2,8 @@
 // can share them without creating a circular import.
 export const TOOLS = {
   SELECT: 'select',
+  DIRECT_SELECT: 'directSelect',
+  GROUP_SELECT: 'groupSelect',
   PEN: 'pen',
   TEXT: 'text',
   RECTANGLE: 'rectangle',
@@ -13,4 +15,6 @@ export const TOOLS = {
   LINE: 'line',
   ARC: 'arc',
   SPIRAL: 'spiral',
+  HAND: 'hand',
+  ZOOM: 'zoom',
 };

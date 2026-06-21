@@ -17,6 +17,46 @@ function SelectIcon() {
   );
 }
 
+function DirectSelectIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 3l14 8-6 1.5L10 19 5 3z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GroupSelectIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 2l12 7-5 1.3L8.5 16 4 2z" fill="currentColor" />
+      <path d="M16 16h5M18.5 13.5v5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function HandIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M8 11V6.5a1.4 1.4 0 0 1 2.8 0V11V4.6a1.4 1.4 0 0 1 2.8 0V11V6.2a1.4 1.4 0 0 1 2.8 0V13a6 6 0 0 1-6 6h-1a5 5 0 0 1-5-5v-2.6l-1-1a1.3 1.3 0 0 1 1.9-1.9L8 11z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ZoomIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
+      <line x1="20" y1="20" x2="15.5" y2="15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function PenIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -126,6 +166,8 @@ function SpiralIcon() {
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
+  { id: TOOLS.DIRECT_SELECT, label: 'Direct Selection', Icon: DirectSelectIcon },
+  { id: TOOLS.GROUP_SELECT, label: 'Group Selection', Icon: GroupSelectIcon },
   { id: TOOLS.PEN, label: 'Pen', Icon: PenIcon },
   { id: TOOLS.TEXT, label: 'Text', Icon: TextIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
@@ -137,4 +179,6 @@ export const TOOL_ITEMS = [
   { id: TOOLS.LINE, label: 'Line', Icon: LineIcon },
   { id: TOOLS.ARC, label: 'Arc', Icon: ArcIcon },
   { id: TOOLS.SPIRAL, label: 'Spiral', Icon: SpiralIcon },
+  { id: TOOLS.HAND, label: 'Hand', Icon: HandIcon },
+  { id: TOOLS.ZOOM, label: 'Zoom', Icon: ZoomIcon },
 ];

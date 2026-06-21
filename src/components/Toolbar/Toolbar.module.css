@@ -1,11 +1,74 @@
 .toolbar {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   padding: 6px;
   width: 48px;
   background: var(--ov-panel);
   border-right: 1px solid var(--ov-panel-border);
+}
+
+.toolbar.two {
+  width: 96px;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-content: flex-start;
+  flex: 1;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ov-panel-border);
+}
+
+.paint {
+  position: relative;
+  width: 30px;
+  height: 30px;
+}
+
+.fill {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 2px;
+}
+
+.stroke {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--ov-text-dim);
+  background: transparent;
+  border-radius: 2px;
+}
+
+.colToggle {
+  width: 26px;
+  height: 22px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  background: var(--ov-bg);
+  color: var(--ov-text-dim);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.colToggle:hover {
+  color: var(--ov-text);
 }
 
 .tool {

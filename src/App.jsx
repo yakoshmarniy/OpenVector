@@ -14,6 +14,7 @@ export default function App() {
   const [sel, setSel] = useState(emptySel);
   const [snap, setSnap] = useState({ grid: false, objects: false });
   const [zoom, setZoom] = useState(1);
+  const [columns, setColumns] = useState(1);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
@@ -62,11 +63,25 @@ export default function App() {
     [activeTool],
   );
 
+  const paint =
+    sel.count === 1 && sel.style
+      ? {
+          fill: sel.style.hasFill ? sel.style.fillColor : null,
+          stroke: sel.style.hasStroke ? sel.style.strokeColor : null,
+        }
+      : { fill: '#b9bcc0', stroke: '#7d8186' };
+
   return (
     <div className="app">
       <TopBar snap={snap} onToggleSnap={toggleSnap} />
       <div className="app-body">
-        <Toolbar activeTool={activeTool} onSelectTool={setActiveTool} />
+        <Toolbar
+          activeTool={activeTool}
+          onSelectTool={setActiveTool}
+          paint={paint}
+          columns={columns}
+          onToggleColumns={() => setColumns((c) => (c === 2 ? 1 : 2))}
+        />
         <Canvas
           activeTool={activeTool}
           onSelectionChange={handleSelectionChange}
