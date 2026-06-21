@@ -2,7 +2,7 @@
 
 Опенсорсный векторный редактор — бесплатная альтернатива Adobe Illustrator.
 Целевая аудитория: графические дизайнеры, которые не хотят платить за Illustrator.
-GitHub: https://github.com/koshmrniy/OpenVector
+GitHub: https://github.com/yakoshmarniy/OpenVector
 Лицензия: MIT
 
 ---
@@ -211,13 +211,12 @@ OpenVector/
 3. Тег на итерацию: `git tag iter-N -m "<название>"` → `git push origin iter-N`.
 4. Если итерация частичная (как 5) — пушим что готово, в теле коммита перечисляем отложенное.
 
-**Предусловия (на 2026-06-20 НЕ выполнены — настроить до первого пуша):**
-- OpenVector пока НЕ отдельный git-репозиторий: корень репо = `~/Desktop`, своего `.git` в папке нет.
-- Remote не настроен (`git remote -v` пусто). Нужен `origin` → https://github.com/koshmrniy/OpenVector
-- Нужна авторизация на GitHub (`gh auth login` или токен).
-
-Пока репозиторий+remote+авторизация не настроены, шаг «залить на гитхаб» невыполним —
-сначала разовая настройка, затем правило работает для каждой следующей итерации.
+**Предусловия (✅ выполнены 2026-06-20):**
+- OpenVector — отдельный git-репозиторий (`.git` в папке, ветка `main`).
+- Remote: `origin` → `git@github.com:yakoshmarniy/OpenVector.git` (SSH).
+- Авторизация: SSH-ключ `~/.ssh/id_ed25519` добавлен в аккаунт `yakoshmarniy`, пуш работает.
+- Залито: `main` + тег `iter-5` (итерации 1–5). Дальше пушим каждую итерацию по правилу выше
+  (`GIT_SSH_COMMAND='ssh -o BatchMode=yes' git push`).
 
 ---
 
