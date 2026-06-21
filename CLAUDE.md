@@ -90,9 +90,12 @@ GitHub: https://github.com/yakoshmarniy/OpenVector
 - [x] Булевы: объединить (Unite), вычесть (Subtract), пересечь (Intersect), исключить (Exclude)
 - [x] Клик по элементу группы выделяет группу целиком (topLevel в pickItem)
 
-### Итерация 7 — Выравнивание
-- Align (относительно друг друга), Distribute (равномерное распределение)
-- Привязка к сетке, привязка к объектам (snapping)
+### Итерация 7 — Выравнивание ← ✅ готово
+- [x] Align (6: left/hcenter/right/top/vcenter/bottom) относительно общей рамки — `align.js`
+- [x] Distribute (H/V, центры равномерно) при 3+ — `align.js`
+- [x] Привязка к сетке (шаг 10) и к объектам (рёбра/центры) при перемещении — `snapping.js`,
+      тумблеры в TopBar; направляющие-линии при объектной привязке
+- [x] Кнопки Align/Distribute в панели Properties при 2+ выделенных
 
 ### Итерация 8 — Дополнительные фигуры
 - Polygon, Star, Arc, Spiral, Rounded Rectangle, Flare Tool
@@ -159,6 +162,7 @@ GitHub: https://github.com/yakoshmarniy/OpenVector
 
 ### Итерация 29 — История и производительность
 - Полноценный Undo/Redo (100 шагов), оптимизация больших файлов, lazy rendering (только видимое)
+- Комбинации: Undo = Cmd/Ctrl+Z, Redo = Cmd/Ctrl+Shift+Z (на Windows ещё Ctrl+Y). Решено оставить на 29.
 
 ### Итерация 30 — Полировка
 - Все горячие клавиши (как в Illustrator), светлая тема, онбординг, README/документация, сайт проекта

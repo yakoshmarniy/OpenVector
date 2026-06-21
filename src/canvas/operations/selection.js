@@ -162,6 +162,10 @@ export function createSelection(onChange) {
       return targets[0] || null;
     },
 
+    get bounds() {
+      return targets.length ? unionBounds(targets) : null;
+    },
+
     has(item) {
       return targets.includes(item);
     },

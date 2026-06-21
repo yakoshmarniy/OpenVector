@@ -25,6 +25,20 @@ const BOOLEANS = [
   { id: 'exclude', label: 'Exclude' },
 ];
 
+const ALIGNS = [
+  { id: 'alignLeft', label: 'Align left', glyph: 'L' },
+  { id: 'alignHCenter', label: 'Align centers (horizontal)', glyph: 'C' },
+  { id: 'alignRight', label: 'Align right', glyph: 'R' },
+  { id: 'alignTop', label: 'Align top', glyph: 'T' },
+  { id: 'alignVCenter', label: 'Align centers (vertical)', glyph: 'M' },
+  { id: 'alignBottom', label: 'Align bottom', glyph: 'B' },
+];
+
+const DISTRIBUTE = [
+  { id: 'distributeH', label: 'Distribute horizontally', glyph: 'H' },
+  { id: 'distributeV', label: 'Distribute vertically', glyph: 'V' },
+];
+
 function StyleControls({ style, onChange }) {
   const opacityPct = Math.round(style.opacity * 100);
   const aligns = [
@@ -127,6 +141,28 @@ export default function Properties({ sel, onChange, onAction }) {
       {count >= 2 && (
         <div className={styles.actions}>
           <p className={styles.heading}>{count} objects selected</p>
+
+          <span className={styles.subLabel}>Align</span>
+          <div className={styles.iconRow}>
+            {ALIGNS.map((a) => (
+              <button key={a.id} type="button" title={a.label} aria-label={a.label}
+                className={styles.iconBtn} onClick={() => onAction(a.id)}>
+                {a.glyph}
+              </button>
+            ))}
+          </div>
+
+          <span className={styles.subLabel}>Distribute</span>
+          <div className={styles.iconRow}>
+            {DISTRIBUTE.map((d) => (
+              <button key={d.id} type="button" title={d.label} aria-label={d.label}
+                className={styles.iconBtn} disabled={count < 3}
+                onClick={() => onAction(d.id)}>
+                {d.glyph}
+              </button>
+            ))}
+          </div>
+
           <button type="button" className={styles.action} onClick={() => onAction('group')}>
             Group
           </button>

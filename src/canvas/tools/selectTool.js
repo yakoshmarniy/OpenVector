@@ -6,6 +6,8 @@ import {
   isOverlayItem,
 } from '../operations/selection.js';
 import { groupItems, ungroupItems, booleanOp } from '../operations/booleans.js';
+import { alignItems, distributeItems } from '../operations/align.js';
+import { snapMove } from '../operations/snapping.js';
 
 function normRect(a, b) {
   return new paper.Rectangle(
@@ -21,11 +23,15 @@ const HANDLE_CURSOR = {
   e: 'ew-resize', w: 'ew-resize',
 };
 
+const ALIGN_MODES = {
+  alignLeft: 'left', alignHCenter: 'hcenter', alignRight: 'right',
+  alignTop: 'top', alignVCenter: 'vcenter', alignBottom: 'bottom',
+};
+
 /**
- * Select tool — click to select, Shift+click to add/remove from the selection,
- * drag the body to move (all selected), drag a handle to resize (single).
- * Shift keeps aspect ratio while resizing. Delete removes, Escape deselects.
- * runAction() performs group/ungroup and the boolean operations.
+ * Select tool — click to select, Shift+click to add/remove, drag empty space
+ * for a marquee, drag the body to move (snapping to grid/objects when enabled),
+ * drag a handle to resize. runAction() does align/distribute/group/booleans.
  */
 export function createSelectTool(ctx = {}) {
   const selection = createSelection(ctx.onSelectionChange);
@@ -35,6 +41,11 @@ export function createSelectTool(ctx = {}) {
   let marqueeStart = null;
   let marqueePath = null;
   let marqueeAdditive = false;
+  // Absolute-move bookkeeping (so snapping is stable, not drift-prone).
+  let moveStart = null;
+  let moveOrigin = [];
+  let moveUnion = null;
+  let guides = null;
 
   const clearMarquee = () => {
     if (marqueePath) {
@@ -54,6 +65,36 @@ export function createSelectTool(ctx = {}) {
     marqueePath.data.isSelectionOverlay = true;
     marqueePath.locked = true;
     marqueePath.bringToFront();
+  };
+
+  const clearGuides = () => {
+    if (guides) {
+      guides.remove();
+      guides = null;
+    }
+  };
+
+  const drawGuides = (xs, ys) => {
+    clearGuides();
+    if (!xs.length && !ys.length) return;
+    const vb = paper.view.bounds;
+    const z = paper.view.zoom;
+    guides = new paper.Group();
+    guides.data.isSelectionOverlay = true;
+    guides.locked = true;
+    xs.forEach((x) => {
+      const l = new paper.Path.Line(new paper.Point(x, vb.top), new paper.Point(x, vb.bottom));
+      l.strokeColor = '#8a9aa8';
+      l.strokeWidth = 1 / z;
+      guides.addChild(l);
+    });
+    ys.forEach((y) => {
+      const l = new paper.Path.Line(new paper.Point(vb.left, y), new paper.Point(vb.right, y));
+      l.strokeColor = '#8a9aa8';
+      l.strokeWidth = 1 / z;
+      guides.addChild(l);
+    });
+    guides.bringToFront();
   };
 
   return {
@@ -78,9 +119,11 @@ export function createSelectTool(ctx = {}) {
         } else {
           if (!selection.has(item)) selection.setTarget(item);
           mode = 'move';
+          moveStart = point;
+          moveOrigin = selection.targets.map((t) => t.position.clone());
+          moveUnion = selection.bounds;
         }
       } else {
-        // Empty space → start a marquee (rubber-band) selection.
         if (!additive) selection.clear();
         mode = 'marquee';
         marqueeStart = point;
@@ -89,11 +132,16 @@ export function createSelectTool(ctx = {}) {
     },
 
     onMouseDrag(point, delta, e) {
-      if (mode === 'move' && selection.targets.length) {
-        selection.targets.forEach((t) => {
-          t.position = t.position.add(delta);
+      if (mode === 'move' && selection.targets.length && moveUnion) {
+        const raw = point.subtract(moveStart);
+        const snap = ctx.getSnap ? ctx.getSnap() : { grid: false, objects: false };
+        const { dx, dy, guideXs, guideYs } = snapMove(moveUnion, raw, snap, selection.targets);
+        const d = new paper.Point(dx, dy);
+        selection.targets.forEach((t, i) => {
+          t.position = moveOrigin[i].add(d);
         });
         selection.draw();
+        drawGuides(guideXs, guideYs);
       } else if (mode === 'resize' && selection.target && originalBounds) {
         if (originalBounds.width < 1e-3 || originalBounds.height < 1e-3) return;
         selection.target.bounds = computeResizeBounds(
@@ -124,9 +172,13 @@ export function createSelectTool(ctx = {}) {
         marqueeStart = null;
         marqueeAdditive = false;
       }
+      clearGuides();
       mode = null;
       activeHandle = null;
       originalBounds = null;
+      moveStart = null;
+      moveOrigin = [];
+      moveUnion = null;
     },
 
     onMouseHover(point) {
@@ -146,10 +198,18 @@ export function createSelectTool(ctx = {}) {
       }
     },
 
-    // group | ungroup | unite | subtract | intersect | exclude
     runAction(name) {
       const items = selection.targets.slice();
-      if (name === 'group') {
+      if (ALIGN_MODES[name]) {
+        alignItems(items, ALIGN_MODES[name]);
+        selection.draw();
+      } else if (name === 'distributeH') {
+        distributeItems(items, 'h');
+        selection.draw();
+      } else if (name === 'distributeV') {
+        distributeItems(items, 'v');
+        selection.draw();
+      } else if (name === 'group') {
         const g = groupItems(items);
         if (g) selection.setTarget(g);
       } else if (name === 'ungroup') {
@@ -171,6 +231,7 @@ export function createSelectTool(ctx = {}) {
 
     deactivate() {
       clearMarquee();
+      clearGuides();
       selection.clear();
     },
   };

@@ -15,3 +15,30 @@
   color: var(--ov-text-dim);
   user-select: none;
 }
+
+.toggles {
+  display: flex;
+  gap: 6px;
+  margin-left: 18px;
+}
+
+.toggle {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 6px;
+  background: var(--ov-bg);
+  color: var(--ov-text-dim);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  color: var(--ov-text);
+}
+
+.on {
+  background: var(--ov-accent-active);
+  border-color: var(--ov-accent-active);
+  color: #f0f1f2;
+}

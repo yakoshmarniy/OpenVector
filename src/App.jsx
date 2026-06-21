@@ -11,10 +11,17 @@ const emptySel = { count: 0, isGroup: false, style: null };
 export default function App() {
   const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
   const [sel, setSel] = useState(emptySel);
+  const [snap, setSnap] = useState({ grid: false, objects: false });
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
   const pendingEditRef = useRef(null); // text item queued for editing (double-click)
+  const snapRef = useRef(snap);
+  snapRef.current = snap;
+
+  const toggleSnap = useCallback((key) => {
+    setSnap((s) => ({ ...s, [key]: !s[key] }));
+  }, []);
 
   const handleSelectionChange = useCallback((arg) => {
     const items = Array.isArray(arg) ? arg : arg ? [arg] : [];
@@ -55,7 +62,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar />
+      <TopBar snap={snap} onToggleSnap={toggleSnap} />
       <div className="app-body">
         <Toolbar activeTool={activeTool} onSelectTool={setActiveTool} />
         <Canvas
@@ -65,6 +72,7 @@ export default function App() {
           pendingEditRef={pendingEditRef}
           refreshRef={refreshSelRef}
           actionRef={actionRef}
+          snapRef={snapRef}
         />
         <Properties sel={sel} onChange={handleStyleChange} onAction={handleAction} />
       </div>

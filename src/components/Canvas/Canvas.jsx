@@ -30,6 +30,7 @@ export default function Canvas({
   pendingEditRef,
   refreshRef,
   actionRef,
+  snapRef,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -231,6 +232,7 @@ export default function Canvas({
         if (pendingEditRef) pendingEditRef.current = null;
         return item;
       },
+      getSnap: () => snapRef?.current ?? { grid: false, objects: false },
     };
     toolRef.current = factory ? factory(toolCtx) : null;
     const canvas = canvasRef.current;

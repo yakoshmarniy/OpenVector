@@ -111,6 +111,37 @@
   border-color: var(--ov-accent);
 }
 
+.subLabel {
+  font-size: 11px;
+  color: var(--ov-text-dim);
+}
+
+.iconRow {
+  display: flex;
+  gap: 4px;
+}
+
+.iconBtn {
+  flex: 1;
+  height: 28px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  background: var(--ov-accent);
+  border-color: var(--ov-accent);
+}
+
+.iconBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .alignGroup {
   display: flex;
   gap: 4px;
