@@ -34,7 +34,7 @@ const ALIGN_MODES = {
  * drag a handle to resize. runAction() does align/distribute/group/booleans.
  */
 export function createSelectTool(ctx = {}) {
-  const selection = createSelection(ctx.onSelectionChange);
+  const selection = createSelection(ctx.onSelectionChange, ctx.onSelectionBounds);
   let mode = null; // 'move' | 'resize' | 'marquee' | null
   let activeHandle = null;
   let originalBounds = null;
@@ -200,6 +200,11 @@ export function createSelectTool(ctx = {}) {
 
     runAction(name) {
       const items = selection.targets.slice();
+      if (name === 'delete') {
+        items.forEach((t) => t.remove());
+        selection.clear();
+        return;
+      }
       if (ALIGN_MODES[name]) {
         alignItems(items, ALIGN_MODES[name]);
         selection.draw();

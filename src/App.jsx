@@ -3,6 +3,7 @@ import TopBar from './components/TopBar/TopBar.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
+import StatusBar from './components/StatusBar/StatusBar.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
 
@@ -12,6 +13,7 @@ export default function App() {
   const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
   const [sel, setSel] = useState(emptySel);
   const [snap, setSnap] = useState({ grid: false, objects: false });
+  const [zoom, setZoom] = useState(1);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
@@ -73,9 +75,11 @@ export default function App() {
           refreshRef={refreshSelRef}
           actionRef={actionRef}
           snapRef={snapRef}
+          onZoomChange={setZoom}
         />
         <Properties sel={sel} onChange={handleStyleChange} onAction={handleAction} />
       </div>
+      <StatusBar zoom={zoom} sel={sel} />
     </div>
   );
 }

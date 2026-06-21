@@ -18,3 +18,32 @@
   touch-action: none;
   user-select: none;
 }
+
+/* Contextual task bar — floats under the current selection. */
+.ctxBar {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  z-index: 30;
+}
+
+.ctxBtn {
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.ctxBtn:hover {
+  background: var(--ov-accent);
+}

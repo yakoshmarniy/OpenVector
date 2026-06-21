@@ -94,12 +94,25 @@ function unionBounds(items) {
  * dashed box plus eight resize handles; multiple targets show a thin box per
  * item plus the union box (move-only, no per-item resize).
  */
-export function createSelection(onChange) {
+export function createSelection(onChange, onBounds) {
   let targets = [];
   let group = null;
 
   function notify() {
     if (onChange) onChange(targets.slice());
+  }
+
+  // Report the selection's on-screen (view) rect for the contextual task bar.
+  function reportBounds() {
+    if (!onBounds) return;
+    if (!targets.length) {
+      onBounds(null);
+      return;
+    }
+    const b = unionBounds(targets);
+    const tl = paper.view.projectToView(b.topLeft);
+    const br = paper.view.projectToView(b.bottomRight);
+    onBounds({ x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
   }
 
   function remove() {
@@ -111,7 +124,10 @@ export function createSelection(onChange) {
 
   function draw() {
     remove();
-    if (!targets.length) return;
+    if (!targets.length) {
+      reportBounds();
+      return;
+    }
     const zoom = paper.view.zoom;
     const hs = HANDLE_PX / zoom;
 
@@ -152,6 +168,7 @@ export function createSelection(onChange) {
     }
 
     group.bringToFront();
+    reportBounds();
   }
 
   return {
@@ -194,6 +211,7 @@ export function createSelection(onChange) {
     clear() {
       targets = [];
       remove();
+      reportBounds();
       notify();
     },
 

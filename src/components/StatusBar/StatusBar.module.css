@@ -1,0 +1,31 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 12px;
+  background: var(--ov-panel);
+  border-top: 1px solid var(--ov-panel-border);
+  color: var(--ov-text-dim);
+  font-size: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.zoom {
+  min-width: 42px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ov-text);
+}
+
+.sep {
+  opacity: 0.5;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.info {
+  color: var(--ov-text-dim);
+}

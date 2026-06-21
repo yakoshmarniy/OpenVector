@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
 import { pickItem } from '../../canvas/operations/selection.js';
@@ -43,6 +43,7 @@ export default function Canvas({
   refreshRef,
   actionRef,
   snapRef,
+  onZoomChange,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -53,6 +54,12 @@ export default function Canvas({
   onSelChangeRef.current = onSelectionChange;
   const onEditTextRef = useRef(onEditText);
   onEditTextRef.current = onEditText;
+  const onZoomChangeRef = useRef(onZoomChange);
+  onZoomChangeRef.current = onZoomChange;
+
+  // Contextual task bar state (floats under the selection on the canvas).
+  const [ctxRect, setCtxRect] = useState(null);
+  const [ctxItems, setCtxItems] = useState([]);
 
   // Let the parent ask the active tool to redraw its selection overlay after an
   // external change (e.g. a Properties edit).
@@ -116,6 +123,7 @@ export default function Canvas({
       view.center = view.center.add(offset.multiply(1 - beta));
       // Handles are sized in screen pixels — let the tool rescale them.
       toolRef.current?.onViewChange?.();
+      onZoomChangeRef.current?.(view.zoom);
     };
 
     // --- Pan (space + drag) and tool dispatch ---
@@ -238,7 +246,11 @@ export default function Canvas({
     toolRef.current?.deactivate?.();
     const factory = TOOL_FACTORIES[activeTool];
     const toolCtx = {
-      onSelectionChange: (item) => onSelChangeRef.current?.(item),
+      onSelectionChange: (items) => {
+        onSelChangeRef.current?.(items);
+        setCtxItems(Array.isArray(items) ? items : items ? [items] : []);
+      },
+      onSelectionBounds: (rect) => setCtxRect(rect),
       consumePendingEdit: () => {
         const item = pendingEditRef?.current ?? null;
         if (pendingEditRef) pendingEditRef.current = null;
@@ -253,9 +265,39 @@ export default function Canvas({
     }
   }, [activeTool]);
 
+  const single = ctxItems.length === 1 ? ctxItems[0] : null;
+  const isGroup = !!(single && single.className === 'Group' && !(single.data && single.data.isText));
+  const isText = !!(single && single.data && single.data.isText);
+  const showCtx = ctxRect && ctxItems.length > 0;
+
   return (
     <div ref={stageRef} className={styles.stage}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {showCtx && (
+        <div
+          className={styles.ctxBar}
+          style={{ left: ctxRect.x + ctxRect.w / 2, top: ctxRect.y + ctxRect.h + 10 }}
+        >
+          {ctxItems.length >= 2 && (
+            <button type="button" className={styles.ctxBtn} onClick={() => toolRef.current?.runAction?.('group')}>
+              Group
+            </button>
+          )}
+          {isGroup && (
+            <button type="button" className={styles.ctxBtn} onClick={() => toolRef.current?.runAction?.('ungroup')}>
+              Ungroup
+            </button>
+          )}
+          {isText && (
+            <button type="button" className={styles.ctxBtn} onClick={() => onEditTextRef.current?.(single)}>
+              Edit
+            </button>
+          )}
+          <button type="button" className={styles.ctxBtn} onClick={() => toolRef.current?.runAction?.('delete')}>
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
