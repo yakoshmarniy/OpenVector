@@ -5,6 +5,12 @@ export const TOOLS = {
   PEN: 'pen',
   TEXT: 'text',
   RECTANGLE: 'rectangle',
+  ROUNDED_RECTANGLE: 'roundedRectangle',
   ELLIPSE: 'ellipse',
+  POLYGON: 'polygon',
+  STAR: 'star',
+  FLARE: 'flare',
   LINE: 'line',
+  ARC: 'arc',
+  SPIRAL: 'spiral',
 };

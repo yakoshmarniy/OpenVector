@@ -97,8 +97,13 @@ GitHub: https://github.com/yakoshmarniy/OpenVector
       тумблеры в TopBar; направляющие-линии при объектной привязке
 - [x] Кнопки Align/Distribute в панели Properties при 2+ выделенных
 
-### Итерация 8 — Дополнительные фигуры
-- Polygon, Star, Arc, Spiral, Rounded Rectangle, Flare Tool
+### Итерация 8 — Дополнительные фигуры ← ✅ готово
+- [x] Polygon (6 сторон), Star (5 лучей), Rounded Rectangle — drag-ом, `*Tool.js`
+- [x] Arc (открытый путь, drag: ширина+изгиб), Spiral (архимедова, 3 витка)
+- [x] Flare — упрощённый (группа концентрических кругов + halo + цепочка); полноценный glow
+      ждёт градиентов (итерация 12)
+- [x] Левый рейл: 2 flyout-группы — фигуры (Rect/RoundedRect/Ellipse/Polygon/Star/Flare)
+      и линии (Line/Arc/Spiral)
 
 ### Итерация 9 — Трансформации
 - Reflect, Shear, Free Transform, Transform-панель (точные x, y, w, h, угол)

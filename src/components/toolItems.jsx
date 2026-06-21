@@ -72,12 +72,69 @@ function LineIcon() {
   );
 }
 
+function RoundedRectangleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="6" width="16" height="12" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function PolygonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function StarIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l2.6 5.7 6.2.6-4.7 4.1 1.4 6.1L12 16.9 6.5 19.6l1.4-6.1L3.2 9.3l6.2-.6z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FlareIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
+      <path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5L19 19M19 5l-2.5 2.5M7.5 16.5L5 19"
+        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ArcIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 19a15 15 0 0 1 15-15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SpiralIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 12a2 2 0 1 1 2 2 4 4 0 1 1-4-4 6 6 0 1 1 6 6"
+        fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
   { id: TOOLS.PEN, label: 'Pen', Icon: PenIcon },
   { id: TOOLS.TEXT, label: 'Text', Icon: TextIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
+  { id: TOOLS.ROUNDED_RECTANGLE, label: 'Rounded Rectangle', Icon: RoundedRectangleIcon },
   { id: TOOLS.ELLIPSE, label: 'Ellipse', Icon: EllipseIcon },
+  { id: TOOLS.POLYGON, label: 'Polygon', Icon: PolygonIcon },
+  { id: TOOLS.STAR, label: 'Star', Icon: StarIcon },
+  { id: TOOLS.FLARE, label: 'Flare', Icon: FlareIcon },
   { id: TOOLS.LINE, label: 'Line', Icon: LineIcon },
+  { id: TOOLS.ARC, label: 'Arc', Icon: ArcIcon },
+  { id: TOOLS.SPIRAL, label: 'Spiral', Icon: SpiralIcon },
 ];

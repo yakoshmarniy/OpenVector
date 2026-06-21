@@ -10,7 +10,8 @@ const GROUPS = [
   [TOOLS.SELECT],
   [TOOLS.PEN],
   [TOOLS.TEXT],
-  [TOOLS.RECTANGLE, TOOLS.ELLIPSE, TOOLS.LINE], // primitive shapes
+  [TOOLS.RECTANGLE, TOOLS.ROUNDED_RECTANGLE, TOOLS.ELLIPSE, TOOLS.POLYGON, TOOLS.STAR, TOOLS.FLARE],
+  [TOOLS.LINE, TOOLS.ARC, TOOLS.SPIRAL],
 ];
 
 export default function Toolbar({ activeTool, onSelectTool }) {

@@ -6,8 +6,14 @@ import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createPenTool } from '../../canvas/tools/penTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
+import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
 import { createEllipseTool } from '../../canvas/tools/ellipseTool.js';
+import { createPolygonTool } from '../../canvas/tools/polygonTool.js';
+import { createStarTool } from '../../canvas/tools/starTool.js';
+import { createFlareTool } from '../../canvas/tools/flareTool.js';
 import { createLineTool } from '../../canvas/tools/lineTool.js';
+import { createArcTool } from '../../canvas/tools/arcTool.js';
+import { createSpiralTool } from '../../canvas/tools/spiralTool.js';
 import styles from './Canvas.module.css';
 
 const TOOL_FACTORIES = {
@@ -15,8 +21,14 @@ const TOOL_FACTORIES = {
   [TOOLS.PEN]: createPenTool,
   [TOOLS.TEXT]: createTextTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
+  [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,
   [TOOLS.ELLIPSE]: createEllipseTool,
+  [TOOLS.POLYGON]: createPolygonTool,
+  [TOOLS.STAR]: createStarTool,
+  [TOOLS.FLARE]: createFlareTool,
   [TOOLS.LINE]: createLineTool,
+  [TOOLS.ARC]: createArcTool,
+  [TOOLS.SPIRAL]: createSpiralTool,
 };
 
 const MIN_ZOOM = 0.05;
