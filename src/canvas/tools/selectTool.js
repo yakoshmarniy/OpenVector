@@ -1,9 +1,18 @@
+import paper from 'paper';
 import {
   createSelection,
   pickItem,
   computeResizeBounds,
+  isOverlayItem,
 } from '../operations/selection.js';
 import { groupItems, ungroupItems, booleanOp } from '../operations/booleans.js';
+
+function normRect(a, b) {
+  return new paper.Rectangle(
+    new paper.Point(Math.min(a.x, b.x), Math.min(a.y, b.y)),
+    new paper.Size(Math.abs(b.x - a.x), Math.abs(b.y - a.y)),
+  );
+}
 
 const HANDLE_CURSOR = {
   nw: 'nwse-resize', se: 'nwse-resize',
@@ -20,9 +29,32 @@ const HANDLE_CURSOR = {
  */
 export function createSelectTool(ctx = {}) {
   const selection = createSelection(ctx.onSelectionChange);
-  let mode = null; // 'move' | 'resize' | null
+  let mode = null; // 'move' | 'resize' | 'marquee' | null
   let activeHandle = null;
   let originalBounds = null;
+  let marqueeStart = null;
+  let marqueePath = null;
+  let marqueeAdditive = false;
+
+  const clearMarquee = () => {
+    if (marqueePath) {
+      marqueePath.remove();
+      marqueePath = null;
+    }
+  };
+
+  const drawMarquee = (rect) => {
+    clearMarquee();
+    const z = paper.view.zoom;
+    marqueePath = new paper.Path.Rectangle(rect);
+    marqueePath.strokeColor = '#6f8595';
+    marqueePath.strokeWidth = 1 / z;
+    marqueePath.dashArray = [3 / z, 2 / z];
+    marqueePath.fillColor = new paper.Color(0.43, 0.52, 0.59, 0.12);
+    marqueePath.data.isSelectionOverlay = true;
+    marqueePath.locked = true;
+    marqueePath.bringToFront();
+  };
 
   return {
     cursor: 'default',
@@ -47,9 +79,12 @@ export function createSelectTool(ctx = {}) {
           if (!selection.has(item)) selection.setTarget(item);
           mode = 'move';
         }
-      } else if (!additive) {
-        selection.clear();
-        mode = null;
+      } else {
+        // Empty space → start a marquee (rubber-band) selection.
+        if (!additive) selection.clear();
+        mode = 'marquee';
+        marqueeStart = point;
+        marqueeAdditive = additive;
       }
     },
 
@@ -68,10 +103,27 @@ export function createSelectTool(ctx = {}) {
           !!(e && e.shiftKey),
         );
         selection.draw();
+      } else if (mode === 'marquee' && marqueeStart) {
+        drawMarquee(normRect(marqueeStart, point));
       }
     },
 
-    onMouseUp() {
+    onMouseUp(point) {
+      if (mode === 'marquee') {
+        clearMarquee();
+        if (marqueeStart && point) {
+          const rect = normRect(marqueeStart, point);
+          if (rect.width > 2 || rect.height > 2) {
+            const hits = paper.project.activeLayer.children.filter(
+              (it) => !isOverlayItem(it) && rect.intersects(it.bounds),
+            );
+            if (marqueeAdditive) hits.forEach((h) => !selection.has(h) && selection.toggle(h));
+            else selection.setTargets(hits);
+          }
+        }
+        marqueeStart = null;
+        marqueeAdditive = false;
+      }
       mode = null;
       activeHandle = null;
       originalBounds = null;
@@ -118,6 +170,7 @@ export function createSelectTool(ctx = {}) {
     },
 
     deactivate() {
+      clearMarquee();
       selection.clear();
     },
   };
