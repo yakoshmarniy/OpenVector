@@ -14,6 +14,12 @@ import {
   createConvertAnchorTool,
 } from '../../canvas/tools/anchorTools.js';
 import { createCurvatureTool } from '../../canvas/tools/curvatureTool.js';
+import { createPencilTool } from '../../canvas/tools/pencilTool.js';
+import { createSmoothTool } from '../../canvas/tools/smoothTool.js';
+import { createPathEraserTool } from '../../canvas/tools/pathEraserTool.js';
+import { createJoinTool } from '../../canvas/tools/joinTool.js';
+import { createPaintbrushTool } from '../../canvas/tools/paintbrushTool.js';
+import { createBlobBrushTool } from '../../canvas/tools/blobBrushTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
 import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
@@ -37,6 +43,12 @@ const TOOL_FACTORIES = {
   [TOOLS.DELETE_ANCHOR]: createDeleteAnchorTool,
   [TOOLS.CONVERT_ANCHOR]: createConvertAnchorTool,
   [TOOLS.CURVATURE]: createCurvatureTool,
+  [TOOLS.PENCIL]: createPencilTool,
+  [TOOLS.SMOOTH]: createSmoothTool,
+  [TOOLS.PATH_ERASER]: createPathEraserTool,
+  [TOOLS.JOIN]: createJoinTool,
+  [TOOLS.PAINTBRUSH]: createPaintbrushTool,
+  [TOOLS.BLOB_BRUSH]: createBlobBrushTool,
   [TOOLS.TEXT]: createTextTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
   [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,

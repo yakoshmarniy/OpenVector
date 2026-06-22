@@ -111,6 +111,59 @@ function CurvatureIcon() {
   );
 }
 
+function PencilIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 20l1.2-4L16 5.2a2 2 0 0 1 2.8 2.8L8 18.8 4 20z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M14.5 6.5l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SmoothIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 16c3 0 4-9 8-9 3 0 3 5 6 5 2 0 4-2 4-2" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PathEraserIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 17l8-8 5 5-3 3H6z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M13 7l4-4 4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function JoinIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 8a6 6 0 0 0 8 5 6 6 0 0 0 8-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="4" cy="8" r="1.8" fill="currentColor" />
+      <circle cx="20" cy="8" r="1.8" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PaintbrushIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M15 3l6 6-7 4-3-3 4-7z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M11 10c-4 1-5 4-5 7 3 0 6-1 7-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BlobBrushIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M7 14c-2-1-3-4-1-6s5-1 6-3 5-2 7 1-1 6-3 7-3 0-5 2-7 1-7-2z" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function TextIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -211,6 +264,12 @@ export const TOOL_ITEMS = [
   { id: TOOLS.DELETE_ANCHOR, label: 'Delete Anchor Point', Icon: DeleteAnchorIcon },
   { id: TOOLS.CONVERT_ANCHOR, label: 'Convert Anchor Point', Icon: ConvertAnchorIcon },
   { id: TOOLS.CURVATURE, label: 'Curvature', Icon: CurvatureIcon },
+  { id: TOOLS.PENCIL, label: 'Pencil', Icon: PencilIcon },
+  { id: TOOLS.SMOOTH, label: 'Smooth', Icon: SmoothIcon },
+  { id: TOOLS.PATH_ERASER, label: 'Path Eraser', Icon: PathEraserIcon },
+  { id: TOOLS.JOIN, label: 'Join', Icon: JoinIcon },
+  { id: TOOLS.PAINTBRUSH, label: 'Paintbrush', Icon: PaintbrushIcon },
+  { id: TOOLS.BLOB_BRUSH, label: 'Blob Brush', Icon: BlobBrushIcon },
   { id: TOOLS.TEXT, label: 'Text', Icon: TextIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
   { id: TOOLS.ROUNDED_RECTANGLE, label: 'Rounded Rectangle', Icon: RoundedRectangleIcon },
