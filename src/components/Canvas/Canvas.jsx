@@ -5,6 +5,8 @@ import { pickItem, isOverlayItem } from '../../canvas/operations/selection.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
 import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
+import { createMagicWandTool } from '../../canvas/tools/magicWandTool.js';
+import { createLassoTool } from '../../canvas/tools/lassoTool.js';
 import { createHandTool } from '../../canvas/tools/handTool.js';
 import { createRotateViewTool } from '../../canvas/tools/rotateViewTool.js';
 import { createZoomTool } from '../../canvas/tools/zoomTool.js';
@@ -44,6 +46,8 @@ const TOOL_FACTORIES = {
   [TOOLS.SELECT]: createSelectTool,
   [TOOLS.DIRECT_SELECT]: createDirectSelectTool,
   [TOOLS.GROUP_SELECT]: createGroupSelectTool,
+  [TOOLS.MAGIC_WAND]: createMagicWandTool,
+  [TOOLS.LASSO]: createLassoTool,
   [TOOLS.HAND]: createHandTool,
   [TOOLS.ROTATE_VIEW]: createRotateViewTool,
   [TOOLS.ZOOM]: createZoomTool,

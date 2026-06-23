@@ -4,6 +4,8 @@ export const TOOLS = {
   SELECT: 'select',
   DIRECT_SELECT: 'directSelect',
   GROUP_SELECT: 'groupSelect',
+  MAGIC_WAND: 'magicWand',
+  LASSO: 'lasso',
   PEN: 'pen',
   ADD_ANCHOR: 'addAnchor',
   DELETE_ANCHOR: 'deleteAnchor',

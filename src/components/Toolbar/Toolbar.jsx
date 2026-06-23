@@ -8,6 +8,8 @@ const BY_ID = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i]));
 // Related tools share a slot and expand in a flyout (like Illustrator).
 const GROUPS = [
   [TOOLS.SELECT, TOOLS.DIRECT_SELECT, TOOLS.GROUP_SELECT],
+  [TOOLS.MAGIC_WAND],
+  [TOOLS.LASSO],
   [TOOLS.PEN, TOOLS.ADD_ANCHOR, TOOLS.DELETE_ANCHOR, TOOLS.CONVERT_ANCHOR, TOOLS.CURVATURE],
   [TOOLS.PENCIL, TOOLS.SHAPER, TOOLS.SMOOTH, TOOLS.PATH_ERASER, TOOLS.JOIN],
   [TOOLS.PAINTBRUSH, TOOLS.BLOB_BRUSH],
@@ -21,6 +23,7 @@ const GROUPS = [
 export default function Toolbar({ activeTool, onSelectTool, paint, columns, onToggleColumns }) {
   const [current, setCurrent] = useState({});
   const [openGroup, setOpenGroup] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const railRef = useRef(null);
 
   useEffect(() => {
@@ -32,12 +35,16 @@ export default function Toolbar({ activeTool, onSelectTool, paint, columns, onTo
   }, [activeTool]);
 
   useEffect(() => {
-    if (openGroup === null) return undefined;
+    if (openGroup === null && !drawerOpen) return undefined;
+    const close = () => {
+      setOpenGroup(null);
+      setDrawerOpen(false);
+    };
     const onDoc = (e) => {
-      if (railRef.current && !railRef.current.contains(e.target)) setOpenGroup(null);
+      if (railRef.current && !railRef.current.contains(e.target)) close();
     };
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpenGroup(null);
+      if (e.key === 'Escape') close();
     };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -45,7 +52,7 @@ export default function Toolbar({ activeTool, onSelectTool, paint, columns, onTo
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
     };
-  }, [openGroup]);
+  }, [openGroup, drawerOpen]);
 
   const repFor = (tools, gi) => (current[gi] && tools.includes(current[gi]) ? current[gi] : tools[0]);
 
@@ -53,6 +60,11 @@ export default function Toolbar({ activeTool, onSelectTool, paint, columns, onTo
     setCurrent((c) => ({ ...c, [gi]: toolId }));
     onSelectTool(toolId);
     setOpenGroup(null);
+  };
+
+  const pickFromDrawer = (toolId) => {
+    onSelectTool(toolId);
+    setDrawerOpen(false);
   };
 
   return (
@@ -126,12 +138,47 @@ export default function Toolbar({ activeTool, onSelectTool, paint, columns, onTo
         <button
           type="button"
           className={styles.colToggle}
+          title="All tools"
+          aria-label="All tools"
+          aria-expanded={drawerOpen}
+          onClick={() => setDrawerOpen((o) => !o)}
+        >
+          ⋯
+        </button>
+        <button
+          type="button"
+          className={styles.colToggle}
           title="Toggle one/two columns"
           onClick={onToggleColumns}
         >
           {columns === 2 ? '1' : '2'}
         </button>
       </div>
+
+      {drawerOpen && (
+        <div className={styles.drawer} role="menu" aria-label="All tools">
+          <div className={styles.drawerTitle}>All Tools</div>
+          <div className={styles.drawerGrid}>
+            {TOOL_ITEMS.map((it) => {
+              const ItIcon = it.Icon;
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  role="menuitem"
+                  aria-label={it.label}
+                  aria-pressed={activeTool === it.id}
+                  className={activeTool === it.id ? `${styles.drawerItem} ${styles.flyActive}` : styles.drawerItem}
+                  onClick={() => pickFromDrawer(it.id)}
+                >
+                  <ItIcon />
+                  <span className={styles.drawerLabel}>{it.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

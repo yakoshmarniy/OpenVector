@@ -34,6 +34,25 @@ function GroupSelectIcon() {
   );
 }
 
+function MagicWandIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 19l9-9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M14 4v3M14 13v-3M11.5 7h5M19 10h-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M18 5l1.5-1.5M18.5 8.5L20 10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LassoIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 11a8 4 0 1 1 9 3.9c-2 .5-3 1-3 2.6a2 2 0 0 0 2 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="7" cy="19.5" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
 function HandIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -341,6 +360,8 @@ export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
   { id: TOOLS.DIRECT_SELECT, label: 'Direct Selection', Icon: DirectSelectIcon },
   { id: TOOLS.GROUP_SELECT, label: 'Group Selection', Icon: GroupSelectIcon },
+  { id: TOOLS.MAGIC_WAND, label: 'Magic Wand', Icon: MagicWandIcon },
+  { id: TOOLS.LASSO, label: 'Lasso', Icon: LassoIcon },
   { id: TOOLS.PEN, label: 'Pen', Icon: PenIcon },
   { id: TOOLS.ADD_ANCHOR, label: 'Add Anchor Point', Icon: AddAnchorIcon },
   { id: TOOLS.DELETE_ANCHOR, label: 'Delete Anchor Point', Icon: DeleteAnchorIcon },
