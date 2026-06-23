@@ -9,16 +9,17 @@ import {
 import { pickItem } from '../operations/selection.js';
 
 /**
- * Text tool.
+ * Text tool (horizontal or vertical).
  *   click            → point text at the cursor
  *   drag             → area text (typed text wraps inside the box)
  *   click a text     → re-edit it
  *   click a path     → type on that path
  *   type             → edit content (Enter = newline, Backspace = delete)
  *   Escape / switch  → commit (empty text is discarded)
+ * The vertical variant stacks glyphs in columns (Vertical Type / Area / on Path).
  * Points arrive in project coordinates.
  */
-export function createTextTool(ctx = {}) {
+function makeTextTool(ctx = {}, { orientation = 'horizontal' } = {}) {
   let editing = null;
   let caret = null;
   let startPoint = null;
@@ -85,7 +86,7 @@ export function createTextTool(ctx = {}) {
       // Click a plain path → type along it.
       if (item && item.className === 'Path' && !(item.data && item.data.glyph)) {
         commit();
-        beginEdit(createTextItem({ path: item }));
+        beginEdit(createTextItem({ path: item, orientation }));
         return;
       }
       commit();
@@ -111,12 +112,16 @@ export function createTextTool(ctx = {}) {
       if (isAreaDrag) {
         const rect = new paper.Rectangle(startPoint, point);
         if (rect.width > 5 && rect.height > 5) {
+          // Vertical columns fill from the right edge, so anchor there.
+          const origin = orientation === 'vertical' ? rect.topRight : rect.topLeft;
           beginEdit(
-            createTextItem({ point: rect.topLeft, areaWidth: rect.width, areaHeight: rect.height }),
+            createTextItem({
+              point: origin, areaWidth: rect.width, areaHeight: rect.height, orientation,
+            }),
           );
         }
       } else {
-        beginEdit(createTextItem({ point: startPoint }));
+        beginEdit(createTextItem({ point: startPoint, orientation }));
       }
       startPoint = null;
       isAreaDrag = false;
@@ -163,4 +168,15 @@ export function createTextTool(ctx = {}) {
       commit();
     },
   };
+}
+
+export function createTextTool(ctx = {}) {
+  return makeTextTool(ctx, { orientation: 'horizontal' });
+}
+
+// Vertical Type / Vertical Area Type / Vertical Type on a Path — one tool that
+// picks the mode by gesture (click / drag / click-a-path), like the horizontal
+// Type tool, but lays glyphs out in top-to-bottom columns.
+export function createVerticalTextTool(ctx = {}) {
+  return makeTextTool(ctx, { orientation: 'vertical' });
 }

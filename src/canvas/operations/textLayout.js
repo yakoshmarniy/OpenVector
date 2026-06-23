@@ -62,7 +62,9 @@ function wrap(raw, width, fs, ff, tr) {
   return out.join('\n');
 }
 
-export function createTextItem({ point, areaWidth = null, areaHeight = null, path = null }) {
+export function createTextItem({
+  point, areaWidth = null, areaHeight = null, path = null, orientation = 'horizontal',
+}) {
   const group = new paper.Group();
   // Keep moves in the group's matrix (glyphs stay in local coords) so a
   // re-layout after dragging the text doesn't snap it back to the origin.
@@ -78,6 +80,8 @@ export function createTextItem({ point, areaWidth = null, areaHeight = null, pat
   d.leading = DEFAULT_FONT_SIZE * 1.2;
   d.tracking = 0;
   d.justification = 'left';
+  d.orientation = orientation; // 'horizontal' | 'vertical'
+  d.glyphFx = {}; // per-glyph Touch Type transforms, keyed by glyph index
 
   if (path) {
     d.mode = 'path';
@@ -144,9 +148,61 @@ function layoutBlock(group) {
   });
 }
 
+// Columns of a vertical block: paragraphs (\n) start new columns; in area mode
+// a paragraph also wraps to a new column once it exceeds the box height.
+function verticalColumns(d, fs, tr) {
+  const raw = d.rawText || '';
+  const vStep = fs + tr;
+  const maxH = d.mode === 'area' ? d.areaHeight : null;
+  const cols = [];
+  raw.split('\n').forEach((para) => {
+    if (!para) {
+      cols.push('');
+      return;
+    }
+    if (maxH) {
+      const per = Math.max(1, Math.floor(maxH / vStep));
+      for (let i = 0; i < para.length; i += per) cols.push(para.slice(i, i + per));
+    } else {
+      cols.push(para);
+    }
+  });
+  return cols;
+}
+
+// Vertical text: glyphs stack downward in a column; columns advance leftwards
+// from the origin (tategaki). Each glyph is centred on its column axis.
+function layoutVertical(group) {
+  const d = group.data;
+  const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const vStep = fs + tr;
+  const colStep = d.leading;
+  const cols = verticalColumns(d, fs, tr);
+
+  cols.forEach((colText, ci) => {
+    const x = d.originX - ci * colStep;
+    for (let i = 0; i < colText.length; i += 1) {
+      const ch = colText[i];
+      if (ch === ' ') continue;
+      const y = d.originY + fs + i * vStep;
+      const cw = advance(ch, fs, ff);
+      const g = new paper.PointText({
+        point: [x - cw / 2, y],
+        content: ch,
+        fontSize: fs,
+        fontFamily: ff,
+        justification: 'left',
+      });
+      styleGlyph(g, d);
+      group.addChild(g);
+    }
+  });
+}
+
 function layoutPath(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const vertical = d.orientation === 'vertical';
   const guide = group.children.find((c) => c.data && c.data.isTextGuide);
   if (!guide) return;
   const len = guide.length;
@@ -170,14 +226,36 @@ function layoutPath(group) {
     });
     styleGlyph(g, d);
     group.addChild(g);
-    g.rotate(tan.angle, localPt);
+    // Vertical-on-path turns each glyph 90° so it reads across the path.
+    g.rotate(vertical ? tan.angle - 90 : tan.angle, localPt);
   }
 }
 
+// Per-glyph Touch Type transform: offset, then scale/rotate about the glyph.
+function applyGlyphFx(g, fx) {
+  if (!fx) return;
+  if (fx.dx || fx.dy) g.translate(new paper.Point(fx.dx || 0, fx.dy || 0));
+  const c = g.bounds.center;
+  if (fx.s && fx.s !== 1) g.scale(fx.s, c);
+  if (fx.rot) g.rotate(fx.rot, c);
+}
+
 export function relayout(group) {
+  const d = group.data;
   group.children.filter((c) => c.data && c.data.glyph).forEach((c) => c.remove());
-  if (group.data.mode === 'path') layoutPath(group);
+  if (d.mode === 'path') layoutPath(group);
+  else if (d.orientation === 'vertical') layoutVertical(group);
   else layoutBlock(group);
+
+  // Index glyphs in reading order and apply any Touch Type transforms.
+  let i = 0;
+  group.children
+    .filter((c) => c.data && c.data.glyph)
+    .forEach((g) => {
+      g.data.glyphIndex = i;
+      applyGlyphFx(g, d.glyphFx && d.glyphFx[i]);
+      i += 1;
+    });
 }
 
 // Caret endpoints in GLOBAL coordinates (the caret overlay lives outside group).
@@ -194,6 +272,19 @@ export function caretSegment(group) {
     const tan = (guide && guide.getTangentAt(off)) || new paper.Point(1, 0);
     const normal = tan.rotate(-90);
     return { from: gpt, to: gpt.add(normal.multiply(fs)) };
+  }
+
+  if (d.orientation === 'vertical') {
+    const vStep = fs + tr;
+    const cols = verticalColumns(d, fs, tr);
+    const ci = Math.max(0, cols.length - 1);
+    const count = cols.length ? cols[ci].length : 0;
+    const x = d.originX - ci * d.leading;
+    const y = d.originY + fs + count * vStep - fs * 0.5;
+    return {
+      from: group.localToGlobal(new paper.Point(x - fs * 0.4, y)),
+      to: group.localToGlobal(new paper.Point(x + fs * 0.4, y)),
+    };
   }
 
   const raw = d.rawText || '';
@@ -219,8 +310,12 @@ export function hitRegion(group) {
   let region = group.children.some((c) => c.data && c.data.glyph) ? group.bounds : null;
 
   if (d.mode === 'area' && d.areaWidth) {
-    const tl = group.localToGlobal(new paper.Point(d.originX, d.originY));
-    const br = group.localToGlobal(new paper.Point(d.originX + d.areaWidth, d.originY + (d.areaHeight || 0)));
+    // Vertical area columns run leftwards from the origin, so the box is on the
+    // left of originX; horizontal area extends to the right.
+    const x1 = d.orientation === 'vertical' ? d.originX - d.areaWidth : d.originX;
+    const x2 = d.orientation === 'vertical' ? d.originX : d.originX + d.areaWidth;
+    const tl = group.localToGlobal(new paper.Point(x1, d.originY));
+    const br = group.localToGlobal(new paper.Point(x2, d.originY + (d.areaHeight || 0)));
     const box = new paper.Rectangle(tl, br);
     region = region ? region.unite(box) : box;
   }

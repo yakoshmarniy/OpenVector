@@ -22,6 +22,8 @@ export const TOOLS = {
   RECTANGULAR_GRID: 'rectangularGrid',
   POLAR_GRID: 'polarGrid',
   TEXT: 'text',
+  VERTICAL_TEXT: 'verticalText',
+  TOUCH_TYPE: 'touchType',
   RECTANGLE: 'rectangle',
   ROUNDED_RECTANGLE: 'roundedRectangle',
   ELLIPSE: 'ellipse',

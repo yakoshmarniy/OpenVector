@@ -26,7 +26,8 @@ import { createScissorsTool } from '../../canvas/tools/scissorsTool.js';
 import { createKnifeTool } from '../../canvas/tools/knifeTool.js';
 import { createRectangularGridTool } from '../../canvas/tools/rectangularGridTool.js';
 import { createPolarGridTool } from '../../canvas/tools/polarGridTool.js';
-import { createTextTool } from '../../canvas/tools/textTool.js';
+import { createTextTool, createVerticalTextTool } from '../../canvas/tools/textTool.js';
+import { createTouchTypeTool } from '../../canvas/tools/touchTypeTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
 import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
 import { createEllipseTool } from '../../canvas/tools/ellipseTool.js';
@@ -62,6 +63,8 @@ const TOOL_FACTORIES = {
   [TOOLS.RECTANGULAR_GRID]: createRectangularGridTool,
   [TOOLS.POLAR_GRID]: createPolarGridTool,
   [TOOLS.TEXT]: createTextTool,
+  [TOOLS.VERTICAL_TEXT]: createVerticalTextTool,
+  [TOOLS.TOUCH_TYPE]: createTouchTypeTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
   [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,
   [TOOLS.ELLIPSE]: createEllipseTool,
