@@ -1,9 +1,12 @@
 import paper from 'paper';
 import { overlayed } from '../operations/freehand.js';
+import { createSelection } from '../operations/selection.js';
 
 // Knife — drag a freehand line across closed shapes to slice each into two
 // pieces along the cut. For each crossed shape we take the chord of the knife
 // between its outermost crossings and rejoin it with the two boundary arcs.
+// After cutting, the resulting pieces are selected so the cut is visible and
+// they can be dragged apart straight away.
 
 // Trim an open path to the range [o1, o2], returning the middle piece.
 function trimOpen(p, o1, o2) {
@@ -31,15 +34,16 @@ function copyStyle(src, dst) {
   dst.strokeWidth = src.strokeWidth;
 }
 
+// Slice one closed path with the knife; returns the two pieces, or null.
 function sliceTarget(target, knife) {
-  if (target.closed === false) return;
+  if (target.closed === false) return null;
   let xs;
   try {
     xs = target.getIntersections(knife);
   } catch {
-    return;
+    return null;
   }
-  if (!xs || xs.length < 2) return;
+  if (!xs || xs.length < 2) return null;
   // Outermost crossings along the knife span the shape.
   xs.sort((a, b) => a.intersection.offset - b.intersection.offset);
   const f = xs[0];
@@ -61,16 +65,18 @@ function sliceTarget(target, knife) {
       copyStyle(target, arc1);
       copyStyle(target, arc2);
       target.remove();
-    } else {
-      arc1.remove();
-      arc2.remove();
+      return [arc1, arc2];
     }
+    arc1.remove();
+    arc2.remove();
+    return null;
   } catch {
-    /* leave the shape intact if the slice fails */
+    return null; // leave the shape intact if the slice fails
   }
 }
 
-export function createKnifeTool() {
+export function createKnifeTool(ctx = {}) {
+  const selection = createSelection(ctx.onSelectionChange, ctx.onSelectionBounds);
   let knife = null;
 
   const drop = () => {
@@ -82,6 +88,7 @@ export function createKnifeTool() {
     cursor: 'crosshair',
 
     onMouseDown(point) {
+      selection.clear();
       knife = new paper.Path();
       knife.strokeColor = new paper.Color('#9aa0a6');
       knife.strokeWidth = 1;
@@ -102,14 +109,28 @@ export function createKnifeTool() {
       const targets = paper.project.getItems({
         match: (it) => it.className === 'Path' && it !== knife && it.closed && !overlayed(it),
       });
+      const pieces = [];
       targets.forEach((t) => {
-        if (t.bounds.intersects(knife.bounds)) sliceTarget(t, knife);
+        if (!t.bounds.intersects(knife.bounds)) return;
+        const cut = sliceTarget(t, knife);
+        if (cut) pieces.push(...cut);
       });
       drop();
+      // Select the fresh pieces so the cut is visible and immediately movable.
+      if (pieces.length) selection.setTargets(pieces);
+    },
+
+    onViewChange() {
+      selection.draw();
+    },
+
+    refreshSelection() {
+      selection.draw();
     },
 
     deactivate() {
       drop();
+      selection.clear();
     },
   };
 }
