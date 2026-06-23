@@ -62,8 +62,26 @@ function normalizedRect(p1, p2) {
   return new paper.Rectangle(new paper.Point(x, y), new paper.Size(w, h));
 }
 
-export function computeResizeBounds(handle, ob, mouse, shift) {
+export function computeResizeBounds(handle, ob, mouse, shift, alt) {
   const isCorner = handle.length === 2;
+
+  // Alt — scale symmetrically about the centre (both sides move together).
+  if (alt) {
+    const c = ob.center;
+    let hw = ob.width / 2;
+    let hh = ob.height / 2;
+    if (handle.includes('e') || handle.includes('w')) hw = Math.abs(mouse.x - c.x);
+    if (handle.includes('n') || handle.includes('s')) hh = Math.abs(mouse.y - c.y);
+    if (shift && isCorner) {
+      const ratio = ob.width / ob.height || 1;
+      if (hw / ratio > hh) hh = hw / ratio;
+      else hw = hh * ratio;
+    }
+    hw = Math.max(0.5, hw);
+    hh = Math.max(0.5, hh);
+    return new paper.Rectangle(new paper.Point(c.x - hw, c.y - hh), new paper.Size(hw * 2, hh * 2));
+  }
+
   if (shift && isCorner) {
     const fixed = {
       nw: ob.bottomRight, ne: ob.bottomLeft, se: ob.topLeft, sw: ob.topRight,

@@ -46,6 +46,10 @@ export function createSelectTool(ctx = {}) {
   let moveOrigin = [];
   let moveUnion = null;
   let guides = null;
+  // Rotation (drag just outside a corner): fixed centre + accumulated angle.
+  let rotateCenter = null;
+  let rotateStart = 0;
+  let rotateApplied = 0;
 
   const clearMarquee = () => {
     if (marqueePath) {
@@ -97,6 +101,23 @@ export function createSelectTool(ctx = {}) {
     guides.bringToFront();
   };
 
+  // A point just OUTSIDE a corner of the selection box → rotate zone.
+  const rotateZone = (point) => {
+    if (!selection.targets.length) return null;
+    const b = selection.bounds;
+    if (!b || b.contains(point)) return null;
+    const z = paper.view.zoom;
+    const hs = 8 / z;
+    const margin = 26 / z;
+    const corners = { nw: b.topLeft, ne: b.topRight, se: b.bottomRight, sw: b.bottomLeft };
+    let best = null;
+    Object.keys(corners).forEach((k) => {
+      const d = point.getDistance(corners[k]);
+      if (d > hs && d <= margin && (!best || d < best.d)) best = { k, d };
+    });
+    return best ? best.k : null;
+  };
+
   return {
     cursor: 'default',
 
@@ -109,6 +130,15 @@ export function createSelectTool(ctx = {}) {
         return;
       }
 
+      // Drag just outside a corner → rotate around the selection centre.
+      if (rotateZone(point)) {
+        mode = 'rotate';
+        rotateCenter = selection.bounds.center;
+        rotateStart = point.subtract(rotateCenter).angle;
+        rotateApplied = 0;
+        return;
+      }
+
       const item = pickItem(point);
       const additive = !!(e && e.shiftKey);
 
@@ -118,6 +148,8 @@ export function createSelectTool(ctx = {}) {
           mode = null;
         } else {
           if (!selection.has(item)) selection.setTarget(item);
+          // Alt+drag leaves the originals and moves duplicates.
+          if (e && e.altKey) selection.setTargets(selection.targets.map((t) => t.clone()));
           mode = 'move';
           moveStart = point;
           moveOrigin = selection.targets.map((t) => t.position.clone());
@@ -133,7 +165,13 @@ export function createSelectTool(ctx = {}) {
 
     onMouseDrag(point, delta, e) {
       if (mode === 'move' && selection.targets.length && moveUnion) {
-        const raw = point.subtract(moveStart);
+        let raw = point.subtract(moveStart);
+        // Shift constrains the move to the horizontal or vertical axis.
+        if (e && e.shiftKey) {
+          raw = Math.abs(raw.x) >= Math.abs(raw.y)
+            ? new paper.Point(raw.x, 0)
+            : new paper.Point(0, raw.y);
+        }
         const snap = ctx.getSnap ? ctx.getSnap() : { grid: false, objects: false };
         const { dx, dy, guideXs, guideYs } = snapMove(moveUnion, raw, snap, selection.targets);
         const d = new paper.Point(dx, dy);
@@ -149,8 +187,19 @@ export function createSelectTool(ctx = {}) {
           originalBounds,
           point,
           !!(e && e.shiftKey),
+          !!(e && e.altKey),
         );
         selection.draw();
+      } else if (mode === 'rotate' && rotateCenter) {
+        const cur = point.subtract(rotateCenter).angle;
+        let desired = cur - rotateStart;
+        if (e && e.shiftKey) desired = Math.round(desired / 15) * 15;
+        const step = desired - rotateApplied;
+        if (step) {
+          selection.targets.forEach((t) => t.rotate(step, rotateCenter));
+          rotateApplied = desired;
+          selection.draw();
+        }
       } else if (mode === 'marquee' && marqueeStart) {
         drawMarquee(normRect(marqueeStart, point));
       }
@@ -179,16 +228,30 @@ export function createSelectTool(ctx = {}) {
       moveStart = null;
       moveOrigin = [];
       moveUnion = null;
+      rotateCenter = null;
     },
 
     onMouseHover(point) {
       const handle = selection.hitHandle(point);
       if (handle) return HANDLE_CURSOR[handle];
+      if (rotateZone(point)) return 'grab';
       return pickItem(point) ? 'move' : 'default';
     },
 
     onKeyDown(e) {
       if (!selection.targets.length) return;
+      // Arrow keys nudge the selection (Shift = larger step).
+      const nudge = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.code];
+      if (nudge) {
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        const d = new paper.Point(nudge[0] * step, nudge[1] * step);
+        selection.targets.forEach((t) => {
+          t.position = t.position.add(d);
+        });
+        selection.draw();
+        return;
+      }
       if (e.code === 'Delete' || e.code === 'Backspace') {
         e.preventDefault();
         selection.targets.forEach((t) => t.remove());
