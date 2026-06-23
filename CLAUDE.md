@@ -77,6 +77,9 @@ GitHub: https://github.com/yakoshmarniy/OpenVector  ·  Лицензия: MIT
 - [ ] Magic Wand, Lasso
 - [ ] Hand, Zoom
 
+> Lasso — ОДИН инструмент (freehand-выбор опорных точек), как в Illustrator. Других вариантов
+> нет и не планируется: Polygonal/Magnetic Lasso — это Photoshop (растр), вне векторной парности.
+
 **2.2 — Bounding box и трансформации мышью**
 - [ ] Bounding box: масштаб, поворот, Reset Bounding Box
 - [ ] Reference Point selector (9 позиций)
