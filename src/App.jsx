@@ -1,13 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
-import TopBar from './components/TopBar/TopBar.jsx';
+import MenuBar from './components/MenuBar/MenuBar.jsx';
+import ControlBar from './components/ControlBar/ControlBar.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
+import { TOOL_ITEMS } from './components/toolItems.jsx';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
 
 const emptySel = { count: 0, isGroup: false, style: null };
+const TOOL_LABELS = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i.label]));
 
 export default function App() {
   const [activeTool, setActiveTool] = useState(TOOLS.SELECT);
@@ -18,6 +21,7 @@ export default function App() {
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
+  const viewRef = useRef(null); // view-level commands (zoom/fit/new) into Canvas
   const pendingEditRef = useRef(null); // text item queued for editing (double-click)
   const snapRef = useRef(snap);
   snapRef.current = snap;
@@ -54,6 +58,38 @@ export default function App() {
     actionRef.current?.(name);
   }, []);
 
+  // Menu commands: view/document-level handled here, selection commands routed
+  // to the active tool (they apply when the Select tool holds the selection).
+  const handleCommand = useCallback(
+    (cmd) => {
+      switch (cmd) {
+        case 'snapGrid':
+          toggleSnap('grid');
+          break;
+        case 'snapObjects':
+          toggleSnap('objects');
+          break;
+        case 'toggleColumns':
+          setColumns((c) => (c === 2 ? 1 : 2));
+          break;
+        case 'zoomIn':
+        case 'zoomOut':
+        case 'zoomFit':
+        case 'zoomActual':
+          viewRef.current?.(cmd);
+          break;
+        case 'fileNew':
+          if (window.confirm('Start a new document? This clears the canvas.')) {
+            viewRef.current?.('clear');
+          }
+          break;
+        default:
+          actionRef.current?.(cmd);
+      }
+    },
+    [toggleSnap],
+  );
+
   const handleEditText = useCallback(
     (item) => {
       if (activeTool === TOOLS.TEXT) return;
@@ -73,7 +109,13 @@ export default function App() {
 
   return (
     <div className="app">
-      <TopBar snap={snap} onToggleSnap={toggleSnap} />
+      <MenuBar sel={sel} snap={snap} columns={columns} onCommand={handleCommand} />
+      <ControlBar
+        toolLabel={TOOL_LABELS[activeTool] || 'Tool'}
+        sel={sel}
+        onChange={handleStyleChange}
+        onAction={handleAction}
+      />
       <div className="app-body">
         <Toolbar
           activeTool={activeTool}
@@ -89,6 +131,7 @@ export default function App() {
           pendingEditRef={pendingEditRef}
           refreshRef={refreshSelRef}
           actionRef={actionRef}
+          viewRef={viewRef}
           snapRef={snapRef}
           onZoomChange={setZoom}
         />

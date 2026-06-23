@@ -200,9 +200,58 @@ export function createSelectTool(ctx = {}) {
 
     runAction(name) {
       const items = selection.targets.slice();
+
+      // Selection commands that don't need an existing selection.
+      if (name === 'selectAll') {
+        const all = paper.project.activeLayer.children.filter(
+          (it) => !isOverlayItem(it) && !it.locked,
+        );
+        selection.setTargets(all);
+        return;
+      }
+      if (name === 'deselect') {
+        selection.clear();
+        return;
+      }
+
+      if (!items.length) return;
+
       if (name === 'delete') {
         items.forEach((t) => t.remove());
         selection.clear();
+        return;
+      }
+      if (name === 'duplicate') {
+        const clones = items.map((t) => {
+          const c = t.clone();
+          c.position = c.position.add(new paper.Point(12, 12));
+          return c;
+        });
+        selection.setTargets(clones);
+        return;
+      }
+      if (name === 'arrangeFront') {
+        items.forEach((t) => t.bringToFront());
+        selection.draw();
+        return;
+      }
+      if (name === 'arrangeBack') {
+        items.slice().reverse().forEach((t) => t.sendToBack());
+        selection.draw();
+        return;
+      }
+      if (name === 'arrangeForward') {
+        items.forEach((t) => {
+          if (t.nextSibling && !isOverlayItem(t.nextSibling)) t.insertAbove(t.nextSibling);
+        });
+        selection.draw();
+        return;
+      }
+      if (name === 'arrangeBackward') {
+        items.forEach((t) => {
+          if (t.previousSibling) t.insertBelow(t.previousSibling);
+        });
+        selection.draw();
         return;
       }
       if (ALIGN_MODES[name]) {

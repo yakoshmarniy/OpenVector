@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
-import { pickItem } from '../../canvas/operations/selection.js';
+import { pickItem, isOverlayItem } from '../../canvas/operations/selection.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
 import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
@@ -87,6 +87,7 @@ export default function Canvas({
   pendingEditRef,
   refreshRef,
   actionRef,
+  viewRef,
   snapRef,
   onZoomChange,
 }) {
@@ -111,6 +112,54 @@ export default function Canvas({
   if (refreshRef) refreshRef.current = () => toolRef.current?.refreshSelection?.();
   // Let Properties buttons trigger group/boolean actions on the current tool.
   if (actionRef) actionRef.current = (name) => toolRef.current?.runAction?.(name);
+
+  // View-level commands from the menus (zoom, fit, new document).
+  if (viewRef) {
+    viewRef.current = (cmd) => {
+      const view = paper.view;
+      const clamp = (z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+      const applyZoom = (nz, pivot) => {
+        const oldZoom = view.zoom;
+        const z = clamp(nz);
+        if (z === oldZoom) return;
+        const beta = oldZoom / z;
+        const offset = pivot.subtract(view.center);
+        view.zoom = z;
+        view.center = view.center.add(offset.multiply(1 - beta));
+        toolRef.current?.onViewChange?.();
+        onZoomChangeRef.current?.(view.zoom);
+      };
+      if (cmd === 'zoomIn') applyZoom(view.zoom * ZOOM_STEP, view.center);
+      else if (cmd === 'zoomOut') applyZoom(view.zoom / ZOOM_STEP, view.center);
+      else if (cmd === 'zoomActual') applyZoom(1, view.center);
+      else if (cmd === 'zoomFit') {
+        const items = paper.project.activeLayer.children.filter((it) => !isOverlayItem(it));
+        if (!items.length) {
+          applyZoom(1, view.center);
+          return;
+        }
+        let b = items[0].bounds.clone();
+        for (let i = 1; i < items.length; i += 1) b = b.unite(items[i].bounds);
+        if (b.width < 1 || b.height < 1) {
+          applyZoom(1, b.center);
+          return;
+        }
+        const margin = 60;
+        view.zoom = clamp(Math.min(
+          (view.viewSize.width - margin) / b.width,
+          (view.viewSize.height - margin) / b.height,
+        ));
+        view.center = b.center;
+        toolRef.current?.onViewChange?.();
+        onZoomChangeRef.current?.(view.zoom);
+      } else if (cmd === 'clear') {
+        toolRef.current?.runAction?.('deselect');
+        paper.project.activeLayer.removeChildren();
+        onSelChangeRef.current?.(null);
+        paper.view.update();
+      }
+    };
+  }
 
   // Interaction state kept in refs so the (mount-once) DOM listeners
   // always read the latest values without re-binding.
@@ -250,6 +299,17 @@ export default function Canvas({
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG') {
         e.preventDefault();
         toolRef.current?.runAction?.(e.shiftKey ? 'ungroup' : 'group');
+        return;
+      }
+      // Select all / deselect / duplicate.
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyA') {
+        e.preventDefault();
+        toolRef.current?.runAction?.(e.shiftKey ? 'deselect' : 'selectAll');
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyD') {
+        e.preventDefault();
+        toolRef.current?.runAction?.('duplicate');
         return;
       }
       // Avoid Backspace navigating the browser back (no text inputs here).

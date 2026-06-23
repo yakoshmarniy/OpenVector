@@ -1,0 +1,114 @@
+.bar {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  gap: 10px;
+  background: var(--ov-panel);
+  border-bottom: 1px solid var(--ov-panel-border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tool {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ov-text);
+  flex-shrink: 0;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background: var(--ov-panel-border);
+  flex-shrink: 0;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--ov-text-dim);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatchLabel,
+.field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tag {
+  font-size: 12px;
+  color: var(--ov-text-dim);
+}
+
+.swatch {
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+}
+
+.swatch:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.number {
+  width: 54px;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+}
+
+.range {
+  width: 90px;
+}
+
+.btn {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: var(--ov-accent-active);
+}
+
+.iconRow {
+  display: flex;
+  gap: 3px;
+}
+
+.iconBtn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.iconBtn:hover {
+  border-color: var(--ov-accent-active);
+}
