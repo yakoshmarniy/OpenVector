@@ -17,6 +17,7 @@ export default function App() {
   const [sel, setSel] = useState(emptySel);
   const [snap, setSnap] = useState({ grid: false, objects: false });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [columns, setColumns] = useState(1);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
@@ -76,6 +77,9 @@ export default function App() {
         case 'zoomOut':
         case 'zoomFit':
         case 'zoomActual':
+        case 'rotateViewCW':
+        case 'rotateViewCCW':
+        case 'rotateViewReset':
           viewRef.current?.(cmd);
           break;
         case 'fileNew':
@@ -134,10 +138,11 @@ export default function App() {
           viewRef={viewRef}
           snapRef={snapRef}
           onZoomChange={setZoom}
+          onRotationChange={setRotation}
         />
         <Properties sel={sel} onChange={handleStyleChange} onAction={handleAction} />
       </div>
-      <StatusBar zoom={zoom} sel={sel} />
+      <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
 import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
 import { createHandTool } from '../../canvas/tools/handTool.js';
+import { createRotateViewTool } from '../../canvas/tools/rotateViewTool.js';
 import { createZoomTool } from '../../canvas/tools/zoomTool.js';
 import { createPenTool } from '../../canvas/tools/penTool.js';
 import {
@@ -44,6 +45,7 @@ const TOOL_FACTORIES = {
   [TOOLS.DIRECT_SELECT]: createDirectSelectTool,
   [TOOLS.GROUP_SELECT]: createGroupSelectTool,
   [TOOLS.HAND]: createHandTool,
+  [TOOLS.ROTATE_VIEW]: createRotateViewTool,
   [TOOLS.ZOOM]: createZoomTool,
   [TOOLS.PEN]: createPenTool,
   [TOOLS.ADD_ANCHOR]: createAddAnchorTool,
@@ -90,6 +92,7 @@ export default function Canvas({
   viewRef,
   snapRef,
   onZoomChange,
+  onRotationChange,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -102,6 +105,8 @@ export default function Canvas({
   onEditTextRef.current = onEditText;
   const onZoomChangeRef = useRef(onZoomChange);
   onZoomChangeRef.current = onZoomChange;
+  const onRotationChangeRef = useRef(onRotationChange);
+  onRotationChangeRef.current = onRotationChange;
 
   // Contextual task bar state (floats under the selection on the canvas).
   const [ctxRect, setCtxRect] = useState(null);
@@ -152,6 +157,10 @@ export default function Canvas({
         view.center = b.center;
         toolRef.current?.onViewChange?.();
         onZoomChangeRef.current?.(view.zoom);
+      } else if (cmd === 'rotateViewCW' || cmd === 'rotateViewCCW' || cmd === 'rotateViewReset') {
+        view.rotation = cmd === 'rotateViewReset' ? 0 : view.rotation + (cmd === 'rotateViewCW' ? 90 : -90);
+        toolRef.current?.onViewChange?.();
+        onRotationChangeRef.current?.(view.rotation);
       } else if (cmd === 'clear') {
         toolRef.current?.runAction?.('deselect');
         paper.project.activeLayer.removeChildren();
@@ -362,6 +371,7 @@ export default function Canvas({
         return item;
       },
       getSnap: () => snapRef?.current ?? { grid: false, objects: false },
+      onRotation: (deg) => onRotationChangeRef.current?.(deg),
       zoomAt: (point, dir) => {
         const view = paper.view;
         const oldZoom = view.zoom;

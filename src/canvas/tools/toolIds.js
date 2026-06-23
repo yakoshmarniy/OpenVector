@@ -34,5 +34,6 @@ export const TOOLS = {
   ARC: 'arc',
   SPIRAL: 'spiral',
   HAND: 'hand',
+  ROTATE_VIEW: 'rotateView',
   ZOOM: 'zoom',
 };

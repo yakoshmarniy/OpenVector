@@ -48,6 +48,15 @@ function HandIcon() {
   );
 }
 
+function RotateViewIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20 12a8 8 0 1 1-2.3-5.6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M20 4v4h-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function ZoomIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -362,5 +371,6 @@ export const TOOL_ITEMS = [
   { id: TOOLS.ARC, label: 'Arc', Icon: ArcIcon },
   { id: TOOLS.SPIRAL, label: 'Spiral', Icon: SpiralIcon },
   { id: TOOLS.HAND, label: 'Hand', Icon: HandIcon },
+  { id: TOOLS.ROTATE_VIEW, label: 'Rotate View', Icon: RotateViewIcon },
   { id: TOOLS.ZOOM, label: 'Zoom', Icon: ZoomIcon },
 ];
