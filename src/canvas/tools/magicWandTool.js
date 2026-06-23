@@ -3,29 +3,40 @@ import { createSelection, pickItem, isOverlayItem } from '../operations/selectio
 
 // Sum-of-RGB-channel tolerance (each channel 0..1, so 0..3 total).
 const TOL = 0.16;
+const WEIGHT_TOL = 1; // stroke-width tolerance in px
 
 const fillOf = (it) => it.fillColor || null;
 const strokeOf = (it) => it.strokeColor || null;
 
-function close(a, b) {
+function colorClose(a, b) {
   if (!a && !b) return true;
   if (!a || !b) return false;
   return Math.abs(a.red - b.red) + Math.abs(a.green - b.green) + Math.abs(a.blue - b.blue) <= TOL;
 }
 
-// Magic Wand — click an object to select every object with a similar fill (or
-// stroke, if the clicked object has no fill). Shift+click adds to the selection.
+// Effective stroke width (0 when there's no stroke).
+const weightOf = (it) => (it.strokeColor ? it.strokeWidth || 0 : 0);
+
+// Magic Wand — click an object to select every object with a similar appearance:
+// fill colour AND stroke colour AND stroke weight must all match (so stroke is
+// never ignored). Shift+click adds to the selection.
 export function createMagicWandTool(ctx = {}) {
   const selection = createSelection(ctx.onSelectionChange, ctx.onSelectionBounds);
 
   const matches = (ref) => {
     const refFill = fillOf(ref);
     const refStroke = strokeOf(ref);
-    if (!refFill && !refStroke) return [ref];
-    const useFill = !!refFill;
+    const refWeight = weightOf(ref);
     return paper.project.activeLayer.children.filter((it) => {
       if (isOverlayItem(it) || it.locked) return false;
-      return useFill ? close(fillOf(it), refFill) : close(strokeOf(it), refStroke);
+      if (it.className !== 'Path' && it.className !== 'CompoundPath' && it.className !== 'Shape') {
+        return false; // only match fillable/strokable artwork
+      }
+      return (
+        colorClose(fillOf(it), refFill) &&
+        colorClose(strokeOf(it), refStroke) &&
+        Math.abs(weightOf(it) - refWeight) <= WEIGHT_TOL
+      );
     });
   };
 
