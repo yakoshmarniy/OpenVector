@@ -164,6 +164,62 @@ function BlobBrushIcon() {
   );
 }
 
+function ShaperIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="7" width="11" height="11" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M13 4c4 0 7 3 7 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+
+function EraserIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M8 19l-4-4a1.5 1.5 0 0 1 0-2.1l8-8a1.5 1.5 0 0 1 2.1 0l4 4a1.5 1.5 0 0 1 0 2.1l-6 6z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 19h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ScissorsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="6" cy="6" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="6" cy="18" r="2.4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 7.5L20 18M8 16.5L20 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function KnifeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 20c2-8 9-15 16-17-1 8-7 14-12 15z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M4 20l3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function RectangularGridIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="4" width="16" height="16" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M9.3 4v16M14.6 4v16M4 9.3h16M4 14.6h16" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
+function PolarGridIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.1" />
+      <path d="M12 4v16M4 12h16M6.3 6.3l11.4 11.4M17.7 6.3L6.3 17.7" stroke="currentColor" strokeWidth="1.1" />
+    </svg>
+  );
+}
+
 function TextIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -270,6 +326,12 @@ export const TOOL_ITEMS = [
   { id: TOOLS.JOIN, label: 'Join', Icon: JoinIcon },
   { id: TOOLS.PAINTBRUSH, label: 'Paintbrush', Icon: PaintbrushIcon },
   { id: TOOLS.BLOB_BRUSH, label: 'Blob Brush', Icon: BlobBrushIcon },
+  { id: TOOLS.SHAPER, label: 'Shaper', Icon: ShaperIcon },
+  { id: TOOLS.ERASER, label: 'Eraser', Icon: EraserIcon },
+  { id: TOOLS.SCISSORS, label: 'Scissors', Icon: ScissorsIcon },
+  { id: TOOLS.KNIFE, label: 'Knife', Icon: KnifeIcon },
+  { id: TOOLS.RECTANGULAR_GRID, label: 'Rectangular Grid', Icon: RectangularGridIcon },
+  { id: TOOLS.POLAR_GRID, label: 'Polar Grid', Icon: PolarGridIcon },
   { id: TOOLS.TEXT, label: 'Text', Icon: TextIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
   { id: TOOLS.ROUNDED_RECTANGLE, label: 'Rounded Rectangle', Icon: RoundedRectangleIcon },

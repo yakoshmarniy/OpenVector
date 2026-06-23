@@ -20,6 +20,12 @@ import { createPathEraserTool } from '../../canvas/tools/pathEraserTool.js';
 import { createJoinTool } from '../../canvas/tools/joinTool.js';
 import { createPaintbrushTool } from '../../canvas/tools/paintbrushTool.js';
 import { createBlobBrushTool } from '../../canvas/tools/blobBrushTool.js';
+import { createShaperTool } from '../../canvas/tools/shaperTool.js';
+import { createEraserTool } from '../../canvas/tools/eraserTool.js';
+import { createScissorsTool } from '../../canvas/tools/scissorsTool.js';
+import { createKnifeTool } from '../../canvas/tools/knifeTool.js';
+import { createRectangularGridTool } from '../../canvas/tools/rectangularGridTool.js';
+import { createPolarGridTool } from '../../canvas/tools/polarGridTool.js';
 import { createTextTool } from '../../canvas/tools/textTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
 import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
@@ -49,6 +55,12 @@ const TOOL_FACTORIES = {
   [TOOLS.JOIN]: createJoinTool,
   [TOOLS.PAINTBRUSH]: createPaintbrushTool,
   [TOOLS.BLOB_BRUSH]: createBlobBrushTool,
+  [TOOLS.SHAPER]: createShaperTool,
+  [TOOLS.ERASER]: createEraserTool,
+  [TOOLS.SCISSORS]: createScissorsTool,
+  [TOOLS.KNIFE]: createKnifeTool,
+  [TOOLS.RECTANGULAR_GRID]: createRectangularGridTool,
+  [TOOLS.POLAR_GRID]: createPolarGridTool,
   [TOOLS.TEXT]: createTextTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
   [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,
