@@ -1,6 +1,7 @@
 import paper from 'paper';
 import { overlayed } from '../operations/freehand.js';
 import { createSelection } from '../operations/selection.js';
+import { runSelectionAction } from '../operations/selectionActions.js';
 
 // Knife — drag a freehand line across closed shapes to slice each into two
 // pieces along the cut. For each crossed shape we take the chord of the knife
@@ -118,6 +119,10 @@ export function createKnifeTool(ctx = {}) {
       drop();
       // Select the fresh pieces so the cut is visible and immediately movable.
       if (pieces.length) selection.setTargets(pieces);
+    },
+
+    runAction(name) {
+      runSelectionAction(selection, name);
     },
 
     onViewChange() {

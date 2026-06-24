@@ -1,5 +1,6 @@
 import paper from 'paper';
 import { createSelection, pickItem, isOverlayItem } from '../operations/selection.js';
+import { runSelectionAction } from '../operations/selectionActions.js';
 
 // Sum-of-RGB-channel tolerance (each channel 0..1, so 0..3 total).
 const TOL = 0.16;
@@ -63,6 +64,10 @@ export function createMagicWandTool(ctx = {}) {
       } else if (e.code === 'Escape') {
         selection.clear();
       }
+    },
+
+    runAction(name) {
+      runSelectionAction(selection, name);
     },
 
     onViewChange() {

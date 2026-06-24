@@ -5,8 +5,7 @@ import {
   computeResizeBounds,
   isOverlayItem,
 } from '../operations/selection.js';
-import { groupItems, ungroupItems, booleanOp } from '../operations/booleans.js';
-import { alignItems, distributeItems } from '../operations/align.js';
+import { runSelectionAction } from '../operations/selectionActions.js';
 import { snapMove } from '../operations/snapping.js';
 
 function normRect(a, b) {
@@ -21,11 +20,6 @@ const HANDLE_CURSOR = {
   ne: 'nesw-resize', sw: 'nesw-resize',
   n: 'ns-resize', s: 'ns-resize',
   e: 'ew-resize', w: 'ew-resize',
-};
-
-const ALIGN_MODES = {
-  alignLeft: 'left', alignHCenter: 'hcenter', alignRight: 'right',
-  alignTop: 'top', alignVCenter: 'vcenter', alignBottom: 'bottom',
 };
 
 /**
@@ -262,80 +256,7 @@ export function createSelectTool(ctx = {}) {
     },
 
     runAction(name) {
-      const items = selection.targets.slice();
-
-      // Selection commands that don't need an existing selection.
-      if (name === 'selectAll') {
-        const all = paper.project.activeLayer.children.filter(
-          (it) => !isOverlayItem(it) && !it.locked,
-        );
-        selection.setTargets(all);
-        return;
-      }
-      if (name === 'deselect') {
-        selection.clear();
-        return;
-      }
-
-      if (!items.length) return;
-
-      if (name === 'delete') {
-        items.forEach((t) => t.remove());
-        selection.clear();
-        return;
-      }
-      if (name === 'duplicate') {
-        const clones = items.map((t) => {
-          const c = t.clone();
-          c.position = c.position.add(new paper.Point(12, 12));
-          return c;
-        });
-        selection.setTargets(clones);
-        return;
-      }
-      if (name === 'arrangeFront') {
-        items.forEach((t) => t.bringToFront());
-        selection.draw();
-        return;
-      }
-      if (name === 'arrangeBack') {
-        items.slice().reverse().forEach((t) => t.sendToBack());
-        selection.draw();
-        return;
-      }
-      if (name === 'arrangeForward') {
-        items.forEach((t) => {
-          if (t.nextSibling && !isOverlayItem(t.nextSibling)) t.insertAbove(t.nextSibling);
-        });
-        selection.draw();
-        return;
-      }
-      if (name === 'arrangeBackward') {
-        items.forEach((t) => {
-          if (t.previousSibling) t.insertBelow(t.previousSibling);
-        });
-        selection.draw();
-        return;
-      }
-      if (ALIGN_MODES[name]) {
-        alignItems(items, ALIGN_MODES[name]);
-        selection.draw();
-      } else if (name === 'distributeH') {
-        distributeItems(items, 'h');
-        selection.draw();
-      } else if (name === 'distributeV') {
-        distributeItems(items, 'v');
-        selection.draw();
-      } else if (name === 'group') {
-        const g = groupItems(items);
-        if (g) selection.setTarget(g);
-      } else if (name === 'ungroup') {
-        const kids = ungroupItems(items[0]);
-        if (kids) selection.setTargets(kids);
-      } else {
-        const result = booleanOp(items, name);
-        if (result) selection.setTarget(result);
-      }
+      runSelectionAction(selection, name);
     },
 
     onViewChange() {
