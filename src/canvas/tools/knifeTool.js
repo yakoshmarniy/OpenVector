@@ -139,7 +139,16 @@ export function createKnifeTool(ctx = {}) {
       const pieces = [];
       targets.forEach((t) => {
         if (!t.bounds.intersects(knife.bounds)) return;
-        const cut = t.closed ? sliceTarget(t, knife) : sliceOpenPath(t, knife);
+        let cut;
+        if (t.closed || t.fillColor) {
+          // A region (incl. a shape opened by Scissors): zip any gap shut and
+          // divide it into two closed halves.
+          if (!t.closed) t.closed = true;
+          cut = sliceTarget(t, knife);
+        } else {
+          // A plain open stroke: split the line at each crossing.
+          cut = sliceOpenPath(t, knife);
+        }
         if (cut) pieces.push(...cut);
       });
       drop();

@@ -32,7 +32,6 @@ import { createPolarGridTool } from '../../canvas/tools/polarGridTool.js';
 import { createTextTool, createVerticalTextTool } from '../../canvas/tools/textTool.js';
 import { createTouchTypeTool } from '../../canvas/tools/touchTypeTool.js';
 import { createRectangleTool } from '../../canvas/tools/rectangleTool.js';
-import { createRoundedRectangleTool } from '../../canvas/tools/roundedRectangleTool.js';
 import { createEllipseTool } from '../../canvas/tools/ellipseTool.js';
 import { createPolygonTool } from '../../canvas/tools/polygonTool.js';
 import { createStarTool } from '../../canvas/tools/starTool.js';
@@ -72,7 +71,6 @@ const TOOL_FACTORIES = {
   [TOOLS.VERTICAL_TEXT]: createVerticalTextTool,
   [TOOLS.TOUCH_TYPE]: createTouchTypeTool,
   [TOOLS.RECTANGLE]: createRectangleTool,
-  [TOOLS.ROUNDED_RECTANGLE]: createRoundedRectangleTool,
   [TOOLS.ELLIPSE]: createEllipseTool,
   [TOOLS.POLYGON]: createPolygonTool,
   [TOOLS.STAR]: createStarTool,

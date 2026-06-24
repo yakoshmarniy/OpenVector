@@ -27,7 +27,6 @@ export const TOOLS = {
   VERTICAL_TEXT: 'verticalText',
   TOUCH_TYPE: 'touchType',
   RECTANGLE: 'rectangle',
-  ROUNDED_RECTANGLE: 'roundedRectangle',
   ELLIPSE: 'ellipse',
   POLYGON: 'polygon',
   STAR: 'star',

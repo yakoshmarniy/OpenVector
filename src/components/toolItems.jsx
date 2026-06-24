@@ -304,14 +304,6 @@ function LineIcon() {
   );
 }
 
-function RoundedRectangleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="6" width="16" height="12" rx="4" fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
 function PolygonIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -383,7 +375,6 @@ export const TOOL_ITEMS = [
   { id: TOOLS.VERTICAL_TEXT, label: 'Vertical Type', Icon: VerticalTextIcon },
   { id: TOOLS.TOUCH_TYPE, label: 'Touch Type', Icon: TouchTypeIcon },
   { id: TOOLS.RECTANGLE, label: 'Rectangle', Icon: RectangleIcon },
-  { id: TOOLS.ROUNDED_RECTANGLE, label: 'Rounded Rectangle', Icon: RoundedRectangleIcon },
   { id: TOOLS.ELLIPSE, label: 'Ellipse', Icon: EllipseIcon },
   { id: TOOLS.POLYGON, label: 'Polygon', Icon: PolygonIcon },
   { id: TOOLS.STAR, label: 'Star', Icon: StarIcon },
