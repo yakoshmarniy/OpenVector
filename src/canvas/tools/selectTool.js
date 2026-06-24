@@ -7,6 +7,20 @@ import {
 } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
 import { snapMove } from '../operations/snapping.js';
+import {
+  isLiveRect,
+  rectAxisAligned,
+  setRadius,
+  radiusWidgetPoint,
+} from '../operations/liveShape.js';
+
+// A curved-arrow cursor for the rotate zone (data-URI SVG, falls back to grab).
+const ROTATE_CURSOR =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'>"
+  + "<g fill='none' stroke='black' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'>"
+  + "<path d='M6 10a7 7 0 1 1 0 4'/><path d='M6 6v5h5'/></g>"
+  + "<g fill='none' stroke='white' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'>"
+  + "<path d='M6 10a7 7 0 1 1 0 4'/><path d='M6 6v5h5'/></g></svg>\") 12 12, grab";
 
 function normRect(a, b) {
   return new paper.Rectangle(
@@ -44,6 +58,9 @@ export function createSelectTool(ctx = {}) {
   let rotateCenter = null;
   let rotateStart = 0;
   let rotateApplied = 0;
+  // Live-shape corner-radius widget.
+  let widget = null;
+  let radiusItem = null;
 
   const clearMarquee = () => {
     if (marqueePath) {
@@ -112,10 +129,48 @@ export function createSelectTool(ctx = {}) {
     return best ? best.k : null;
   };
 
+  // Live-rectangle corner-radius widget (shown for a single axis-aligned live rect).
+  const clearWidget = () => {
+    if (widget) {
+      widget.remove();
+      widget = null;
+    }
+    radiusItem = null;
+  };
+
+  const drawWidget = () => {
+    clearWidget();
+    const t = selection.targets.length === 1 ? selection.targets[0] : null;
+    if (!t || !isLiveRect(t) || !rectAxisAligned(t)) return;
+    radiusItem = t;
+    const z = paper.view.zoom;
+    const s = 5 / z;
+    const c = radiusWidgetPoint(t);
+    widget = new paper.Path.Circle({ center: c, radius: s });
+    widget.fillColor = new paper.Color('#cfd3d7');
+    widget.strokeColor = new paper.Color('#3a3d41');
+    widget.strokeWidth = 1 / z;
+    widget.data.isSelectionOverlay = true;
+    widget.locked = true;
+    widget.bringToFront();
+  };
+
+  const widgetHit = (point) => {
+    if (!widget || !radiusItem) return false;
+    return widget.bounds.expand(8 / paper.view.zoom).contains(point);
+  };
+
   return {
     cursor: 'default',
 
     onMouseDown(point, e) {
+      // Live-rect corner-radius widget sits inside the box, so check it first.
+      if (widgetHit(point)) {
+        mode = 'radius';
+        return;
+      }
+      clearWidget();
+
       const handle = selection.hitHandle(point);
       if (handle && selection.target) {
         mode = 'resize';
@@ -194,6 +249,11 @@ export function createSelectTool(ctx = {}) {
           rotateApplied = desired;
           selection.draw();
         }
+      } else if (mode === 'radius' && radiusItem) {
+        const b = radiusItem.bounds;
+        setRadius(radiusItem, Math.min(point.x - b.left, point.y - b.top));
+        selection.draw();
+        drawWidget();
       } else if (mode === 'marquee' && marqueeStart) {
         drawMarquee(normRect(marqueeStart, point));
       }
@@ -223,12 +283,14 @@ export function createSelectTool(ctx = {}) {
       moveOrigin = [];
       moveUnion = null;
       rotateCenter = null;
+      drawWidget();
     },
 
     onMouseHover(point) {
+      if (widgetHit(point)) return 'pointer';
       const handle = selection.hitHandle(point);
       if (handle) return HANDLE_CURSOR[handle];
-      if (rotateZone(point)) return 'grab';
+      if (rotateZone(point)) return ROTATE_CURSOR;
       return pickItem(point) ? 'move' : 'default';
     },
 
@@ -244,14 +306,17 @@ export function createSelectTool(ctx = {}) {
           t.position = t.position.add(d);
         });
         selection.draw();
+        drawWidget();
         return;
       }
       if (e.code === 'Delete' || e.code === 'Backspace') {
         e.preventDefault();
         selection.targets.forEach((t) => t.remove());
         selection.clear();
+        clearWidget();
       } else if (e.code === 'Escape') {
         selection.clear();
+        clearWidget();
       }
     },
 
@@ -261,15 +326,18 @@ export function createSelectTool(ctx = {}) {
 
     onViewChange() {
       selection.draw();
+      drawWidget();
     },
 
     refreshSelection() {
       selection.draw();
+      drawWidget();
     },
 
     deactivate() {
       clearMarquee();
       clearGuides();
+      clearWidget();
       selection.clear();
     },
   };

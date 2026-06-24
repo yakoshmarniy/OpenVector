@@ -1,5 +1,6 @@
 import paper from 'paper';
 import { SHAPE_STYLE } from './styles.js';
+import { tagLiveRect } from '../operations/liveShape.js';
 
 const MAX_RADIUS = 40;
 
@@ -28,6 +29,7 @@ export function createRoundedRectangleTool() {
       path.fillColor = new paper.Color(SHAPE_STYLE.fillColor);
       path.strokeColor = new paper.Color(SHAPE_STYLE.strokeColor);
       path.strokeWidth = SHAPE_STYLE.strokeWidth;
+      tagLiveRect(path, r); // live rectangle with editable corner radius
     },
     onMouseUp() {
       if (path && path.bounds.width < 1 && path.bounds.height < 1) path.remove();

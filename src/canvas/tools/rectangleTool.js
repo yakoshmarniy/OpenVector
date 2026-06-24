@@ -1,5 +1,6 @@
 import paper from 'paper';
 import { SHAPE_STYLE } from './styles.js';
+import { tagLiveRect } from '../operations/liveShape.js';
 
 // Shift while drawing constrains to a perfect square, preserving drag direction.
 function constrainSquare(origin, point) {
@@ -27,6 +28,7 @@ export function createRectangleTool() {
         rectangle: new paper.Rectangle(point, point),
         ...SHAPE_STYLE,
       });
+      tagLiveRect(path, 0); // live rectangle with editable corner radius
     },
 
     onMouseDrag(point, _delta, e) {
