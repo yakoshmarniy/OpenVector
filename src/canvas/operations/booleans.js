@@ -21,6 +21,15 @@ export function ungroupItems(group) {
 
 const BOOL_OPS = ['unite', 'subtract', 'intersect', 'exclude'];
 
+// An empty / sub-pixel boolean result (e.g. intersect of shapes that don't
+// overlap). We must not keep it — and must not destroy the originals for it.
+function isDegenerate(p) {
+  if (!p) return true;
+  if (p.className === 'CompoundPath') return p.children.length === 0;
+  if (!p.segments || p.segments.length === 0) return true;
+  return Math.abs(p.area) < 0.5 && p.bounds.width < 1 && p.bounds.height < 1;
+}
+
 export function booleanOp(items, op) {
   if (!BOOL_OPS.includes(op)) return null;
   const paths = (items || []).filter(
@@ -38,6 +47,14 @@ export function booleanOp(items, op) {
     acc.remove();
     acc = next;
   }
+
+  // Nothing left (no overlap / fully cancelled): abort and keep the originals
+  // instead of leaving a stray pixel behind.
+  if (isDegenerate(acc)) {
+    if (acc) acc.remove();
+    return null;
+  }
+
   paths.forEach((p) => p.remove());
   return acc;
 }

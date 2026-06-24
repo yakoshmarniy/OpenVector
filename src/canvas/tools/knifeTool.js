@@ -76,6 +76,32 @@ function sliceTarget(target, knife) {
   }
 }
 
+// Slice an OPEN path: split it at every knife crossing into separate pieces.
+// (Needed for shapes already opened by the Scissors tool, and for plain strokes.)
+function sliceOpenPath(target, knife) {
+  let xs;
+  try {
+    xs = target.getIntersections(knife);
+  } catch {
+    return null;
+  }
+  if (!xs || !xs.length) return null;
+  // Split from the far end inwards so earlier offsets stay valid.
+  const offsets = xs.map((x) => x.offset).sort((a, b) => b - a);
+  const pieces = [];
+  let cur = target;
+  offsets.forEach((off) => {
+    const loc = cur.getLocationAt(off);
+    if (!loc) return;
+    const piece = cur.splitAt(loc);
+    if (piece) {
+      copyStyle(target, piece);
+      pieces.push(piece);
+    }
+  });
+  return pieces.length ? [...pieces, cur] : null;
+}
+
 export function createKnifeTool(ctx = {}) {
   const selection = createSelection(ctx.onSelectionChange, ctx.onSelectionBounds);
   let knife = null;
@@ -108,12 +134,12 @@ export function createKnifeTool(ctx = {}) {
         return;
       }
       const targets = paper.project.getItems({
-        match: (it) => it.className === 'Path' && it !== knife && it.closed && !overlayed(it),
+        match: (it) => it.className === 'Path' && it !== knife && !it.locked && !overlayed(it),
       });
       const pieces = [];
       targets.forEach((t) => {
         if (!t.bounds.intersects(knife.bounds)) return;
-        const cut = sliceTarget(t, knife);
+        const cut = t.closed ? sliceTarget(t, knife) : sliceOpenPath(t, knife);
         if (cut) pieces.push(...cut);
       });
       drop();
