@@ -25,6 +25,79 @@ const BOOLEANS = [
   { id: 'exclude', label: 'Exclude' },
 ];
 
+function LineIcon({ kind }) {
+  const dash = { solid: undefined, dashed: '5 3', dotted: '0.1 3' }[kind];
+  return (
+    <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
+      <line x1="2" y1="7" x2="20" y2="7" stroke="currentColor" strokeWidth="2"
+        strokeLinecap={kind === 'dotted' ? 'round' : 'butt'} strokeDasharray={dash} />
+    </svg>
+  );
+}
+
+function CapIcon({ kind }) {
+  const cap = { butt: 'butt', round: 'round', square: 'square' }[kind];
+  return (
+    <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
+      <line x1="6" y1="7" x2="16" y2="7" stroke="currentColor" strokeWidth="6" strokeLinecap={cap} />
+      <line x1="6" y1="2" x2="6" y2="12" stroke="var(--ov-text-dim)" strokeWidth="0.75" />
+    </svg>
+  );
+}
+
+function JoinIcon({ kind }) {
+  const join = { miter: 'miter', round: 'round', bevel: 'bevel' }[kind];
+  return (
+    <svg width="22" height="14" viewBox="0 0 22 14" aria-hidden="true">
+      <polyline points="4,12 4,4 18,4" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin={join} />
+    </svg>
+  );
+}
+
+const LINE_TYPES = [
+  { id: 'solid', label: 'Solid', Icon: LineIcon },
+  { id: 'dashed', label: 'Dashed', Icon: LineIcon },
+  { id: 'dotted', label: 'Dotted', Icon: LineIcon },
+];
+const CAPS = [
+  { id: 'butt', label: 'Butt cap', Icon: CapIcon },
+  { id: 'round', label: 'Round cap', Icon: CapIcon },
+  { id: 'square', label: 'Square cap', Icon: CapIcon },
+];
+const JOINS = [
+  { id: 'miter', label: 'Miter join', Icon: JoinIcon },
+  { id: 'round', label: 'Round join', Icon: JoinIcon },
+  { id: 'bevel', label: 'Bevel join', Icon: JoinIcon },
+];
+
+// One row of mutually-exclusive icon buttons.
+function Seg({ options, value, onPick, disabled }) {
+  return (
+    <div className={styles.alignGroup}>
+      {options.map((o) => {
+        const Icon = o.Icon;
+        const active = value === o.id;
+        return (
+          <button key={o.id} type="button" title={o.label} aria-label={o.label} aria-pressed={active}
+            disabled={disabled}
+            className={active ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
+            onClick={() => onPick(o.id)}>
+            <Icon kind={o.id} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Translate a line-type preset into a concrete dash pattern (scaled by width).
+function dashPatternFor(lineType, strokeWidth) {
+  const w = Math.max(1, strokeWidth || 1);
+  if (lineType === 'dashed') return [w * 3, w * 2];
+  if (lineType === 'dotted') return [0, w * 2];
+  return [];
+}
+
 const ALIGNS = [
   { id: 'alignLeft', label: 'Align left', glyph: 'L' },
   { id: 'alignHCenter', label: 'Align centers (horizontal)', glyph: 'C' },
@@ -110,6 +183,71 @@ function StyleControls({ style, onChange }) {
           value={style.strokeWidth} disabled={!style.hasStroke}
           onChange={(e) => onChange({ strokeWidth: Number(e.target.value) })} />
       </div>
+
+      {!style.isText && (
+        <div className={styles.strokeDetail}>
+          <div className={styles.row}>
+            <span className={styles.label}>Line</span>
+            <Seg options={LINE_TYPES} value={style.lineType} disabled={!style.hasStroke}
+              onPick={(id) => onChange({
+                dashArray: dashPatternFor(id, style.strokeWidth),
+                strokeCap: id === 'dotted' ? 'round' : style.strokeCap,
+              })} />
+          </div>
+
+          <div className={styles.row}>
+            <span className={styles.label}>Cap</span>
+            <Seg options={CAPS} value={style.strokeCap} disabled={!style.hasStroke}
+              onPick={(id) => onChange({ strokeCap: id })} />
+          </div>
+
+          <div className={styles.row}>
+            <span className={styles.label}>Join</span>
+            <Seg options={JOINS} value={style.strokeJoin} disabled={!style.hasStroke}
+              onPick={(id) => onChange({ strokeJoin: id })} />
+          </div>
+
+          {style.lineType !== 'solid' && (
+            <div className={styles.row}>
+              <span className={styles.label}>Dash</span>
+              <input type="number" className={styles.numberSm} min="0" step="1"
+                value={Math.round(style.dashArray[0] ?? 0)} disabled={!style.hasStroke}
+                onChange={(e) => onChange({
+                  dashArray: [Math.max(0, Number(e.target.value)), style.dashArray[1] ?? 3],
+                })} />
+              <span className={styles.gapLabel}>Gap</span>
+              <input type="number" className={styles.numberSm} min="0" step="1"
+                value={Math.round(style.dashArray[1] ?? 0)} disabled={!style.hasStroke}
+                onChange={(e) => onChange({
+                  dashArray: [style.dashArray[0] ?? 0, Math.max(0, Number(e.target.value))],
+                })} />
+            </div>
+          )}
+
+          {style.isOpenPath && (
+            <>
+              <span className={styles.subLabel}>Arrowheads</span>
+              <div className={styles.row}>
+                <label className={styles.checkLabel}>
+                  <input type="checkbox" checked={style.arrowStart} disabled={!style.hasStroke}
+                    onChange={(e) => onChange({ arrowStart: e.target.checked })} />
+                  Start
+                </label>
+                <label className={styles.checkLabel}>
+                  <input type="checkbox" checked={style.arrowEnd} disabled={!style.hasStroke}
+                    onChange={(e) => onChange({ arrowEnd: e.target.checked })} />
+                  End
+                </label>
+                <input type="number" className={styles.numberSm} min="0.25" max="6" step="0.25"
+                  title="Arrowhead size"
+                  value={style.arrowScale}
+                  disabled={!style.hasStroke || (!style.arrowStart && !style.arrowEnd)}
+                  onChange={(e) => onChange({ arrowScale: Math.max(0.25, Number(e.target.value)) })} />
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       <div className={styles.row}>
         <span className={styles.label}>Opacity</span>

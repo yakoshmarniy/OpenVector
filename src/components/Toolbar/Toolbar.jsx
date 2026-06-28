@@ -20,7 +20,16 @@ const GROUPS = [
   [TOOLS.HAND, TOOLS.ROTATE_VIEW, TOOLS.ZOOM],
 ];
 
-export default function Toolbar({ activeTool, onSelectTool, paint, columns, onToggleColumns }) {
+export default function Toolbar({
+  activeTool,
+  onSelectTool,
+  paint,
+  paintFocus = 'fill',
+  onSetPaintFocus,
+  onSwapPaint,
+  columns,
+  onToggleColumns,
+}) {
   const [current, setCurrent] = useState({});
   const [openGroup, setOpenGroup] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -131,9 +140,32 @@ export default function Toolbar({ activeTool, onSelectTool, paint, columns, onTo
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.paint} title="Fill / Stroke">
-          <span className={styles.stroke} style={{ borderColor: paint?.stroke || 'var(--ov-text-dim)' }} />
-          <span className={styles.fill} style={{ background: paint?.fill || 'transparent' }} />
+        <div className={styles.paint} title="Fill / Stroke — X switches focus, Shift+X swaps">
+          <button
+            type="button"
+            aria-label="Stroke (X to focus)"
+            aria-pressed={paintFocus === 'stroke'}
+            className={paintFocus === 'stroke' ? `${styles.stroke} ${styles.paintActive}` : styles.stroke}
+            style={{ borderColor: paint?.stroke || 'var(--ov-text-dim)' }}
+            onClick={() => onSetPaintFocus?.('stroke')}
+          />
+          <button
+            type="button"
+            aria-label="Fill (X to focus)"
+            aria-pressed={paintFocus === 'fill'}
+            className={paintFocus === 'fill' ? `${styles.fill} ${styles.paintActive}` : styles.fill}
+            style={{ background: paint?.fill || 'transparent' }}
+            onClick={() => onSetPaintFocus?.('fill')}
+          />
+          <button
+            type="button"
+            className={styles.swap}
+            title="Swap fill and stroke (Shift+X)"
+            aria-label="Swap fill and stroke"
+            onClick={() => onSwapPaint?.()}
+          >
+            ⇄
+          </button>
         </div>
         <button
           type="button"

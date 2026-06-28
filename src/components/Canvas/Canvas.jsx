@@ -92,6 +92,7 @@ export default function Canvas({
   refreshRef,
   actionRef,
   viewRef,
+  paintRef,
   snapRef,
   onZoomChange,
   onRotationChange,
@@ -321,6 +322,13 @@ export default function Canvas({
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyD') {
         e.preventDefault();
         toolRef.current?.runAction?.('duplicate');
+        return;
+      }
+      // X swaps the active fill/stroke focus; Shift+X swaps the colours.
+      if (e.code === 'KeyX' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        if (e.shiftKey) paintRef?.current?.swap?.();
+        else paintRef?.current?.toggleFocus?.();
         return;
       }
       // Avoid Backspace navigating the browser back (no text inputs here).

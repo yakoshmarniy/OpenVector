@@ -1,5 +1,6 @@
 import paper from 'paper';
 import { hitRegion, isTextItem } from './textLayout.js';
+import { refreshArrowheads } from './arrowheads.js';
 
 // On-screen size of resize handles, in pixels (kept constant across zoom).
 const HANDLE_PX = 8;
@@ -142,6 +143,8 @@ export function createSelection(onChange, onBounds) {
 
   function draw() {
     remove();
+    // Keep any arrowheads following their paths as they move / resize / rotate.
+    targets.forEach((t) => refreshArrowheads(t));
     if (!targets.length) {
       reportBounds();
       return;

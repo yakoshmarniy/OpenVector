@@ -67,6 +67,51 @@
   font-variant-numeric: tabular-nums;
 }
 
+.strokeDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0 2px;
+  border-top: 1px solid var(--ov-panel-border);
+}
+
+.numberSm {
+  box-sizing: border-box;
+  width: 44px;
+  padding: 4px 6px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+}
+
+.numberSm:disabled {
+  opacity: 0.4;
+}
+
+.gapLabel {
+  color: var(--ov-text-dim);
+  font-size: 12px;
+}
+
+.checkLabel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ov-text);
+  font-size: 12px;
+}
+
+.checkLabel input:disabled {
+  opacity: 0.4;
+}
+
+.alignBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .textSection {
   display: flex;
   flex-direction: column;

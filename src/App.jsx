@@ -19,11 +19,13 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [columns, setColumns] = useState(1);
+  const [paintFocus, setPaintFocus] = useState('fill'); // which paint X-shortcuts target
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
   const viewRef = useRef(null); // view-level commands (zoom/fit/new) into Canvas
   const pendingEditRef = useRef(null); // text item queued for editing (double-click)
+  const paintRef = useRef(null); // X / Shift+X handlers, called from Canvas keydown
   const snapRef = useRef(snap);
   snapRef.current = snap;
 
@@ -58,6 +60,35 @@ export default function App() {
   const handleAction = useCallback((name) => {
     actionRef.current?.(name);
   }, []);
+
+  // Swap the selected item's fill and stroke colours (Shift+X).
+  const swapFillStroke = useCallback(() => {
+    const item = selItemsRef.current[0];
+    if (!item) return;
+    const s = readStyle(item);
+    if (s.isText) return;
+    applyStyle(item, {
+      fillColor: s.hasStroke ? s.strokeColor : null,
+      strokeColor: s.hasFill ? s.fillColor : null,
+    });
+    const fresh = readStyle(item);
+    setSel((prev) => ({
+      ...prev,
+      style: {
+        ...fresh,
+        fillColor: fresh.hasFill ? fresh.fillColor : s.strokeColor,
+        strokeColor: fresh.hasStroke ? fresh.strokeColor : s.fillColor,
+      },
+    }));
+    refreshSelRef.current?.();
+  }, []);
+
+  const togglePaintFocus = useCallback(() => {
+    setPaintFocus((f) => (f === 'fill' ? 'stroke' : 'fill'));
+  }, []);
+
+  // Expose the X-shortcut handlers to Canvas's global keydown handler.
+  paintRef.current = { swap: swapFillStroke, toggleFocus: togglePaintFocus };
 
   // Menu commands: view/document-level handled here, selection commands routed
   // to the active tool (they apply when the Select tool holds the selection).
@@ -125,6 +156,9 @@ export default function App() {
           activeTool={activeTool}
           onSelectTool={setActiveTool}
           paint={paint}
+          paintFocus={paintFocus}
+          onSetPaintFocus={setPaintFocus}
+          onSwapPaint={swapFillStroke}
           columns={columns}
           onToggleColumns={() => setColumns((c) => (c === 2 ? 1 : 2))}
         />
@@ -136,6 +170,7 @@ export default function App() {
           refreshRef={refreshSelRef}
           actionRef={actionRef}
           viewRef={viewRef}
+          paintRef={paintRef}
           snapRef={snapRef}
           onZoomChange={setZoom}
           onRotationChange={setRotation}

@@ -829,6 +829,34 @@ i18next пока не подключаем — это отдельный пун�
       (live rect, виджет на холсте), поэтому дубль не нужен. Удалён `roundedRectangleTool.js`, ссылки
       в toolIds/Canvas/toolItems/Toolbar. Прямоугольник рисуется обычным Rectangle и скругляется виджетом.
 
+### Сессия 18 — прогресс (✅ итерация 3.2)
+
+Объём: **фаза 3.2** добита — полная обводка + стрелки + Fill/Stroke индикатор.
+
+- [x] `itemStyle.js`: читает/пишет `strokeCap`, `strokeJoin`, `dashArray`, стрелки (`data.arrows`).
+      Тип линии (solid/dashed/dotted) выводится из dashArray+cap; пресет → конкретный паттерн
+      (`dashPatternFor`, масштаб по толщине). Dotted = `dashArray:[0, w*2]` + `strokeCap:'round'`.
+- [x] Properties: блок stroke-detail — Line (3 SVG-иконки), Cap (3), Join (3), Dash/Gap поля
+      (настраиваемый пунктир), Arrowheads (Start/End + размер). Стрелки показываются только для
+      открытых путей (`isOpenPath`). Все поля дизейблятся при выключенной обводке.
+- [x] `operations/arrowheads.js` — стрелки НЕ запекаются в путь: каждая = отдельный залитый
+      треугольник `data.isArrow`, привязан к пути через `data.ownerId` (id пути). `refreshArrowheads`
+      перестраивает (не двигает) их; вызывается из `selection.draw()` (на каждый redraw →
+      следуют за move/resize/rotate) и из `applyStyle` (цвет/толщина/тогглы меняют головку).
+      Поиск старых головок по ownerId (не по сохранённым ссылкам) → clone пути не трогает чужие.
+- [x] Fill/Stroke индикатор в Toolbar интерактивен: клик по свотчу = фокус, ⇄ = swap, клавиша
+      **X** = переключить фокус, **Shift+X** = поменять fill/stroke местами (`swapFillStroke` в App,
+      вызов из `Canvas.onKeyDown` через `paintRef`). X-хоткей гардит `!meta/!ctrl/!alt` (не ломает Cut).
+
+Заметки / решения сессии 18:
+- Стрелки `locked=true` → Paper hitTest их игнорирует (не выделяются), `selectAll` фильтрует по
+      `!locked`. Удаление пути чистит головки (`clearArrowheads` в `selectionActions.delete`);
+      duplicate строит свои головки для клона (`refreshArrowheads(c)`).
+- `numberSm` нужен `box-sizing: border-box`, иначе padding+border раздували поля и панель
+      переполнялась на ~24px (горизонтальный скролл). Проверено: scrollWidth 219 ≤ 220.
+- Проверено в браузере: линия dotted + стрелки с обоих концов рендерятся и переживают
+      снятие выделения; Shift+X на rect меняет #b9bcc0↔#7d8186; X переключает фокус свотча.
+
 ### Сверка с планом 20 фаз — что уже сделано
 
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
@@ -840,7 +868,7 @@ i18next пока не подключаем — это отдельный пун�
 - **2.1 (Toolbar/выделение):** ✅ ГОТОВО — 1/2 колонки + flyout, Select/Direct/Group, Magic Wand, Lasso, Hand/Zoom, drawer (список всех инструментов)
 - **2.2 (Bounding box/трансформации):** 🟡 масштаб ручками, **поворот за угол** (Shift=15°), Shift-констрейн перемещения, **Alt-копия при drag**, **Alt-масштаб от центра**, **nudge стрелками** (Shift=10) ✅ · ⬜ Reference Point (9 поз.), Reset BB + поворотный bounding-box, Transform Again, Drawing Modes, Screen Modes (F) — отложены, завязаны на поворотный бокс и Transform-панель (7.1)
 - **3.1 (Примитивы):** 🟡 все фигуры ✅; **live rectangle — скругление углов виджетом на холсте** ✅; поворот любой фигуры за угол с курсором-стрелкой ✅ · ⬜ live-параметры polygon/star/ellipse (стороны/лучи/pie-углы) — отложено
-- **3.2 (Заливка/обводка):** 🟡 заливка ✅, обводка цвет+толщина ✅, opacity ✅ · ⬜ тип/концы/углы/пунктир/стрелки
+- **3.2 (Заливка/обводка):** ✅ ГОТОВО — заливка, обводка (цвет+толщина), тип линии (solid/dashed/dotted), концы (butt/round/square), углы (miter/round/bevel), настраиваемый пунктир (Dash/Gap), стрелки на концах (Start/End + размер; живые — следуют за путём), opacity, Fill/Stroke индикатор в Toolbar (X — фокус, Shift+X — swap)
 - **4.1 (Pen):** ✅ ГОТОВО (Pen, Add/Delete/Convert Anchor, Curvature)
 - **4.2 (Свободное рисование/резка):** ✅ ГОТОВО — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
 - **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type

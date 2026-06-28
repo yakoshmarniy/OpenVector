@@ -1,4 +1,6 @@
+import paper from 'paper';
 import { isTextItem, readTextStyle, applyTextStyle } from './textLayout.js';
+import { refreshArrowheads } from './arrowheads.js';
 
 // Read/write the visual style of a Paper.js item as plain serialisable values,
 // so React (the Properties panel) can drive it without touching paper directly.
@@ -7,16 +9,35 @@ import { isTextItem, readTextStyle, applyTextStyle } from './textLayout.js';
 const DEFAULT_FILL = '#b9bcc0';
 const DEFAULT_STROKE = '#7d8186';
 
+// Classify the dash pattern back into the three UI presets.
+function lineTypeOf(dashArray, cap) {
+  if (!dashArray || !dashArray.length) return 'solid';
+  if (dashArray[0] === 0 && cap === 'round') return 'dotted';
+  return 'dashed';
+}
+
 export function readStyle(item) {
   if (isTextItem(item)) return readTextStyle(item);
 
+  const dashArray = item.dashArray && item.dashArray.length ? item.dashArray.slice() : [];
+  const strokeCap = item.strokeCap || 'butt';
+  const arrows = (item.data && item.data.arrows) || {};
   return {
     hasFill: !!item.fillColor,
     fillColor: item.fillColor ? item.fillColor.toCSS(true) : DEFAULT_FILL,
     hasStroke: !!item.strokeColor,
     strokeColor: item.strokeColor ? item.strokeColor.toCSS(true) : DEFAULT_STROKE,
     strokeWidth: item.strokeWidth ?? 0,
+    strokeCap,
+    strokeJoin: item.strokeJoin || 'miter',
+    dashArray,
+    lineType: lineTypeOf(dashArray, strokeCap),
     opacity: item.opacity ?? 1,
+    // Arrowheads only make sense on open paths.
+    isOpenPath: item instanceof paper.Path && !item.closed,
+    arrowStart: !!arrows.start,
+    arrowEnd: !!arrows.end,
+    arrowScale: arrows.scale || 1,
     isText: false,
   };
 }
@@ -30,5 +51,19 @@ export function applyStyle(item, patch) {
   if ('fillColor' in patch) item.fillColor = patch.fillColor;
   if ('strokeColor' in patch) item.strokeColor = patch.strokeColor;
   if ('strokeWidth' in patch) item.strokeWidth = patch.strokeWidth;
+  if ('strokeCap' in patch) item.strokeCap = patch.strokeCap;
+  if ('strokeJoin' in patch) item.strokeJoin = patch.strokeJoin;
+  if ('dashArray' in patch) item.dashArray = patch.dashArray || [];
   if ('opacity' in patch) item.opacity = patch.opacity;
+
+  if ('arrowStart' in patch || 'arrowEnd' in patch || 'arrowScale' in patch) {
+    const arrows = { ...(item.data.arrows || {}) };
+    if ('arrowStart' in patch) arrows.start = patch.arrowStart;
+    if ('arrowEnd' in patch) arrows.end = patch.arrowEnd;
+    if ('arrowScale' in patch) arrows.scale = patch.arrowScale;
+    item.data.arrows = arrows;
+  }
+
+  // Stroke colour / width / arrow toggles all change the heads — rebuild them.
+  refreshArrowheads(item);
 }

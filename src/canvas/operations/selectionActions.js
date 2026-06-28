@@ -2,6 +2,7 @@ import paper from 'paper';
 import { isOverlayItem } from './selection.js';
 import { groupItems, ungroupItems, booleanOp } from './booleans.js';
 import { alignItems, distributeItems } from './align.js';
+import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
 
 const ALIGN_MODES = {
   alignLeft: 'left',
@@ -36,13 +37,17 @@ export function runSelectionAction(selection, name) {
 
   switch (name) {
     case 'delete':
-      items.forEach((t) => t.remove());
+      items.forEach((t) => {
+        clearArrowheads(t);
+        t.remove();
+      });
       selection.clear();
       return;
     case 'duplicate': {
       const clones = items.map((t) => {
         const c = t.clone();
         c.position = c.position.add(new paper.Point(12, 12));
+        refreshArrowheads(c); // build the clone's own heads (config is copied)
         return c;
       });
       selection.setTargets(clones);
