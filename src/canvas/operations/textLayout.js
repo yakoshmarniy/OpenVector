@@ -240,6 +240,14 @@ function applyGlyphFx(g, fx) {
   if (fx.rot) g.rotate(fx.rot, c);
 }
 
+// Re-layout every text item — called when a font finishes loading, since
+// glyph advances measured before the load used fallback metrics.
+export function relayoutAllText() {
+  paper.project
+    .getItems({ match: (it) => it.data && it.data.isText })
+    .forEach(relayout);
+}
+
 export function relayout(group) {
   const d = group.data;
   group.children.filter((c) => c.data && c.data.glyph).forEach((c) => c.remove());
@@ -336,6 +344,7 @@ export function readTextStyle(group) {
     strokeColor: d.strokeColor || DEFAULT_STROKE,
     strokeWidth: d.strokeWidth || 0,
     opacity: group.opacity ?? 1,
+    fontFamily: d.fontFamily || DEFAULT_FONT,
     fontSize: d.fontSize,
     leading: d.leading,
     tracking: d.tracking || 0,
@@ -359,6 +368,10 @@ export function applyTextStyle(group, patch) {
     needsLayout = true;
   }
   if ('opacity' in patch) group.opacity = patch.opacity;
+  if ('fontFamily' in patch) {
+    d.fontFamily = patch.fontFamily || DEFAULT_FONT;
+    needsLayout = true;
+  }
   if ('fontSize' in patch) {
     d.fontSize = patch.fontSize;
     needsLayout = true;

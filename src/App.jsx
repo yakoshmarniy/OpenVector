@@ -5,6 +5,7 @@ import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
+import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
 import { TOOL_ITEMS } from './components/toolItems.jsx';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
@@ -20,6 +21,7 @@ export default function App() {
   const [rotation, setRotation] = useState(0);
   const [columns, setColumns] = useState(1);
   const [paintFocus, setPaintFocus] = useState('fill'); // which paint X-shortcuts target
+  const [fontsOpen, setFontsOpen] = useState(false);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
@@ -104,6 +106,9 @@ export default function App() {
         case 'toggleColumns':
           setColumns((c) => (c === 2 ? 1 : 2));
           break;
+        case 'openFonts':
+          setFontsOpen(true);
+          break;
         case 'zoomIn':
         case 'zoomOut':
         case 'zoomFit':
@@ -175,9 +180,15 @@ export default function App() {
           onZoomChange={setZoom}
           onRotationChange={setRotation}
         />
-        <Properties sel={sel} onChange={handleStyleChange} onAction={handleAction} />
+        <Properties
+          sel={sel}
+          onChange={handleStyleChange}
+          onAction={handleAction}
+          onManageFonts={() => setFontsOpen(true)}
+        />
       </div>
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
+      {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}
     </div>
   );
 }

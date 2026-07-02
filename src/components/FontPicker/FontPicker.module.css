@@ -1,0 +1,101 @@
+.root {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.button {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 6px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.buttonLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: var(--ov-text-dim);
+  font-size: 10px;
+}
+
+.popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.list {
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.groupTitle {
+  padding: 6px 8px 3px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ov-text-dim);
+}
+
+.item {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  border: none;
+  background: none;
+  color: var(--ov-text);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item:hover {
+  background: var(--ov-accent);
+}
+
+.itemActive {
+  background: var(--ov-accent-active);
+  color: #f0f1f2;
+}
+
+.manage {
+  padding: 6px 8px;
+  border: none;
+  border-top: 1px solid var(--ov-panel-border);
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.manage:hover {
+  background: var(--ov-accent);
+}

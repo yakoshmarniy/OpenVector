@@ -60,6 +60,8 @@ function buildMenus({ sel, snap, columns }) {
     {
       title: 'Type',
       items: [
+        { label: 'Fonts…', cmd: 'openFonts' },
+        sep,
         { label: 'Create Outlines', enabled: false, accel: '⌘⇧O' },
         { label: 'Find Font…', enabled: false },
         { label: 'Change Case', enabled: false },

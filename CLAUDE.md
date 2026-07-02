@@ -395,8 +395,9 @@ OpenVector/
 ```
 
 > Реальное состояние дерева на сейчас: есть `canvas/{tools,operations}`,
-> `components/{MenuBar,ControlBar,Toolbar,Properties,Canvas,StatusBar}`, `styles/`.
-> Папки `effects/`, `Panels/`, `AIPanel/`, `state/`, `i18n/`, `plugins/` появятся по мере
+> `components/{MenuBar,ControlBar,Toolbar,Properties,Canvas,StatusBar,FontPicker,FontsDialog}`,
+> `styles/`, `state/` (пока только `fonts.js`, сессия 19).
+> Папки `effects/`, `Panels/`, `AIPanel/`, `i18n/`, `plugins/` появятся по мере
 > соответствующих фаз. (Временный `TopBar/` удалён — его заменили Menu Bar + Control Bar.)
 
 ---
@@ -857,6 +858,43 @@ i18next пока не подключаем — это отдельный пун�
 - Проверено в браузере: линия dotted + стрелки с обоих концов рендерятся и переживают
       снятие выделения; Shift+X на rect меняет #b9bcc0↔#7d8186; X переключает фокус свотча.
 
+### Сессия 19 — прогресс (✅ итерация 5.2)
+
+Объём: **фаза 5.2** — шрифты (системные, файлы, Google Fonts, менеджер, превью).
+
+- [x] `src/state/fonts.js` — реестр шрифтов (первый модуль в `state/`): 3 группы (system/custom/google),
+      `subscribeFonts` для React и Canvas. Системные — курируемый список из 26 кандидатов,
+      детект через canvas-замер ширины против generic-фолбэков (на маке прошло 23 + 3 generic).
+- [x] Загрузка файлов .ttf/.otf/.woff/.woff2: `FontFace` + `document.fonts.add`; имя семейства из
+      имени файла, коллизии — суффикс «2». Файлы живут сессию (FontFace не сериализуется) — hint в UI.
+- [x] Google Fonts: инжект `<link>` css2 + верификация `document.fonts.load()`; неверное имя →
+      link.onerror → понятная ошибка, состояние не трогаем. Список персистится в localStorage
+      (`ov.fonts.google`) и восстанавливается на старте (по мере загрузки — notify → re-layout).
+- [x] `textLayout.js`: `fontFamily` в read/applyTextStyle (с re-layout), `relayoutAllText()`.
+- [x] `components/FontPicker/` — дропдаун в Properties (только для текста): кнопка и каждый пункт
+      рендерятся СВОИМ шрифтом, группы Loaded/Google/System, футер «Manage fonts…» → менеджер.
+- [x] `components/FontsDialog/` — менеджер (Type > Fonts…): редактируемая строка превью, превью
+      каждого семейства, загрузка файлов, Google (поле + Enter/Add + чипы-подсказки), удаление ✕.
+- [x] Canvas подписан на реестр: шрифт догрузился → `relayoutAllText` + refresh оверлея + update
+      (advance до загрузки мерялся фолбэком — метрики меняются).
+- [x] Retype (шрифт из картинки) — НЕ здесь: это AI, явно значится в 18.2 (AI Retype).
+
+Заметки / решения сессии 19:
+- **`document.fonts.check()` возвращает true для НЕзарегистрированного семейства** (vacuous truth) —
+  проверять загрузку через `document.fonts.load()` и длину результата. По той же причине детект
+  системных — canvas-замером (72px, строка m/l/W/@) против monospace И serif (отличие хотя бы
+  от одного = установлен), а не через check().
+- Грабли теста (не кода): синтетический keydown `code:'Space'` при НЕтекстовом инструменте включает
+  pan (`spaceDownRef`) и без keyup залипает — все последующие mousedown уходят в панораму.
+  Всегда слать keyup. Смена инструмента кликом по тулбару применяется в useEffect (асинхронно) —
+  клик по кнопке и события холста слать РАЗНЫМИ eval.
+- В headless-eval живой paper достаётся динамическим импортом точного URL из
+  `performance.getEntriesByType('resource')` (`/node_modules/.vite/deps/paper.js?v=…`);
+  `/@id/paper` возвращает ДРУГОЙ инстанс (project=null). Модули `/src/*.js` по прямому пути
+  импортируются тем же инстансом, что у приложения (проверено по общему состоянию).
+- `.claude/launch.json`: добавлен конфиг `openvector-alt` (порт 5181) на случай, когда 5180
+  занят dev-сервером параллельной сессии.
+
 ### Сверка с планом 20 фаз — что уже сделано
 
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
@@ -872,6 +910,7 @@ i18next пока не подключаем — это отдельный пун�
 - **4.1 (Pen):** ✅ ГОТОВО (Pen, Add/Delete/Convert Anchor, Curvature)
 - **4.2 (Свободное рисование/резка):** ✅ ГОТОВО — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
 - **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
+- **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
 - **5.3 (Типографика):** 🟡 размер/leading/tracking/justification ✅ · ⬜ панели Character/Paragraph/Tabs/Glyphs, Create Outlines, …
 - **6.1 (Организация):** 🟡 Align + Distribute, Group/Ungroup ✅ · ⬜ Arrange (z-order), Lock/Hide, Isolation Mode, Layers панель
 - **6.2 (Pathfinder):** 🟡 Add/Subtract/Intersect/Exclude ✅ · ⬜ Divide/Trim/Merge/Crop/Outline, Shape Builder, Compound Path, path-ops
@@ -882,9 +921,10 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**, **слои**,
 **Menu Bar / Control Bar**, **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 3.2 полная обводка (тип/концы/углы/пунктир/стрелки).
-Затем 5.2 Шрифты. Отложено: live-параметры polygon/star/ellipse (с 3.x/7.1); хвост 2.2
-(Reference Point, Reset BB + поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1.
+**Следующее по плану (ранние пробелы):** 5.3 Типографика (панели Character/Paragraph,
+Create Outlines, …). Затем 6.1 Организация (слои + единый стор выделения). Отложено:
+live-параметры polygon/star/ellipse (с 3.x/7.1); хвост 2.2 (Reference Point, Reset BB +
+поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1.
 
 > Грабли Paper: `project.getItems(fn)` с голой функцией НЕ работает (трактует fn как класс) —
 > нужно `getItems({ match: fn })`. Иначе фильтр молча возвращает 0.

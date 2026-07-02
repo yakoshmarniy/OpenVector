@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
 import { pickItem, isOverlayItem } from '../../canvas/operations/selection.js';
+import { relayoutAllText } from '../../canvas/operations/textLayout.js';
+import { subscribeFonts } from '../../state/fonts.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
 import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
@@ -364,6 +366,13 @@ export default function Canvas({
       paper.project?.clear();
     };
   }, []);
+
+  // A font that finishes loading changes glyph metrics — re-layout all text.
+  useEffect(() => subscribeFonts(() => {
+    relayoutAllText();
+    toolRef.current?.refreshSelection?.();
+    paper.view?.update();
+  }), []);
 
   // --- Swap the active tool when it changes ---
   useEffect(() => {

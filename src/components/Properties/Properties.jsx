@@ -1,4 +1,5 @@
 import styles from './Properties.module.css';
+import FontPicker from '../FontPicker/FontPicker.jsx';
 
 // labels are plain text for now; will move to i18next t() when i18n lands.
 
@@ -112,7 +113,7 @@ const DISTRIBUTE = [
   { id: 'distributeV', label: 'Distribute vertically', glyph: 'V' },
 ];
 
-function StyleControls({ style, onChange }) {
+function StyleControls({ style, onChange, onManageFonts }) {
   const opacityPct = Math.round(style.opacity * 100);
   const aligns = [
     { id: 'left', label: 'Align left' },
@@ -123,6 +124,14 @@ function StyleControls({ style, onChange }) {
     <>
       {style.isText && (
         <div className={styles.textSection}>
+          <div className={styles.row}>
+            <span className={styles.label}>Font</span>
+            <FontPicker
+              value={style.fontFamily}
+              onChange={(family) => onChange({ fontFamily: family })}
+              onManage={onManageFonts}
+            />
+          </div>
           <div className={styles.row}>
             <span className={styles.label}>Align</span>
             <div className={styles.alignGroup}>
@@ -263,7 +272,7 @@ function StyleControls({ style, onChange }) {
  * Right-hand panel. Adapts to the selection: nothing, a single item (style
  * controls), a group (ungroup), or several items (group + boolean ops).
  */
-export default function Properties({ sel, onChange, onAction }) {
+export default function Properties({ sel, onChange, onAction, onManageFonts }) {
   const { count, isGroup, style } = sel;
 
   if (count === 0) {
@@ -337,7 +346,9 @@ export default function Properties({ sel, onChange, onAction }) {
         </div>
       )}
 
-      {count === 1 && !isGroup && style && <StyleControls style={style} onChange={onChange} />}
+      {count === 1 && !isGroup && style && (
+        <StyleControls style={style} onChange={onChange} onManageFonts={onManageFonts} />
+      )}
     </aside>
   );
 }
