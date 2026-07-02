@@ -68,6 +68,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+.select {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 4px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
 .strokeDetail {
   display: flex;
   flex-direction: column;

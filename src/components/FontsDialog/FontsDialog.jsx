@@ -7,13 +7,19 @@ import styles from './FontsDialog.module.css';
 
 const DEFAULT_PREVIEW = 'The quick brown fox 0123';
 
-function FontRow({ family, preview, removable }) {
+function FontRow({ family, preview, size, removable }) {
   return (
     <div className={styles.fontRow}>
       <div className={styles.fontMeta}>
         <span className={styles.fontName}>{family}</span>
-        <span className={styles.fontSample} style={{ fontFamily: family }}>
+        <span className={styles.fontSample} style={{ fontFamily: family, fontSize: size }}>
           {preview || DEFAULT_PREVIEW}
+        </span>
+        <span className={styles.variantLine} style={{ fontFamily: family }}>
+          <span>Regular</span>
+          <span style={{ fontWeight: 700 }}>Bold</span>
+          <span style={{ fontStyle: 'italic' }}>Italic</span>
+          <span style={{ fontWeight: 700, fontStyle: 'italic' }}>Bold Italic</span>
         </span>
       </div>
       {removable && (
@@ -39,6 +45,7 @@ function FontRow({ family, preview, removable }) {
 export default function FontsDialog({ onClose }) {
   const [groups, setGroups] = useState(getFontGroups);
   const [preview, setPreview] = useState(DEFAULT_PREVIEW);
+  const [previewSize, setPreviewSize] = useState(20);
   const [googleName, setGoogleName] = useState('');
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState(null); // { kind: 'ok' | 'error', text }
@@ -94,6 +101,16 @@ export default function FontsDialog({ onClose }) {
               value={preview}
               onChange={(e) => setPreview(e.target.value)}
             />
+            <input
+              type="range"
+              className={styles.sizeRange}
+              title="Preview size"
+              min="12"
+              max="48"
+              value={previewSize}
+              onChange={(e) => setPreviewSize(Number(e.target.value))}
+            />
+            <span className={styles.sizeValue}>{previewSize}</span>
           </label>
 
           <div className={styles.addRow}>
@@ -150,7 +167,7 @@ export default function FontsDialog({ onClose }) {
             <>
               <div className={styles.groupTitle}>Loaded ({groups.custom.length})</div>
               {groups.custom.map((f) => (
-                <FontRow key={f} family={f} preview={preview} removable />
+                <FontRow key={f} family={f} preview={preview} size={previewSize} removable />
               ))}
             </>
           )}
@@ -158,13 +175,13 @@ export default function FontsDialog({ onClose }) {
             <>
               <div className={styles.groupTitle}>Google Fonts ({groups.google.length})</div>
               {groups.google.map((f) => (
-                <FontRow key={f} family={f} preview={preview} removable />
+                <FontRow key={f} family={f} preview={preview} size={previewSize} removable />
               ))}
             </>
           )}
           <div className={styles.groupTitle}>System ({groups.system.length})</div>
           {groups.system.map((f) => (
-            <FontRow key={f} family={f} preview={preview} />
+            <FontRow key={f} family={f} preview={preview} size={previewSize} />
           ))}
         </div>
       </div>

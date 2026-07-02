@@ -62,18 +62,16 @@
 }
 
 .item {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   width: 100%;
-  padding: 5px 8px;
+  padding: 5px 8px 6px;
   border: none;
   background: none;
   color: var(--ov-text);
-  font-size: 14px;
   text-align: left;
   cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .item:hover {
@@ -83,6 +81,26 @@
 .itemActive {
   background: var(--ov-accent-active);
   color: #f0f1f2;
+}
+
+.itemName {
+  font-size: 11px;
+  color: var(--ov-text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.itemActive .itemName {
+  color: #d5d7da;
+}
+
+.itemSample {
+  font-size: 17px;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .manage {

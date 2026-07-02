@@ -113,6 +113,12 @@ const DISTRIBUTE = [
   { id: 'distributeV', label: 'Distribute vertically', glyph: 'V' },
 ];
 
+// Standard weight ladder; faces the family lacks are synthesized by the browser.
+const WEIGHTS = [
+  [100, 'Thin'], [200, 'ExtraLight'], [300, 'Light'], [400, 'Regular'],
+  [500, 'Medium'], [600, 'SemiBold'], [700, 'Bold'], [800, 'ExtraBold'], [900, 'Black'],
+];
+
 function StyleControls({ style, onChange, onManageFonts }) {
   const opacityPct = Math.round(style.opacity * 100);
   const aligns = [
@@ -134,28 +140,27 @@ function StyleControls({ style, onChange, onManageFonts }) {
           </div>
           <div className={styles.row}>
             <span className={styles.label}>Style</span>
-            <div className={styles.alignGroup}>
-              <button
-                type="button"
-                title="Bold"
-                aria-label="Bold"
-                aria-pressed={(style.fontWeight || 400) >= 600}
-                className={(style.fontWeight || 400) >= 600 ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
-                onClick={() => onChange({ fontWeight: (style.fontWeight || 400) >= 600 ? 400 : 700 })}
-              >
-                <span style={{ fontWeight: 700 }}>B</span>
-              </button>
-              <button
-                type="button"
-                title="Italic"
-                aria-label="Italic"
-                aria-pressed={style.fontStyle === 'italic'}
-                className={style.fontStyle === 'italic' ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
-                onClick={() => onChange({ fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic' })}
-              >
-                <span style={{ fontStyle: 'italic' }}>I</span>
-              </button>
-            </div>
+            <select
+              className={styles.select}
+              title="Font weight"
+              aria-label="Font weight"
+              value={style.fontWeight ?? 400}
+              onChange={(e) => onChange({ fontWeight: Number(e.target.value) })}
+            >
+              {WEIGHTS.map(([w, name]) => (
+                <option key={w} value={w}>{name}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              title="Italic"
+              aria-label="Italic"
+              aria-pressed={style.fontStyle === 'italic'}
+              className={style.fontStyle === 'italic' ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
+              onClick={() => onChange({ fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic' })}
+            >
+              <span style={{ fontStyle: 'italic', fontFamily: 'Georgia, serif' }}>I</span>
+            </button>
           </div>
           <div className={styles.row}>
             <span className={styles.label}>Align</span>

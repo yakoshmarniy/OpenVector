@@ -3,25 +3,46 @@ import { getFontGroups, subscribeFonts } from '../../state/fonts.js';
 import styles from './FontPicker.module.css';
 
 const GROUP_TITLES = { custom: 'Loaded', google: 'Google Fonts', system: 'System' };
+const SAMPLE = 'Aa Bb Яя';
 
 /**
- * Font family dropdown: the button and every list entry render in their own
- * family (a native <select> can't style options). Footer opens the manager.
+ * Font family dropdown. Each entry is a card: family name in the UI font plus
+ * a sample line rendered in that family. Hovering an entry live-previews it on
+ * the selected text; closing without picking restores the original family.
  */
 export default function FontPicker({ value, onChange, onManage }) {
   const [open, setOpen] = useState(false);
   const [groups, setGroups] = useState(getFontGroups);
   const rootRef = useRef(null);
+  // Family committed when the popover opened; restored on close-without-pick.
+  const openedValueRef = useRef(value);
+  // Latest applied family (committed or hover preview) — avoids no-op churn.
+  const appliedRef = useRef(value);
+  appliedRef.current = value;
 
   useEffect(() => subscribeFonts(() => setGroups(getFontGroups())), []);
+
+  const openPopover = () => {
+    openedValueRef.current = value;
+    setOpen(true);
+  };
+
+  const revertPreview = () => {
+    if (appliedRef.current !== openedValueRef.current) onChange(openedValueRef.current);
+  };
+
+  const closeWithoutPick = () => {
+    revertPreview();
+    setOpen(false);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
     const onDoc = (e) => {
-      if (rootRef.current && !rootRef.current.contains(e.target)) setOpen(false);
+      if (rootRef.current && !rootRef.current.contains(e.target)) closeWithoutPick();
     };
     const onKey = (e) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') closeWithoutPick();
     };
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -29,10 +50,16 @@ export default function FontPicker({ value, onChange, onManage }) {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const preview = (family) => {
+    if (appliedRef.current !== family) onChange(family);
+  };
 
   const pick = (family) => {
     onChange(family);
+    openedValueRef.current = family; // committed — nothing to revert
     setOpen(false);
   };
 
@@ -45,7 +72,7 @@ export default function FontPicker({ value, onChange, onManage }) {
         aria-expanded={open}
         title={value}
         style={{ fontFamily: value }}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? closeWithoutPick() : openPopover())}
       >
         <span className={styles.buttonLabel}>{value}</span>
         <span className={styles.chevron} aria-hidden="true">▾</span>
@@ -53,7 +80,7 @@ export default function FontPicker({ value, onChange, onManage }) {
 
       {open && (
         <div className={styles.popover} role="listbox">
-          <div className={styles.list}>
+          <div className={styles.list} onMouseLeave={revertPreview}>
             {['custom', 'google', 'system'].map((key) => {
               const families = groups[key];
               if (!families.length) return null;
@@ -65,12 +92,19 @@ export default function FontPicker({ value, onChange, onManage }) {
                       key={family}
                       type="button"
                       role="option"
-                      aria-selected={family === value}
-                      className={family === value ? `${styles.item} ${styles.itemActive}` : styles.item}
-                      style={{ fontFamily: family }}
+                      aria-selected={family === openedValueRef.current}
+                      className={
+                        family === openedValueRef.current
+                          ? `${styles.item} ${styles.itemActive}`
+                          : styles.item
+                      }
+                      onMouseEnter={() => preview(family)}
                       onClick={() => pick(family)}
                     >
-                      {family}
+                      <span className={styles.itemName}>{family}</span>
+                      <span className={styles.itemSample} style={{ fontFamily: family }}>
+                        {SAMPLE}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -82,7 +116,7 @@ export default function FontPicker({ value, onChange, onManage }) {
               type="button"
               className={styles.manage}
               onClick={() => {
-                setOpen(false);
+                closeWithoutPick();
                 onManage();
               }}
             >

@@ -185,10 +185,31 @@
 }
 
 .fontSample {
-  font-size: 17px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.variantLine {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ov-text-dim);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sizeRange {
+  width: 90px;
+  accent-color: var(--ov-accent-active);
+}
+
+.sizeValue {
+  width: 20px;
+  text-align: right;
+  color: var(--ov-text-dim);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .remove {
