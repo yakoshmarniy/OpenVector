@@ -167,6 +167,47 @@ function StyleControls({ style, onChange, onManageFonts }) {
               value={Math.round((style.tracking ?? 0) * 10) / 10}
               onChange={(e) => onChange({ tracking: Number(e.target.value) })} />
           </div>
+          <div className={styles.row}>
+            <span className={styles.label}>Baseline</span>
+            <input type="number" className={styles.number} step="1"
+              title="Baseline shift"
+              value={Math.round(style.baselineShift ?? 0)}
+              onChange={(e) => onChange({ baselineShift: Number(e.target.value) })} />
+          </div>
+
+          {style.textMode !== 'path' && style.orientation !== 'vertical' && (
+            <>
+              <span className={styles.subLabel}>Paragraph</span>
+              {style.textMode === 'area' && (
+                <div className={styles.tightRow}>
+                  <span className={styles.label}>Indent</span>
+                  <input type="number" className={styles.numberXs} min="0" step="1"
+                    title="Left indent"
+                    value={Math.round(style.indentLeft ?? 0)}
+                    onChange={(e) => onChange({ indentLeft: Math.max(0, Number(e.target.value)) })} />
+                  <input type="number" className={styles.numberXs} min="0" step="1"
+                    title="First-line indent"
+                    value={Math.round(style.indentFirst ?? 0)}
+                    onChange={(e) => onChange({ indentFirst: Math.max(0, Number(e.target.value)) })} />
+                  <input type="number" className={styles.numberXs} min="0" step="1"
+                    title="Right indent"
+                    value={Math.round(style.indentRight ?? 0)}
+                    onChange={(e) => onChange({ indentRight: Math.max(0, Number(e.target.value)) })} />
+                </div>
+              )}
+              <div className={styles.row}>
+                <span className={styles.label}>Space</span>
+                <input type="number" className={styles.numberSm} min="0" step="1"
+                  title="Space before paragraph"
+                  value={Math.round(style.spaceBefore ?? 0)}
+                  onChange={(e) => onChange({ spaceBefore: Math.max(0, Number(e.target.value)) })} />
+                <input type="number" className={styles.numberSm} min="0" step="1"
+                  title="Space after paragraph"
+                  value={Math.round(style.spaceAfter ?? 0)}
+                  onChange={(e) => onChange({ spaceAfter: Math.max(0, Number(e.target.value)) })} />
+              </div>
+            </>
+          )}
         </div>
       )}
 

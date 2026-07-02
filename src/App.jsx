@@ -9,6 +9,8 @@ import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
 import { TOOL_ITEMS } from './components/toolItems.jsx';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
+import { setShowHiddenChars } from './canvas/operations/textLayout.js';
+import { changeCase, smartPunctuation, fitHeadline } from './canvas/operations/typography.js';
 
 const emptySel = { count: 0, isGroup: false, style: null };
 const TOOL_LABELS = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i.label]));
@@ -22,6 +24,7 @@ export default function App() {
   const [columns, setColumns] = useState(1);
   const [paintFocus, setPaintFocus] = useState('fill'); // which paint X-shortcuts target
   const [fontsOpen, setFontsOpen] = useState(false);
+  const [hiddenChars, setHiddenChars] = useState(false);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
@@ -92,11 +95,38 @@ export default function App() {
   // Expose the X-shortcut handlers to Canvas's global keydown handler.
   paintRef.current = { swap: swapFillStroke, toggleFocus: togglePaintFocus };
 
+  // Type-menu commands rewrite the selected text group's data, then re-sync
+  // the panel style and the selection overlay (text bounds change).
+  const applyTextCommand = useCallback((fn) => {
+    const items = selItemsRef.current.filter((it) => it?.data?.isText);
+    if (!items.length) return;
+    items.forEach(fn);
+    setSel((prev) => ({ ...prev, style: readStyle(items[0]) }));
+    refreshSelRef.current?.();
+  }, []);
+
   // Menu commands: view/document-level handled here, selection commands routed
   // to the active tool (they apply when the Select tool holds the selection).
   const handleCommand = useCallback(
     (cmd) => {
       switch (cmd) {
+        case 'caseUpper':
+        case 'caseLower':
+        case 'caseTitle':
+        case 'caseSentence':
+          applyTextCommand((g) => changeCase(g, cmd.slice(4).toLowerCase()));
+          break;
+        case 'smartPunct':
+          applyTextCommand(smartPunctuation);
+          break;
+        case 'fitHeadline':
+          applyTextCommand(fitHeadline);
+          break;
+        case 'toggleHiddenChars':
+          setShowHiddenChars(!hiddenChars);
+          setHiddenChars(!hiddenChars);
+          refreshSelRef.current?.();
+          break;
         case 'snapGrid':
           toggleSnap('grid');
           break;
@@ -127,7 +157,7 @@ export default function App() {
           actionRef.current?.(cmd);
       }
     },
-    [toggleSnap],
+    [toggleSnap, applyTextCommand, hiddenChars],
   );
 
   const handleEditText = useCallback(
@@ -149,7 +179,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <MenuBar sel={sel} snap={snap} columns={columns} onCommand={handleCommand} />
+      <MenuBar sel={sel} snap={snap} columns={columns} hiddenChars={hiddenChars} onCommand={handleCommand} />
       <ControlBar
         toolLabel={TOOL_LABELS[activeTool] || 'Tool'}
         sel={sel}

@@ -105,3 +105,20 @@
   margin: 5px 6px;
   background: var(--ov-panel-border);
 }
+
+.subWrap {
+  position: relative;
+}
+
+.subMenu {
+  position: absolute;
+  left: calc(100% + 1px);
+  top: -6px;
+  min-width: 180px;
+  padding: 5px;
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  z-index: 51;
+}

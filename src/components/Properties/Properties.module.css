@@ -57,6 +57,7 @@
 
 .range {
   flex: 1;
+  min-width: 0; /* let flex shrink the range below its ~129px default */
   accent-color: var(--ov-accent-active);
 }
 
@@ -87,6 +88,23 @@
 
 .numberSm:disabled {
   opacity: 0.4;
+}
+
+/* A row of three small fields (paragraph indents) has to fit the 220px panel. */
+.tightRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.numberXs {
+  box-sizing: border-box;
+  width: 42px;
+  padding: 4px 4px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
 }
 
 .gapLabel {

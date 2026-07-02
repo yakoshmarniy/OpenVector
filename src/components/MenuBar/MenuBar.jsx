@@ -4,10 +4,12 @@ import styles from './MenuBar.module.css';
 // Top menu bar. Items map to app commands (onCommand). Features that belong to
 // later phases are shown disabled so the structure is honest. Labels are plain
 // text for now; they move to i18next t() when i18n lands.
-function buildMenus({ sel, snap, columns }) {
+function buildMenus({ sel, snap, columns, hiddenChars }) {
   const has = sel.count >= 1;
   const multi = sel.count >= 2;
   const group = sel.count === 1 && sel.isGroup;
+  const text = sel.count === 1 && !!sel.style?.isText;
+  const areaText = text && sel.style.textMode === 'area' && sel.style.orientation !== 'vertical';
   const sep = { separator: true };
 
   return [
@@ -62,9 +64,23 @@ function buildMenus({ sel, snap, columns }) {
       items: [
         { label: 'Fonts…', cmd: 'openFonts' },
         sep,
+        {
+          label: 'Change Case',
+          enabled: text,
+          items: [
+            { label: 'UPPERCASE', cmd: 'caseUpper' },
+            { label: 'lowercase', cmd: 'caseLower' },
+            { label: 'Title Case', cmd: 'caseTitle' },
+            { label: 'Sentence case', cmd: 'caseSentence' },
+          ],
+        },
+        { label: 'Smart Punctuation', cmd: 'smartPunct', enabled: text },
+        { label: 'Fit Headline', cmd: 'fitHeadline', enabled: areaText },
+        sep,
+        { label: 'Show Hidden Characters', cmd: 'toggleHiddenChars', checked: !!hiddenChars, accel: '⌥⌘I' },
+        sep,
         { label: 'Create Outlines', enabled: false, accel: '⌘⇧O' },
         { label: 'Find Font…', enabled: false },
-        { label: 'Change Case', enabled: false },
       ],
     },
     {
@@ -115,10 +131,15 @@ function buildMenus({ sel, snap, columns }) {
   ];
 }
 
-export default function MenuBar({ sel, snap, columns, onCommand }) {
+export default function MenuBar({ sel, snap, columns, hiddenChars, onCommand }) {
   const [open, setOpen] = useState(null);
+  const [sub, setSub] = useState(null); // index of the item whose submenu is open
   const barRef = useRef(null);
-  const menus = buildMenus({ sel, snap, columns });
+  const menus = buildMenus({ sel, snap, columns, hiddenChars });
+
+  useEffect(() => {
+    setSub(null);
+  }, [open]);
 
   useEffect(() => {
     if (open === null) return undefined;
@@ -162,6 +183,43 @@ export default function MenuBar({ sel, snap, columns, onCommand }) {
               {menu.items.map((item, ii) =>
                 item.separator ? (
                   <div key={`sep-${ii}`} className={styles.sep} />
+                ) : item.items ? (
+                  <div
+                    key={item.label}
+                    className={styles.subWrap}
+                    onMouseEnter={() => item.enabled !== false && setSub(ii)}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      aria-haspopup="true"
+                      aria-expanded={sub === ii}
+                      className={styles.item}
+                      disabled={item.enabled === false}
+                    >
+                      <span className={styles.check} />
+                      <span className={styles.itemLabel}>{item.label}</span>
+                      <span className={styles.accel}>▸</span>
+                    </button>
+                    {sub === ii && item.enabled !== false && (
+                      <div className={styles.subMenu} role="menu">
+                        {item.items.map((si) => (
+                          <button
+                            key={si.label}
+                            type="button"
+                            role="menuitem"
+                            className={styles.item}
+                            disabled={si.enabled === false || !si.cmd}
+                            onClick={() => choose(si)}
+                          >
+                            <span className={styles.check}>{si.checked ? '✓' : ''}</span>
+                            <span className={styles.itemLabel}>{si.label}</span>
+                            {si.accel && <span className={styles.accel}>{si.accel}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <button
                     key={item.label}
@@ -169,6 +227,7 @@ export default function MenuBar({ sel, snap, columns, onCommand }) {
                     role="menuitem"
                     className={styles.item}
                     disabled={item.enabled === false || (!item.cmd && !item.checked)}
+                    onMouseEnter={() => setSub(null)}
                     onClick={() => choose(item)}
                   >
                     <span className={styles.check}>{item.checked ? '✓' : ''}</span>

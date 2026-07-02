@@ -15,11 +15,22 @@ const DEFAULT_STROKE = '#7d8186';
 
 let measureCtx = null;
 // Advance width (what determines spacing), via an offscreen 2D context.
-function advance(text, fontSize, fontFamily) {
+export function advance(text, fontSize, fontFamily) {
   if (!text) return 0;
   if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
   measureCtx.font = `${fontSize}px ${fontFamily}`;
   return measureCtx.measureText(text).width;
+}
+
+// View-level toggle (Type > Show Hidden Characters): renders space dots and
+// paragraph marks as dim non-interactive glyphs.
+let showHidden = false;
+export function setShowHiddenChars(value) {
+  showHidden = !!value;
+  relayoutAllText();
+}
+export function getShowHiddenChars() {
+  return showHidden;
 }
 
 export function isTextItem(item) {
@@ -41,25 +52,63 @@ function lineWidth(line, fs, ff, tr) {
   return advance(line, fs, ff) + tr * Math.max(0, line.length - 1);
 }
 
-function wrap(raw, width, fs, ff, tr) {
-  const out = [];
-  raw.split('\n').forEach((para) => {
-    if (!para) {
-      out.push('');
-      return;
+// Lay a horizontal block (point/area text) out into positioned lines, applying
+// paragraph settings: indents (area only) and space before/after paragraphs.
+// Both layoutBlock and caretSegment consume this, so they can't drift apart.
+function blockLines(d) {
+  const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const raw = d.rawText || '';
+  const w = d.mode === 'area' ? d.areaWidth : null;
+  const iL = w ? d.indentLeft || 0 : 0;
+  const iR = w ? d.indentRight || 0 : 0;
+  const iF = w ? d.indentFirst || 0 : 0;
+  const sBefore = d.spaceBefore || 0;
+  const sAfter = d.spaceAfter || 0;
+  const paras = raw.split('\n');
+  const lines = [];
+  let y = d.originY + fs;
+
+  paras.forEach((para, pi) => {
+    if (pi > 0) y += sBefore;
+    const paraLines = [];
+    if (!para) paraLines.push({ text: '', first: true });
+    else if (w) {
+      let line = '';
+      let first = true;
+      para.split(' ').forEach((word) => {
+        const test = line ? `${line} ${word}` : word;
+        const avail = w - iL - iR - (first ? iF : 0);
+        if (!line || lineWidth(test, fs, ff, tr) <= avail) line = test;
+        else {
+          paraLines.push({ text: line, first });
+          first = false;
+          line = word;
+        }
+      });
+      paraLines.push({ text: line, first });
+    } else {
+      paraLines.push({ text: para, first: true });
     }
-    let line = '';
-    para.split(' ').forEach((word) => {
-      const test = line ? `${line} ${word}` : word;
-      if (!line || lineWidth(test, fs, ff, tr) <= width) line = test;
-      else {
-        out.push(line);
-        line = word;
-      }
+
+    paraLines.forEach((pl, li) => {
+      const indent = iL + (pl.first ? iF : 0);
+      const availW = w ? w - indent - iR : null;
+      const lw = lineWidth(pl.text, fs, ff, tr);
+      let startX = d.originX + indent;
+      if (d.justification === 'center') startX = w ? startX + (availW - lw) / 2 : d.originX - lw / 2;
+      else if (d.justification === 'right') startX = w ? startX + (availW - lw) : d.originX - lw;
+      lines.push({
+        text: pl.text,
+        startX,
+        y,
+        paraEnd: li === paraLines.length - 1,
+        lastPara: pi === paras.length - 1,
+      });
+      y += d.leading;
     });
-    out.push(line);
+    y += sAfter;
   });
-  return out.join('\n');
+  return lines;
 }
 
 export function createTextItem({
@@ -117,24 +166,38 @@ function styleGlyph(glyph, d) {
   glyph.data.glyph = true;
 }
 
+// A hidden-character mark: dim, locked (skipped by hit tests), and not a real
+// glyph — Touch Type indexing ignores it.
+function addHiddenMark(group, ch, x, y, fs, ff) {
+  const g = new paper.PointText({
+    point: [x, y],
+    content: ch,
+    fontSize: fs * 0.85,
+    fontFamily: ff,
+    justification: 'left',
+  });
+  g.fillColor = new paper.Color('#5f7f9a');
+  g.locked = true;
+  g.data.hiddenMark = true;
+  group.addChild(g);
+}
+
 function layoutBlock(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
-  const raw = d.rawText || '';
-  const w = d.mode === 'area' ? d.areaWidth : null;
-  const lines = w ? wrap(raw, w, fs, ff, tr).split('\n') : raw.split('\n');
+  const shift = d.baselineShift || 0;
 
-  lines.forEach((line, li) => {
-    const baseY = d.originY + fs + d.leading * li;
-    const lw = lineWidth(line, fs, ff, tr);
-    let startX = d.originX;
-    if (d.justification === 'center') startX = w ? d.originX + (w - lw) / 2 : d.originX - lw / 2;
-    else if (d.justification === 'right') startX = w ? d.originX + (w - lw) : d.originX - lw;
-
-    for (let i = 0; i < line.length; i += 1) {
-      const ch = line[i];
-      if (ch === ' ') continue; // advance is counted; no glyph needed
-      const x = startX + advance(line.slice(0, i), fs, ff) + tr * i;
+  blockLines(d).forEach((line) => {
+    const baseY = line.y - shift;
+    const { text, startX } = line;
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i];
+      const x = startX + advance(text.slice(0, i), fs, ff) + tr * i;
+      if (ch === ' ') {
+        // advance is counted; no glyph needed — but the toggle shows a dot
+        if (showHidden) addHiddenMark(group, '·', x, baseY, fs, ff);
+        continue;
+      }
       const g = new paper.PointText({
         point: [x, baseY],
         content: ch,
@@ -144,6 +207,10 @@ function layoutBlock(group) {
       });
       styleGlyph(g, d);
       group.addChild(g);
+    }
+    if (showHidden && line.paraEnd) {
+      const endX = startX + lineWidth(text, fs, ff, tr);
+      addHiddenMark(group, line.lastPara ? '#' : '¶', endX, baseY, fs, ff);
     }
   });
 }
@@ -228,6 +295,8 @@ function layoutPath(group) {
     group.addChild(g);
     // Vertical-on-path turns each glyph 90° so it reads across the path.
     g.rotate(vertical ? tan.angle - 90 : tan.angle, localPt);
+    // Baseline shift moves the glyph along the path normal (positive = up).
+    if (d.baselineShift) g.translate(tan.rotate(-90).multiply(d.baselineShift));
   }
 }
 
@@ -250,7 +319,9 @@ export function relayoutAllText() {
 
 export function relayout(group) {
   const d = group.data;
-  group.children.filter((c) => c.data && c.data.glyph).forEach((c) => c.remove());
+  group.children
+    .filter((c) => c.data && (c.data.glyph || c.data.hiddenMark))
+    .forEach((c) => c.remove());
   if (d.mode === 'path') layoutPath(group);
   else if (d.orientation === 'vertical') layoutVertical(group);
   else layoutBlock(group);
@@ -295,17 +366,10 @@ export function caretSegment(group) {
     };
   }
 
-  const raw = d.rawText || '';
-  const lines = d.mode === 'area' ? wrap(raw, d.areaWidth, fs, ff, tr).split('\n') : raw.split('\n');
-  const li = lines.length - 1;
-  const last = lines[li];
-  const baseY = d.originY + fs + d.leading * li;
-  const lw = lineWidth(last, fs, ff, tr);
-  let startX = d.originX;
-  const w = d.mode === 'area' ? d.areaWidth : null;
-  if (d.justification === 'center') startX = w ? d.originX + (w - lw) / 2 : d.originX - lw / 2;
-  else if (d.justification === 'right') startX = w ? d.originX + (w - lw) : d.originX - lw;
-  const caretX = startX + lw;
+  const lines = blockLines(d);
+  const last = lines[lines.length - 1];
+  const baseY = last.y - (d.baselineShift || 0);
+  const caretX = last.startX + lineWidth(last.text, fs, ff, tr);
   return {
     from: group.localToGlobal(new paper.Point(caretX, baseY - fs * 0.8)),
     to: group.localToGlobal(new paper.Point(caretX, baseY + fs * 0.2)),
@@ -349,6 +413,14 @@ export function readTextStyle(group) {
     leading: d.leading,
     tracking: d.tracking || 0,
     justification: d.justification,
+    baselineShift: d.baselineShift || 0,
+    indentLeft: d.indentLeft || 0,
+    indentRight: d.indentRight || 0,
+    indentFirst: d.indentFirst || 0,
+    spaceBefore: d.spaceBefore || 0,
+    spaceAfter: d.spaceAfter || 0,
+    textMode: d.mode,
+    orientation: d.orientation || 'horizontal',
   };
 }
 
@@ -388,5 +460,12 @@ export function applyTextStyle(group, patch) {
     d.justification = patch.justification;
     needsLayout = true;
   }
+  ['baselineShift', 'indentLeft', 'indentRight', 'indentFirst', 'spaceBefore', 'spaceAfter']
+    .forEach((key) => {
+      if (key in patch) {
+        d[key] = patch[key] || 0;
+        needsLayout = true;
+      }
+    });
   if (needsLayout) relayout(group);
 }

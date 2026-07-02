@@ -895,6 +895,47 @@ i18next пока не подключаем — это отдельный пун�
 - `.claude/launch.json`: добавлен конфиг `openvector-alt` (порт 5181) на случай, когда 5180
   занят dev-сервером параллельной сессии.
 
+### Сессия 20 — прогресс (✅ ядро 5.3)
+
+Объём: **фаза 5.3** — типографика (ядро; сложные подсистемы отложены).
+
+- [x] Character: **baseline shift** (весь текст-объект; в block-тексте = сдвиг базовой линии,
+      на пути = смещение вдоль нормали). Поле Baseline в Properties.
+- [x] Paragraph: **отступы** (левый / первой строки / правый — только area-текст) и
+      **интервалы до/после параграфа** (point и area). Поля Indent (3) и Space (2) в Properties.
+- [x] `textLayout.js` рефакторнут: общий `blockLines(d)` считает строки (перенос с учётом отступов,
+      startX по justification, y с интервалами) — им пользуются и `layoutBlock`, и `caretSegment`
+      (раньше математика дублировалась и могла разъехаться). Старый `wrap()` удалён.
+- [x] **Change Case** (UPPERCASE / lowercase / Title Case / Sentence case) — подменю в Type.
+- [x] **Smart Punctuation** — “ ” ‘ ’ … — (применяет всё сразу; диалог с чекбоксами — с 15.1).
+- [x] **Fit Headline** — area-текст: склеивает в одну строку и подбирает tracking под ширину рамки
+      (минус отступы). Пункт активен только для горизонтального area-текста.
+- [x] **Show Hidden Characters** — глобальный тумблер (`setShowHiddenChars`): точки-пробелы `·`,
+      `¶` на концах параграфов, `#` в конце текста. Метки `data.hiddenMark` + `locked` (не хитятся,
+      не индексируются как глифы — Touch Type fx не съезжают), чистятся в relayout.
+- [x] MenuBar: **поддержка подменю** (`item.items` → флайаут по ховеру, `.subMenu` в CSS) — общая,
+      пригодится для Arrange/Effect. Type-меню: Change Case ▸, Smart Punctuation, Fit Headline,
+      Show Hidden Characters (с ✓); Create Outlines/Find Font — disabled (отложены).
+- [x] Новый модуль `src/canvas/operations/typography.js` (changeCase/smartPunctuation/fitHeadline);
+      команды идут App.applyTextCommand → по выделенным text-группам (selItemsRef), не через инструмент.
+- [ ] Отложено: Create Outlines (нужен opentype.js + бинарники шрифтов — FontFace их не отдаёт;
+      fonts.js буферы не хранит), Find Font, Threaded Text, Text Wrap, панели Character/Paragraph
+      как отдельные плавающие (сейчас всё в Properties), Tabs, Glyphs, кернинг пар (нужно
+      посимвольное выделение в текст-редакторе).
+
+Заметки / решения сессии 20:
+- Отступы параграфа действуют ТОЛЬКО в area-тексте (у point-текста нет рамки — ширина не
+  определена); интервалы до/после — в обоих. Вертикальный и on-path текст параграф-настройки
+  игнорируют (v1). Baseline shift работает в block- и path-режимах, в вертикальном — нет (v1).
+- Fit Headline оставляет крошечный запас (−0.01 к трекингу), иначе строка ровно по ширине
+  переносится из-за float-округления.
+- **Фикс вёрстки панели**: `input[type=range]` во flex-строке не ужимается (min-width:auto,
+  дефолтная ширина ~129px) — панель скроллилась по X. Лечится `min-width: 0` у `.range`.
+  Строка Indent из трёх полей — свой класс `.tightRow` (gap 4) + `.numberXs` (42px).
+- Грабли теста (не кода): после синтетического `button.click()` в eval React флашит стейт ПОСЛЕ
+  return — DOM проверять СЛЕДУЮЩИМ eval. React onMouseEnter триггерится через `mouseover`
+  (bubbles: true), голый `mouseenter` не ловится.
+
 ### Сверка с планом 20 фаз — что уже сделано
 
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
@@ -911,7 +952,7 @@ i18next пока не подключаем — это отдельный пун�
 - **4.2 (Свободное рисование/резка):** ✅ ГОТОВО — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
 - **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
 - **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
-- **5.3 (Типографика):** 🟡 размер/leading/tracking/justification ✅ · ⬜ панели Character/Paragraph/Tabs/Glyphs, Create Outlines, …
+- **5.3 (Типографика):** 🟡 ядро ✅ — размер/leading/tracking/justification, baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, подменю в MenuBar · ⬜ Create Outlines (opentype.js), Find Font, Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар
 - **6.1 (Организация):** 🟡 Align + Distribute, Group/Ungroup ✅ · ⬜ Arrange (z-order), Lock/Hide, Isolation Mode, Layers панель
 - **6.2 (Pathfinder):** 🟡 Add/Subtract/Intersect/Exclude ✅ · ⬜ Divide/Trim/Merge/Crop/Outline, Shape Builder, Compound Path, path-ops
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
@@ -921,8 +962,8 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**, **слои**,
 **Menu Bar / Control Bar**, **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 5.3 Типографика (панели Character/Paragraph,
-Create Outlines, …). Затем 6.1 Организация (слои + единый стор выделения). Отложено:
+**Следующее по плану (ранние пробелы):** 6.1 Организация (слои + единый стор выделения,
+Arrange, Lock/Hide, Isolation Mode). Затем 6.2 Pathfinder. Отложено:
 live-параметры polygon/star/ellipse (с 3.x/7.1); хвост 2.2 (Reference Point, Reset BB +
 поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1.
 
