@@ -133,6 +133,31 @@ function StyleControls({ style, onChange, onManageFonts }) {
             />
           </div>
           <div className={styles.row}>
+            <span className={styles.label}>Style</span>
+            <div className={styles.alignGroup}>
+              <button
+                type="button"
+                title="Bold"
+                aria-label="Bold"
+                aria-pressed={(style.fontWeight || 400) >= 600}
+                className={(style.fontWeight || 400) >= 600 ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
+                onClick={() => onChange({ fontWeight: (style.fontWeight || 400) >= 600 ? 400 : 700 })}
+              >
+                <span style={{ fontWeight: 700 }}>B</span>
+              </button>
+              <button
+                type="button"
+                title="Italic"
+                aria-label="Italic"
+                aria-pressed={style.fontStyle === 'italic'}
+                className={style.fontStyle === 'italic' ? `${styles.alignBtn} ${styles.alignActive}` : styles.alignBtn}
+                onClick={() => onChange({ fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic' })}
+              >
+                <span style={{ fontStyle: 'italic' }}>I</span>
+              </button>
+            </div>
+          </div>
+          <div className={styles.row}>
             <span className={styles.label}>Align</span>
             <div className={styles.alignGroup}>
               {aligns.map((a) => (

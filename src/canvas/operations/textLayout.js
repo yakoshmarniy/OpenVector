@@ -15,11 +15,20 @@ const DEFAULT_STROKE = '#7d8186';
 
 let measureCtx = null;
 // Advance width (what determines spacing), via an offscreen 2D context.
-export function advance(text, fontSize, fontFamily) {
+// `variant` is the CSS font-shorthand prefix ("italic 700"), see variantOf.
+export function advance(text, fontSize, fontFamily, variant = '') {
   if (!text) return 0;
   if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
-  measureCtx.font = `${fontSize}px ${fontFamily}`;
+  measureCtx.font = `${variant} ${fontSize}px ${fontFamily}`.trim();
   return measureCtx.measureText(text).width;
+}
+
+// Weight + italic as a canvas font-shorthand prefix. Paper's fontWeight is
+// pasted verbatim before "<size>px <family>", so "italic 700" rides along —
+// that's the only way to get font-style through paper.PointText.
+export function variantOf(d) {
+  const w = d.fontWeight || 400;
+  return d.fontStyle === 'italic' ? `italic ${w}` : `${w}`;
 }
 
 // View-level toggle (Type > Show Hidden Characters): renders space dots and
@@ -47,9 +56,9 @@ export function textEntity(item) {
   return null;
 }
 
-function lineWidth(line, fs, ff, tr) {
+function lineWidth(line, fs, ff, tr, va) {
   if (!line) return 0;
-  return advance(line, fs, ff) + tr * Math.max(0, line.length - 1);
+  return advance(line, fs, ff, va) + tr * Math.max(0, line.length - 1);
 }
 
 // Lay a horizontal block (point/area text) out into positioned lines, applying
@@ -57,6 +66,7 @@ function lineWidth(line, fs, ff, tr) {
 // Both layoutBlock and caretSegment consume this, so they can't drift apart.
 function blockLines(d) {
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const va = variantOf(d);
   const raw = d.rawText || '';
   const w = d.mode === 'area' ? d.areaWidth : null;
   const iL = w ? d.indentLeft || 0 : 0;
@@ -78,7 +88,7 @@ function blockLines(d) {
       para.split(' ').forEach((word) => {
         const test = line ? `${line} ${word}` : word;
         const avail = w - iL - iR - (first ? iF : 0);
-        if (!line || lineWidth(test, fs, ff, tr) <= avail) line = test;
+        if (!line || lineWidth(test, fs, ff, tr, va) <= avail) line = test;
         else {
           paraLines.push({ text: line, first });
           first = false;
@@ -93,7 +103,7 @@ function blockLines(d) {
     paraLines.forEach((pl, li) => {
       const indent = iL + (pl.first ? iF : 0);
       const availW = w ? w - indent - iR : null;
-      const lw = lineWidth(pl.text, fs, ff, tr);
+      const lw = lineWidth(pl.text, fs, ff, tr, va);
       let startX = d.originX + indent;
       if (d.justification === 'center') startX = w ? startX + (availW - lw) / 2 : d.originX - lw / 2;
       else if (d.justification === 'right') startX = w ? startX + (availW - lw) : d.originX - lw;
@@ -123,6 +133,8 @@ export function createTextItem({
   d.rawText = '';
   d.fontSize = DEFAULT_FONT_SIZE;
   d.fontFamily = DEFAULT_FONT;
+  d.fontWeight = 400;
+  d.fontStyle = 'normal'; // 'normal' | 'italic'
   d.fillColor = DEFAULT_TEXT_COLOR;
   d.strokeColor = null;
   d.strokeWidth = 0;
@@ -158,6 +170,7 @@ export function setRawText(group, raw) {
 }
 
 function styleGlyph(glyph, d) {
+  glyph.fontWeight = variantOf(d);
   glyph.fillColor = d.fillColor ? new paper.Color(d.fillColor) : null;
   if (d.strokeColor) {
     glyph.strokeColor = new paper.Color(d.strokeColor);
@@ -185,6 +198,7 @@ function addHiddenMark(group, ch, x, y, fs, ff) {
 function layoutBlock(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const va = variantOf(d);
   const shift = d.baselineShift || 0;
 
   blockLines(d).forEach((line) => {
@@ -192,7 +206,7 @@ function layoutBlock(group) {
     const { text, startX } = line;
     for (let i = 0; i < text.length; i += 1) {
       const ch = text[i];
-      const x = startX + advance(text.slice(0, i), fs, ff) + tr * i;
+      const x = startX + advance(text.slice(0, i), fs, ff, va) + tr * i;
       if (ch === ' ') {
         // advance is counted; no glyph needed — but the toggle shows a dot
         if (showHidden) addHiddenMark(group, '·', x, baseY, fs, ff);
@@ -209,7 +223,7 @@ function layoutBlock(group) {
       group.addChild(g);
     }
     if (showHidden && line.paraEnd) {
-      const endX = startX + lineWidth(text, fs, ff, tr);
+      const endX = startX + lineWidth(text, fs, ff, tr, va);
       addHiddenMark(group, line.lastPara ? '#' : '¶', endX, baseY, fs, ff);
     }
   });
@@ -242,6 +256,7 @@ function verticalColumns(d, fs, tr) {
 function layoutVertical(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const va = variantOf(d);
   const vStep = fs + tr;
   const colStep = d.leading;
   const cols = verticalColumns(d, fs, tr);
@@ -252,7 +267,7 @@ function layoutVertical(group) {
       const ch = colText[i];
       if (ch === ' ') continue;
       const y = d.originY + fs + i * vStep;
-      const cw = advance(ch, fs, ff);
+      const cw = advance(ch, fs, ff, va);
       const g = new paper.PointText({
         point: [x - cw / 2, y],
         content: ch,
@@ -269,6 +284,7 @@ function layoutVertical(group) {
 function layoutPath(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const va = variantOf(d);
   const vertical = d.orientation === 'vertical';
   const guide = group.children.find((c) => c.data && c.data.isTextGuide);
   if (!guide) return;
@@ -277,7 +293,7 @@ function layoutPath(group) {
 
   for (let i = 0; i < text.length; i += 1) {
     const ch = text[i];
-    const off = advance(text.slice(0, i), fs, ff) + tr * i + advance(ch, fs, ff) / 2;
+    const off = advance(text.slice(0, i), fs, ff, va) + tr * i + advance(ch, fs, ff, va) / 2;
     if (off > len) break;
     if (ch === ' ') continue;
     const gpt = guide.getPointAt(off);
@@ -341,12 +357,13 @@ export function relayout(group) {
 export function caretSegment(group) {
   const d = group.data;
   const { fontSize: fs, fontFamily: ff, tracking: tr } = d;
+  const va = variantOf(d);
 
   if (d.mode === 'path') {
     const guide = group.children.find((c) => c.data && c.data.isTextGuide);
     const text = (d.rawText || '').replace(/\n/g, ' ');
     const len = guide ? guide.length : 0;
-    const off = Math.min(advance(text, fs, ff) + tr * text.length, len);
+    const off = Math.min(advance(text, fs, ff, va) + tr * text.length, len);
     const gpt = guide ? guide.getPointAt(off) : new paper.Point(0, 0);
     const tan = (guide && guide.getTangentAt(off)) || new paper.Point(1, 0);
     const normal = tan.rotate(-90);
@@ -369,7 +386,7 @@ export function caretSegment(group) {
   const lines = blockLines(d);
   const last = lines[lines.length - 1];
   const baseY = last.y - (d.baselineShift || 0);
-  const caretX = last.startX + lineWidth(last.text, fs, ff, tr);
+  const caretX = last.startX + lineWidth(last.text, fs, ff, tr, va);
   return {
     from: group.localToGlobal(new paper.Point(caretX, baseY - fs * 0.8)),
     to: group.localToGlobal(new paper.Point(caretX, baseY + fs * 0.2)),
@@ -409,6 +426,8 @@ export function readTextStyle(group) {
     strokeWidth: d.strokeWidth || 0,
     opacity: group.opacity ?? 1,
     fontFamily: d.fontFamily || DEFAULT_FONT,
+    fontWeight: d.fontWeight || 400,
+    fontStyle: d.fontStyle || 'normal',
     fontSize: d.fontSize,
     leading: d.leading,
     tracking: d.tracking || 0,
@@ -442,6 +461,14 @@ export function applyTextStyle(group, patch) {
   if ('opacity' in patch) group.opacity = patch.opacity;
   if ('fontFamily' in patch) {
     d.fontFamily = patch.fontFamily || DEFAULT_FONT;
+    needsLayout = true;
+  }
+  if ('fontWeight' in patch) {
+    d.fontWeight = patch.fontWeight || 400;
+    needsLayout = true;
+  }
+  if ('fontStyle' in patch) {
+    d.fontStyle = patch.fontStyle === 'italic' ? 'italic' : 'normal';
     needsLayout = true;
   }
   if ('fontSize' in patch) {

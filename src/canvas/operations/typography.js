@@ -1,4 +1,4 @@
-import { relayout, advance } from './textLayout.js';
+import { relayout, advance, variantOf } from './textLayout.js';
 
 // Type-menu commands that rewrite a text group's rawText / typography settings.
 
@@ -41,7 +41,7 @@ export function fitHeadline(group) {
   const text = (d.rawText || '').replace(/\n/g, ' ').trim();
   if (text.length < 2) return false;
   const width = d.areaWidth - (d.indentLeft || 0) - (d.indentRight || 0) - (d.indentFirst || 0);
-  const adv = advance(text, d.fontSize, d.fontFamily);
+  const adv = advance(text, d.fontSize, d.fontFamily, variantOf(d));
   // Tiny margin keeps the exact-fit line from wrapping on float rounding.
   d.tracking = (width - adv) / (text.length - 1) - 0.01;
   d.rawText = text;
