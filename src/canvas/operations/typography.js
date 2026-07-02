@@ -1,6 +1,26 @@
-import { relayout, advance, variantOf } from './textLayout.js';
+import paper from 'paper';
+import { relayout, advance, variantOf, applyTextStyle } from './textLayout.js';
 
 // Type-menu commands that rewrite a text group's rawText / typography settings.
+
+const textItems = () => paper.project.getItems({ match: (it) => it.data && it.data.isText });
+
+// Font usage across the document, for the Find Font dialog.
+export function listFontUsage() {
+  const counts = new Map();
+  textItems().forEach((g) => {
+    const f = g.data.fontFamily || 'sans-serif';
+    counts.set(f, (counts.get(f) || 0) + 1);
+  });
+  return [...counts.entries()].map(([family, count]) => ({ family, count }));
+}
+
+// Swap every use of `from` for `to`; returns how many text objects changed.
+export function replaceFont(from, to) {
+  const hits = textItems().filter((g) => (g.data.fontFamily || 'sans-serif') === from);
+  hits.forEach((g) => applyTextStyle(g, { fontFamily: to }));
+  return hits.length;
+}
 
 const toTitle = (s) => s.replace(/\S+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 

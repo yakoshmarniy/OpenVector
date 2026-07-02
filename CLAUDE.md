@@ -936,6 +936,40 @@ i18next пока не подключаем — это отдельный пун�
   return — DOM проверять СЛЕДУЮЩИМ eval. React onMouseEnter триггерится через `mouseover`
   (bubbles: true), голый `mouseenter` не ловится.
 
+### Сессия 21 — прогресс (✅ 5.3: Create Outlines + Find Font; bold/italic)
+
+Объём: добивка **фазы 5.3** — Create Outlines, Find Font; + закоммичен движок bold/italic
+(fontWeight/fontStyle, `variantOf` через весь layout) с UI-переключателями.
+
+- [x] **Create Outlines** (Type-меню, активен при выделенном тексте): текст-группа → группа
+      `CompoundPath`-контуров. Новый `operations/outlines.js` + зависимость **opentype.js@2**.
+      Каждый глиф-`PointText` рисует символ в ЛОКАЛЬНОМ (0,0), а размещение/поворот/Touch Type
+      сидят в его матрице → контур генерим в (0,0) (`font.getPath`) и прогоняем через
+      `glyph.matrix`, затем `group.matrix` — все режимы (point/area/path/vertical/touch) выходят
+      ровно там, где рендерились. Центр-выравненные глифы (on-path) — сдвиг на −advance/2.
+- [x] **Бинарники шрифтов** (`resolveFontBinary` в `state/fonts.js`): файловые — буфер хранится
+      при загрузке; Google — WOFF v1 с Fontsource-зеркала на jsDelivr
+      (`cdn.jsdelivr.net/fontsource/fonts/<id>@latest/latin-<вес>-<стиль>.woff`, фолбэк к 400/normal);
+      системные — `queryLocalFonts` (Chromium, промпт) со скорингом стиля, generic-семейства
+      маппятся на реальные (sans-serif→Helvetica/Arial и т.д.). Парсинг+кеш по family|weight|italic.
+- [x] **Find Font** (Type > Find Font…): диалог `components/FindFontDialog/` — семейства документа
+      с числом объектов, выбор замены из всех зарегистрированных, Replace меняет все вхождения
+      (`listFontUsage`/`replaceFont` в typography.js). После замены — re-sync панели/оверлея.
+- [x] Bold/Italic: движок (параллельная правка) + коммит 068978e; Properties получил выбор веса
+      (100–900) и Italic-тумблер (доработано параллельной сессией).
+
+Заметки / решения сессии 21:
+- **Google не отдаёт TTF браузеру**: подмена User-Agent в fetch не влияет (client hints),
+  css2 всегда возвращает woff2, а opentype.js woff2 НЕ читает (нужен brotli). Решение — зеркало
+  Fontsource на jsDelivr, у которого лежит WOFF v1 (opentype.js его парсит через встроенный inflate).
+- Ошибка резолва бинарника (нет Local Font Access, семейство не найдено) — alert с понятным
+  текстом, текст НЕ трогается (замена группы происходит только после успешного парсинга).
+- Выделение сбрасывается ДО контуров (`deselect` через actionRef) — текст-группа удаляется,
+  оверлей не должен держать мёртвую ссылку. Illustrator сохраняет выделение — наше TODO к 6.1
+  (единый стор выделения).
+- Контур ≠ метрики канвы: advance от opentype может чуть отличаться от `measureText` (браузер
+  мог рендерить другой бинарник) — на глаз неотличимо, позиция каждого глифа своя, не суммируется.
+
 ### Сверка с планом 20 фаз — что уже сделано
 
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
@@ -952,7 +986,7 @@ i18next пока не подключаем — это отдельный пун�
 - **4.2 (Свободное рисование/резка):** ✅ ГОТОВО — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
 - **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
 - **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
-- **5.3 (Типографика):** 🟡 ядро ✅ — размер/leading/tracking/justification, baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, подменю в MenuBar · ⬜ Create Outlines (opentype.js), Find Font, Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар
+- **5.3 (Типографика):** 🟡 почти всё ✅ — размер/leading/tracking/justification, bold/italic (вес 100–900), baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: файлы/Google via Fontsource-WOFF/локальные via queryLocalFonts), **Find Font** (диалог замены), подменю в MenuBar · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар (нужно посимвольное выделение)
 - **6.1 (Организация):** 🟡 Align + Distribute, Group/Ungroup ✅ · ⬜ Arrange (z-order), Lock/Hide, Isolation Mode, Layers панель
 - **6.2 (Pathfinder):** 🟡 Add/Subtract/Intersect/Exclude ✅ · ⬜ Divide/Trim/Merge/Crop/Outline, Shape Builder, Compound Path, path-ops
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode

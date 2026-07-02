@@ -79,8 +79,8 @@ function buildMenus({ sel, snap, columns, hiddenChars }) {
         sep,
         { label: 'Show Hidden Characters', cmd: 'toggleHiddenChars', checked: !!hiddenChars, accel: '⌥⌘I' },
         sep,
-        { label: 'Create Outlines', enabled: false, accel: '⌘⇧O' },
-        { label: 'Find Font…', enabled: false },
+        { label: 'Create Outlines', cmd: 'createOutlines', enabled: text, accel: '⌘⇧O' },
+        { label: 'Find Font…', cmd: 'openFindFont' },
       ],
     },
     {

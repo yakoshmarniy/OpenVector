@@ -89,10 +89,12 @@ export async function loadFontFiles(files) {
   for (const file of files) {
     try {
       const family = uniqueFamily(familyFromFileName(file.name));
-      const face = new FontFace(family, await file.arrayBuffer());
+      const buffer = await file.arrayBuffer();
+      const face = new FontFace(family, buffer);
       await face.load();
       document.fonts.add(face);
-      state.custom.push({ family, face });
+      // Keep the raw bytes: Create Outlines parses them with opentype.js.
+      state.custom.push({ family, face, buffer });
       added.push(family);
     } catch (err) {
       errors.push(`${file.name}: ${err.message || 'not a valid font file'}`);
@@ -108,21 +110,48 @@ function googleLinkId(family) {
   return `ov-gf-${family.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 }
 
+// Axis sets, richest first: full variable range with italics, the four
+// static classics, plain regular+bold, finally whatever the family has.
+// css2 rejects the whole request if any axis tuple is missing, so we walk
+// down until one loads — that way variants (weights, italic) come as real
+// faces when the family has them, and the browser synthesizes the rest.
+const GOOGLE_AXES = [
+  ':ital,wght@0,100..900;1,100..900',
+  ':ital,wght@0,400;0,700;1,400;1,700',
+  ':wght@400;700',
+  '',
+];
+
+function tryStylesheet(id, href) {
+  return new Promise((resolve, reject) => {
+    const link = document.createElement('link');
+    link.id = id;
+    link.rel = 'stylesheet';
+    link.href = href;
+    link.onload = () => resolve(link);
+    link.onerror = () => {
+      link.remove();
+      reject(new Error('axis set unavailable'));
+    };
+    document.head.appendChild(link);
+  });
+}
+
 async function injectGoogleFont(family) {
   const id = googleLinkId(family);
   if (!document.getElementById(id)) {
-    await new Promise((resolve, reject) => {
-      const link = document.createElement('link');
-      link.id = id;
-      link.rel = 'stylesheet';
-      link.href = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}:wght@400;700&display=swap`;
-      link.onload = resolve;
-      link.onerror = () => {
-        link.remove();
-        reject(new Error(`"${family}" not found on Google Fonts`));
-      };
-      document.head.appendChild(link);
-    });
+    const urlFamily = family.replace(/ /g, '+');
+    let attached = false;
+    for (const axes of GOOGLE_AXES) {
+      try {
+        await tryStylesheet(id, `https://fonts.googleapis.com/css2?family=${urlFamily}${axes}&display=swap`);
+        attached = true;
+        break;
+      } catch {
+        // next, plainer axis set
+      }
+    }
+    if (!attached) throw new Error(`"${family}" not found on Google Fonts`);
   }
   // The stylesheet alone doesn't fetch the font — force it and verify.
   const loaded = await document.fonts.load(`16px "${family}"`);
@@ -130,6 +159,11 @@ async function injectGoogleFont(family) {
     document.getElementById(id)?.remove();
     throw new Error(`"${family}" failed to load`);
   }
+  // Warm the common variants so the canvas doesn't measure with fallback
+  // metrics on first use (fire-and-forget; missing faces just no-op).
+  ['bold 16px', 'italic 16px', 'italic bold 16px'].forEach((v) => {
+    document.fonts.load(`${v} "${family}"`).catch(() => {});
+  });
 }
 
 export async function addGoogleFont(rawName) {
@@ -161,6 +195,74 @@ export function removeFont(family) {
     notify();
   }
 }
+
+// --- Font binaries (for Create Outlines) ---
+
+// Generic CSS families resolved to concrete local faces, best match first.
+const GENERIC_LOCAL = {
+  'sans-serif': ['Helvetica', 'Arial', 'Segoe UI', 'Verdana'],
+  serif: ['Times New Roman', 'Times', 'Georgia'],
+  monospace: ['Menlo', 'Courier New', 'Monaco', 'Consolas'],
+};
+
+function fontsourceId(family) {
+  return family.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+}
+
+// Google families: fetch a static WOFF (v1 — opentype.js can't read woff2)
+// from the Fontsource mirror on jsDelivr. Falls back towards regular when the
+// exact weight/italic face doesn't exist.
+async function fetchGoogleBinary(family, weight, italic) {
+  const id = fontsourceId(family);
+  const tries = [];
+  const styles = italic ? ['italic', 'normal'] : ['normal'];
+  const weights = [...new Set([weight, 400, 700])];
+  styles.forEach((s) => weights.forEach((w) => tries.push(`latin-${w}-${s}`)));
+  for (const variant of tries) {
+    const res = await fetch(`https://cdn.jsdelivr.net/fontsource/fonts/${id}@latest/${variant}.woff`)
+      .catch(() => null);
+    if (res && res.ok) return res.arrayBuffer();
+  }
+  throw new Error(`No downloadable face found for "${family}"`);
+}
+
+// System families: the Local Font Access API (Chromium; prompts once).
+async function fetchLocalBinary(family, weight, italic) {
+  if (typeof window.queryLocalFonts !== 'function') {
+    throw new Error(`"${family}" is a system font — outlining it needs the Local Font Access API (Chrome) or the font file loaded via Type > Fonts…`);
+  }
+  const families = GENERIC_LOCAL[family] || [family];
+  const fonts = await window.queryLocalFonts();
+  const candidates = fonts.filter((f) => families.some((fam) => f.family.toLowerCase() === fam.toLowerCase()));
+  if (!candidates.length) throw new Error(`"${family}" was not found among local fonts`);
+  const wantBold = weight >= 600;
+  const score = (f) => {
+    const s = f.style.toLowerCase();
+    let n = 0;
+    if (/bold/.test(s) === wantBold) n += 2;
+    if (/italic|oblique/.test(s) === italic) n += 2;
+    if (s === 'regular' && !wantBold && !italic) n += 1;
+    return n;
+  };
+  candidates.sort((a, b) => score(b) - score(a));
+  const blob = await candidates[0].blob();
+  return blob.arrayBuffer();
+}
+
+// Raw bytes of the face closest to family+weight+style. Custom files win
+// (we hold their buffers), then the Fontsource mirror for Google families,
+// then local fonts. Callers parse the result with opentype.js.
+export async function resolveFontBinary(family, { weight = 400, italic = false } = {}) {
+  const custom = state.custom.find((c) => c.family === family);
+  if (custom) return custom.buffer;
+  if (state.google.some((f) => f === family)) return fetchGoogleBinary(family, weight, italic);
+  return fetchLocalBinary(family, weight, italic);
+}
+
+// Any face that finishes loading (variant weights/italics fetch lazily on
+// first use) re-notifies subscribers, so canvas text re-measures with the
+// real metrics instead of the synthesized fallback.
+document.fonts?.addEventListener?.('loadingdone', () => notify());
 
 // Restore persisted Google Fonts on startup (fire-and-forget: each family
 // notifies as it arrives so open documents re-layout with real metrics).

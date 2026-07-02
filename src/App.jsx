@@ -6,11 +6,13 @@ import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
+import FindFontDialog from './components/FindFontDialog/FindFontDialog.jsx';
 import { TOOLS } from './canvas/tools/toolIds.js';
 import { TOOL_ITEMS } from './components/toolItems.jsx';
 import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
 import { setShowHiddenChars } from './canvas/operations/textLayout.js';
 import { changeCase, smartPunctuation, fitHeadline } from './canvas/operations/typography.js';
+import { createOutlines } from './canvas/operations/outlines.js';
 
 const emptySel = { count: 0, isGroup: false, style: null };
 const TOOL_LABELS = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i.label]));
@@ -24,6 +26,7 @@ export default function App() {
   const [columns, setColumns] = useState(1);
   const [paintFocus, setPaintFocus] = useState('fill'); // which paint X-shortcuts target
   const [fontsOpen, setFontsOpen] = useState(false);
+  const [findFontOpen, setFindFontOpen] = useState(false);
   const [hiddenChars, setHiddenChars] = useState(false);
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
@@ -122,6 +125,16 @@ export default function App() {
         case 'fitHeadline':
           applyTextCommand(fitHeadline);
           break;
+        case 'createOutlines': {
+          const items = selItemsRef.current.filter((it) => it?.data?.isText);
+          if (!items.length) break;
+          // Drop the selection first — the text groups are about to be removed.
+          actionRef.current?.('deselect');
+          Promise.all(items.map(createOutlines)).catch((err) => {
+            window.alert(`Create Outlines failed: ${err.message}`);
+          });
+          break;
+        }
         case 'toggleHiddenChars':
           setShowHiddenChars(!hiddenChars);
           setHiddenChars(!hiddenChars);
@@ -138,6 +151,9 @@ export default function App() {
           break;
         case 'openFonts':
           setFontsOpen(true);
+          break;
+        case 'openFindFont':
+          setFindFontOpen(true);
           break;
         case 'zoomIn':
         case 'zoomOut':
@@ -219,6 +235,17 @@ export default function App() {
       </div>
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
       {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}
+      {findFontOpen && (
+        <FindFontDialog
+          onClose={() => setFindFontOpen(false)}
+          onReplaced={() => {
+            // Selected text may have been restyled — re-sync panel + overlay.
+            const item = selItemsRef.current[0];
+            if (item?.data?.isText) setSel((prev) => ({ ...prev, style: readStyle(item) }));
+            refreshSelRef.current?.();
+          }}
+        />
+      )}
     </div>
   );
 }
