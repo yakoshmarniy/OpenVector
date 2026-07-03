@@ -133,8 +133,14 @@ export function createKnifeTool(ctx = {}) {
         drop();
         return;
       }
+      const cuttable = (it) => {
+        for (let c = it; c; c = c.parent) {
+          if (!c.visible || c.locked) return false;
+        }
+        return true;
+      };
       const targets = paper.project.getItems({
-        match: (it) => it.className === 'Path' && it !== knife && !it.locked && !overlayed(it),
+        match: (it) => it.className === 'Path' && it !== knife && cuttable(it) && !overlayed(it),
       });
       const pieces = [];
       targets.forEach((t) => {
@@ -170,7 +176,7 @@ export function createKnifeTool(ctx = {}) {
 
     deactivate() {
       drop();
-      selection.clear();
+      selection.dispose();
     },
   };
 }

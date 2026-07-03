@@ -3,7 +3,8 @@ import {
   createSelection,
   pickItem,
   computeResizeBounds,
-  isOverlayItem,
+  editableItems,
+  addOverlay,
 } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
 import { snapMove } from '../operations/snapping.js';
@@ -77,8 +78,7 @@ export function createSelectTool(ctx = {}) {
     marqueePath.strokeWidth = 1 / z;
     marqueePath.dashArray = [3 / z, 2 / z];
     marqueePath.fillColor = new paper.Color(0.43, 0.52, 0.59, 0.12);
-    marqueePath.data.isSelectionOverlay = true;
-    marqueePath.locked = true;
+    addOverlay(marqueePath);
     marqueePath.bringToFront();
   };
 
@@ -95,8 +95,7 @@ export function createSelectTool(ctx = {}) {
     const vb = paper.view.bounds;
     const z = paper.view.zoom;
     guides = new paper.Group();
-    guides.data.isSelectionOverlay = true;
-    guides.locked = true;
+    addOverlay(guides);
     xs.forEach((x) => {
       const l = new paper.Path.Line(new paper.Point(x, vb.top), new paper.Point(x, vb.bottom));
       l.strokeColor = '#8a9aa8';
@@ -150,8 +149,7 @@ export function createSelectTool(ctx = {}) {
     widget.fillColor = new paper.Color('#cfd3d7');
     widget.strokeColor = new paper.Color('#3a3d41');
     widget.strokeWidth = 1 / z;
-    widget.data.isSelectionOverlay = true;
-    widget.locked = true;
+    addOverlay(widget);
     widget.bringToFront();
   };
 
@@ -265,9 +263,7 @@ export function createSelectTool(ctx = {}) {
         if (marqueeStart && point) {
           const rect = normRect(marqueeStart, point);
           if (rect.width > 2 || rect.height > 2) {
-            const hits = paper.project.activeLayer.children.filter(
-              (it) => !isOverlayItem(it) && rect.intersects(it.bounds),
-            );
+            const hits = editableItems().filter((it) => rect.intersects(it.bounds));
             if (marqueeAdditive) hits.forEach((h) => !selection.has(h) && selection.toggle(h));
             else selection.setTargets(hits);
           }
@@ -311,8 +307,7 @@ export function createSelectTool(ctx = {}) {
       }
       if (e.code === 'Delete' || e.code === 'Backspace') {
         e.preventDefault();
-        selection.targets.forEach((t) => t.remove());
-        selection.clear();
+        runSelectionAction(selection, 'delete'); // also clears arrowheads
         clearWidget();
       } else if (e.code === 'Escape') {
         selection.clear();
@@ -338,7 +333,7 @@ export function createSelectTool(ctx = {}) {
       clearMarquee();
       clearGuides();
       clearWidget();
-      selection.clear();
+      selection.dispose(); // the selection itself survives the tool switch
     },
   };
 }

@@ -1,0 +1,180 @@
+.panel {
+  height: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--ov-panel);
+  border-left: 1px solid var(--ov-panel-border);
+  border-top: 1px solid var(--ov-panel-border);
+  font-size: 12px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px 6px;
+}
+
+.title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ov-text-dim);
+}
+
+.headBtn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ov-text-dim);
+  cursor: pointer;
+}
+
+.headBtn:hover {
+  color: var(--ov-text);
+  background: var(--ov-bg);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 6px;
+}
+
+.layerRow,
+.itemRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 8px 0 4px;
+  cursor: default;
+  border-left: 2px solid transparent;
+}
+
+.layerRow {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.layerRow:hover,
+.itemRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.activeLayer {
+  border-left-color: var(--ov-accent-active);
+}
+
+.selectedRow {
+  background: rgba(111, 133, 149, 0.28);
+}
+
+.selectedRow:hover {
+  background: rgba(111, 133, 149, 0.36);
+}
+
+.dropTarget {
+  box-shadow: inset 0 2px 0 var(--ov-accent-active);
+}
+
+.flagBtn {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--ov-text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.flagBtn:hover {
+  background: var(--ov-bg);
+}
+
+/* Lock shown dimmed when unlocked, bright when locked; eye dimmed when hidden. */
+.flagDim {
+  color: transparent;
+}
+
+.layerRow:hover .flagDim,
+.itemRow:hover .flagDim {
+  color: var(--ov-text-dim);
+}
+
+.flagOn {
+  color: var(--ov-text);
+}
+
+.flagOff {
+  color: var(--ov-text-dim);
+}
+
+.disclose {
+  width: 14px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--ov-text-dim);
+  font-size: 10px;
+  padding: 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 2px;
+}
+
+.layerName,
+.itemName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.layerName {
+  color: var(--ov-text);
+  font-weight: 600;
+}
+
+.itemName {
+  color: var(--ov-text);
+}
+
+.renameInput {
+  flex: 1;
+  min-width: 0;
+  height: 18px;
+  border: 1px solid var(--ov-accent);
+  border-radius: 3px;
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-size: 12px;
+  padding: 0 4px;
+  outline: none;
+}
+
+.empty {
+  margin: 8px 10px;
+  color: var(--ov-text-dim);
+}

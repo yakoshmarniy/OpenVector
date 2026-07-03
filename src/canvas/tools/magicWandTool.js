@@ -1,5 +1,4 @@
-import paper from 'paper';
-import { createSelection, pickItem, isOverlayItem } from '../operations/selection.js';
+import { createSelection, pickItem, editableItems } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
 
 // Sum-of-RGB-channel tolerance (each channel 0..1, so 0..3 total).
@@ -28,8 +27,7 @@ export function createMagicWandTool(ctx = {}) {
     const refFill = fillOf(ref);
     const refStroke = strokeOf(ref);
     const refWeight = weightOf(ref);
-    return paper.project.activeLayer.children.filter((it) => {
-      if (isOverlayItem(it) || it.locked) return false;
+    return editableItems().filter((it) => {
       if (it.className !== 'Path' && it.className !== 'CompoundPath' && it.className !== 'Shape') {
         return false; // only match fillable/strokable artwork
       }
@@ -59,8 +57,7 @@ export function createMagicWandTool(ctx = {}) {
       if (!selection.targets.length) return;
       if (e.code === 'Delete' || e.code === 'Backspace') {
         e.preventDefault();
-        selection.targets.forEach((t) => t.remove());
-        selection.clear();
+        runSelectionAction(selection, 'delete');
       } else if (e.code === 'Escape') {
         selection.clear();
       }
@@ -79,7 +76,7 @@ export function createMagicWandTool(ctx = {}) {
     },
 
     deactivate() {
-      selection.clear();
+      selection.dispose();
     },
   };
 }

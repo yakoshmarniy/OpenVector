@@ -1,9 +1,25 @@
 import { useEffect, useRef, useState } from 'react';
 import paper from 'paper';
 import { TOOLS } from '../../canvas/tools/toolIds.js';
-import { pickItem, isOverlayItem } from '../../canvas/operations/selection.js';
+import {
+  pickItem,
+  isOverlayItem,
+  createSelection,
+  artworkLayers,
+} from '../../canvas/operations/selection.js';
+import { runSelectionAction } from '../../canvas/operations/selectionActions.js';
+import {
+  isolationActive,
+  isolationCrumbs,
+  enterIsolation,
+  exitIsolationTo,
+  exitIsolationAll,
+  adoptNewItems,
+} from '../../canvas/operations/isolation.js';
 import { relayoutAllText } from '../../canvas/operations/textLayout.js';
 import { subscribeFonts } from '../../state/fonts.js';
+import { setSelectedItems, clearSelection, getSelectedItems } from '../../state/selection.js';
+import { bumpDocument } from '../../state/document.js';
 import { createSelectTool } from '../../canvas/tools/selectTool.js';
 import { createDirectSelectTool } from '../../canvas/tools/directSelectTool.js';
 import { createGroupSelectTool } from '../../canvas/tools/groupSelectTool.js';
@@ -98,10 +114,14 @@ export default function Canvas({
   snapRef,
   onZoomChange,
   onRotationChange,
+  onIsolationChange,
 }) {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const toolRef = useRef(null);
+  // Persistent view over the global selection store: draws the overlay and
+  // feeds App / the contextual task bar no matter which tool is active.
+  const docSelRef = useRef(null);
   // Latest callbacks, kept in refs so the mount-once listeners read the current
   // prop without re-binding.
   const onSelChangeRef = useRef(onSelectionChange);
@@ -112,22 +132,65 @@ export default function Canvas({
   onZoomChangeRef.current = onZoomChange;
   const onRotationChangeRef = useRef(onRotationChange);
   onRotationChangeRef.current = onRotationChange;
+  const onIsolationChangeRef = useRef(onIsolationChange);
+  onIsolationChangeRef.current = onIsolationChange;
 
   // Contextual task bar state (floats under the selection on the canvas).
   const [ctxRect, setCtxRect] = useState(null);
   const [ctxItems, setCtxItems] = useState([]);
+  // Isolation-mode breadcrumbs (empty = not isolated).
+  const [isoCrumbs, setIsoCrumbs] = useState([]);
 
-  // Let the parent ask the active tool to redraw its selection overlay after an
-  // external change (e.g. a Properties edit).
-  if (refreshRef) refreshRef.current = () => toolRef.current?.refreshSelection?.();
-  // Let Properties buttons trigger group/boolean actions on the current tool.
-  if (actionRef) actionRef.current = (name) => toolRef.current?.runAction?.(name);
+  // After any user gesture that may have changed the document: adopt items
+  // drawn while isolated into the isolated group, then signal panels.
+  const afterMutation = () => {
+    if (isolationActive()) adoptNewItems();
+    bumpDocument();
+  };
+
+  const syncIsolation = () => {
+    const crumbs = isolationCrumbs();
+    setIsoCrumbs(crumbs);
+    onIsolationChangeRef.current?.(crumbs.length);
+  };
+
+  // Exit isolation down to `depth` levels; select the group we stepped out of.
+  const leaveIsolationTo = (depth) => {
+    const left = exitIsolationTo(depth);
+    if (left && left.parent) setSelectedItems([left]);
+    else clearSelection();
+    syncIsolation();
+    bumpDocument();
+    paper.view.update();
+  };
+
+  // Let the parent ask for an overlay redraw after an external change (e.g. a
+  // Properties edit): the shared overlay plus any tool-specific widgets.
+  if (refreshRef) {
+    refreshRef.current = () => {
+      if (toolRef.current?.refreshSelection) toolRef.current.refreshSelection();
+      else docSelRef.current?.draw();
+    };
+  }
+  // Menu / Properties commands: prefer the active tool (it may add behaviour),
+  // otherwise run against the shared selection — so commands work everywhere.
+  if (actionRef) {
+    actionRef.current = (name) => {
+      if (toolRef.current?.runAction) toolRef.current.runAction(name);
+      else if (docSelRef.current) runSelectionAction(docSelRef.current, name);
+      afterMutation();
+    };
+  }
 
   // View-level commands from the menus (zoom, fit, new document).
   if (viewRef) {
     viewRef.current = (cmd) => {
       const view = paper.view;
       const clamp = (z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+      const redraw = () => {
+        toolRef.current?.onViewChange?.();
+        docSelRef.current?.draw();
+      };
       const applyZoom = (nz, pivot) => {
         const oldZoom = view.zoom;
         const z = clamp(nz);
@@ -136,14 +199,20 @@ export default function Canvas({
         const offset = pivot.subtract(view.center);
         view.zoom = z;
         view.center = view.center.add(offset.multiply(1 - beta));
-        toolRef.current?.onViewChange?.();
+        redraw();
         onZoomChangeRef.current?.(view.zoom);
       };
       if (cmd === 'zoomIn') applyZoom(view.zoom * ZOOM_STEP, view.center);
       else if (cmd === 'zoomOut') applyZoom(view.zoom / ZOOM_STEP, view.center);
       else if (cmd === 'zoomActual') applyZoom(1, view.center);
       else if (cmd === 'zoomFit') {
-        const items = paper.project.activeLayer.children.filter((it) => !isOverlayItem(it));
+        const items = [];
+        artworkLayers().forEach((l) => {
+          if (!l.visible) return;
+          l.children.forEach((it) => {
+            if (!isOverlayItem(it) && it.visible) items.push(it);
+          });
+        });
         if (!items.length) {
           applyZoom(1, view.center);
           return;
@@ -160,16 +229,31 @@ export default function Canvas({
           (view.viewSize.height - margin) / b.height,
         ));
         view.center = b.center;
-        toolRef.current?.onViewChange?.();
+        redraw();
         onZoomChangeRef.current?.(view.zoom);
       } else if (cmd === 'rotateViewCW' || cmd === 'rotateViewCCW' || cmd === 'rotateViewReset') {
         view.rotation = cmd === 'rotateViewReset' ? 0 : view.rotation + (cmd === 'rotateViewCW' ? 90 : -90);
-        toolRef.current?.onViewChange?.();
+        redraw();
         onRotationChangeRef.current?.(view.rotation);
+      } else if (cmd === 'isolate') {
+        const sel = getSelectedItems();
+        const group = sel.length === 1 ? sel[0] : null;
+        if (enterIsolation(group)) {
+          clearSelection();
+          syncIsolation();
+          bumpDocument();
+          paper.view.update();
+        }
+      } else if (cmd === 'exitIsolation') {
+        leaveIsolationTo(0);
       } else if (cmd === 'clear') {
-        toolRef.current?.runAction?.('deselect');
-        paper.project.activeLayer.removeChildren();
-        onSelChangeRef.current?.(null);
+        exitIsolationAll();
+        syncIsolation();
+        clearSelection();
+        artworkLayers().forEach((l) => l.remove());
+        const fresh = new paper.Layer(); // becomes the active layer
+        fresh.name = 'Layer 1';
+        bumpDocument();
         paper.view.update();
       }
     };
@@ -187,6 +271,18 @@ export default function Canvas({
     const canvas = canvasRef.current;
     const stage = stageRef.current;
     paper.setup(canvas);
+    paper.project.activeLayer.name = 'Layer 1';
+
+    // One persistent selection view for the whole document: renders the shared
+    // overlay and reports selection / bounds regardless of the active tool.
+    const docSelection = createSelection(
+      (items) => {
+        onSelChangeRef.current?.(items);
+        setCtxItems(items);
+      },
+      (rect) => setCtxRect(rect),
+    );
+    docSelRef.current = docSelection;
 
     // Measure the stage (not the canvas) — Paper writes inline width/height on
     // the canvas, so observing it would feed back on itself.
@@ -229,8 +325,9 @@ export default function Canvas({
       const offset = mouse.subtract(view.center);
       view.zoom = newZoom;
       view.center = view.center.add(offset.multiply(1 - beta));
-      // Handles are sized in screen pixels — let the tool rescale them.
+      // Handles are sized in screen pixels — rescale the overlay and widgets.
       toolRef.current?.onViewChange?.();
+      docSelection.draw();
       onZoomChangeRef.current?.(view.zoom);
     };
 
@@ -278,15 +375,38 @@ export default function Canvas({
       if (drawingRef.current) {
         drawingRef.current = false;
         toolRef.current?.onMouseUp?.(toProject(e), e);
+        afterMutation();
       }
     };
 
-    // Double-click a text item → edit it (works from any tool).
+    // Double-click: text → edit it; group → isolate it (deeper when already
+    // isolated); empty space while isolated → step one level out.
     const onDblClick = (e) => {
       const item = pickItem(toProject(e));
       if (item && item.data && item.data.isText) {
         onEditTextRef.current?.(item);
+        return;
       }
+      if (item && item.className === 'Group') {
+        if (enterIsolation(item)) {
+          clearSelection();
+          syncIsolation();
+          bumpDocument();
+          paper.view.update();
+        }
+        return;
+      }
+      if (!item && isolationActive()) {
+        leaveIsolationTo(isolationCrumbs().length - 1);
+      }
+    };
+
+    // Selection commands work from any tool: the active tool may add
+    // behaviour; otherwise they run against the shared selection store.
+    const runToolAction = (name) => {
+      if (toolRef.current?.runAction) toolRef.current.runAction(name);
+      else runSelectionAction(docSelection, name);
+      afterMutation();
     };
 
     const onKeyDown = (e) => {
@@ -299,6 +419,7 @@ export default function Canvas({
       // including Space — goes to it, not to pan/shortcut handling.
       if (toolRef.current?.wantsKeyboard?.()) {
         toolRef.current.onKeyDown?.(e);
+        afterMutation(); // typing edits the document (Layers labels follow)
         return;
       }
       if (e.code === 'Space') {
@@ -312,18 +433,30 @@ export default function Canvas({
       // Group / ungroup (Cmd/Ctrl+G, +Shift to ungroup).
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG') {
         e.preventDefault();
-        toolRef.current?.runAction?.(e.shiftKey ? 'ungroup' : 'group');
+        runToolAction(e.shiftKey ? 'ungroup' : 'group');
         return;
       }
       // Select all / deselect / duplicate.
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyA') {
         e.preventDefault();
-        toolRef.current?.runAction?.(e.shiftKey ? 'deselect' : 'selectAll');
+        runToolAction(e.shiftKey ? 'deselect' : 'selectAll');
         return;
       }
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyD') {
         e.preventDefault();
-        toolRef.current?.runAction?.('duplicate');
+        runToolAction('duplicate');
+        return;
+      }
+      // Lock / hide (⌘2 / ⌘3; with Alt — unlock all / show all).
+      if ((e.metaKey || e.ctrlKey) && (e.code === 'Digit2' || e.code === 'Digit3')) {
+        e.preventDefault();
+        const lock = e.code === 'Digit2';
+        runToolAction(e.altKey ? (lock ? 'unlockAll' : 'showAll') : (lock ? 'lockSelection' : 'hideSelection'));
+        return;
+      }
+      // Escape steps out of isolation mode one level at a time.
+      if (e.code === 'Escape' && isolationActive()) {
+        leaveIsolationTo(isolationCrumbs().length - 1);
         return;
       }
       // X swaps the active fill/stroke focus; Shift+X swaps the colours.
@@ -336,6 +469,7 @@ export default function Canvas({
       // Avoid Backspace navigating the browser back (no text inputs here).
       if (e.code === 'Backspace') e.preventDefault();
       toolRef.current?.onKeyDown?.(e);
+      afterMutation();
     };
 
     const onKeyUp = (e) => {
@@ -363,6 +497,8 @@ export default function Canvas({
       window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      docSelection.dispose();
+      docSelRef.current = null;
       paper.project?.clear();
     };
   }, []);
@@ -379,11 +515,8 @@ export default function Canvas({
     toolRef.current?.deactivate?.();
     const factory = TOOL_FACTORIES[activeTool];
     const toolCtx = {
-      onSelectionChange: (items) => {
-        onSelChangeRef.current?.(items);
-        setCtxItems(Array.isArray(items) ? items : items ? [items] : []);
-      },
-      onSelectionBounds: (rect) => setCtxRect(rect),
+      // Selection reporting is global now (the store feeds App and the task
+      // bar via the persistent view) — tools only get behavioural hooks.
       consumePendingEdit: () => {
         const item = pendingEditRef?.current ?? null;
         if (pendingEditRef) pendingEditRef.current = null;
@@ -402,6 +535,7 @@ export default function Canvas({
         view.zoom = newZoom;
         view.center = view.center.add(offset.multiply(1 - beta));
         toolRef.current?.onViewChange?.();
+        docSelRef.current?.draw();
         onZoomChangeRef.current?.(view.zoom);
       },
     };
@@ -420,6 +554,25 @@ export default function Canvas({
   return (
     <div ref={stageRef} className={styles.stage}>
       <canvas ref={canvasRef} className={styles.canvas} />
+      {isoCrumbs.length > 0 && (
+        <div className={styles.crumbs}>
+          <button type="button" className={styles.crumb} onClick={() => leaveIsolationTo(0)}>
+            Document
+          </button>
+          {isoCrumbs.map((label, i) => (
+            <span key={`${label}-${i}`} className={styles.crumbWrap}>
+              <span className={styles.crumbSep}>›</span>
+              <button
+                type="button"
+                className={i === isoCrumbs.length - 1 ? `${styles.crumb} ${styles.crumbLast}` : styles.crumb}
+                onClick={() => leaveIsolationTo(i + 1)}
+              >
+                {label}
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
       {showCtx && (
         <div
           className={styles.ctxBar}

@@ -7,6 +7,7 @@ import {
   caretSegment,
 } from '../operations/textLayout.js';
 import { pickItem } from '../operations/selection.js';
+import { setSelectedItems } from '../../state/selection.js';
 
 /**
  * Text tool (horizontal or vertical).
@@ -53,17 +54,26 @@ function makeTextTool(ctx = {}, { orientation = 'horizontal' } = {}) {
 
   const beginEdit = (item) => {
     editing = item;
+    // Flag suppresses the selection box while the caret owns the visual;
+    // the store still holds the item so Properties shows its style.
+    editing.data.editing = true;
     showCaret();
-    ctx.onSelectionChange?.(item);
+    setSelectedItems([item]);
   };
 
   const commit = () => {
     removeCaret();
     removeBox();
     if (editing) {
-      if (!editing.data.rawText) editing.remove(); // discard empty text
+      const item = editing;
       editing = null;
-      ctx.onSelectionChange?.(null);
+      delete item.data.editing;
+      if (!item.data.rawText) {
+        item.remove(); // discard empty text
+        setSelectedItems([]);
+      } else {
+        setSelectedItems([item]); // committed text stays selected
+      }
     }
   };
 

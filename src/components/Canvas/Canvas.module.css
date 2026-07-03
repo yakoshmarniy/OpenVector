@@ -47,3 +47,49 @@
 .ctxBtn:hover {
   background: var(--ov-accent);
 }
+
+/* Isolation-mode breadcrumbs — pinned to the top-left of the canvas. */
+.crumbs {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 8px;
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  z-index: 30;
+  font-size: 12px;
+}
+
+.crumbWrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.crumbSep {
+  color: var(--ov-text-dim);
+}
+
+.crumb {
+  border: none;
+  background: transparent;
+  color: var(--ov-text-dim);
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.crumb:hover {
+  color: var(--ov-text);
+  background: var(--ov-bg);
+}
+
+.crumbLast {
+  color: var(--ov-text);
+}

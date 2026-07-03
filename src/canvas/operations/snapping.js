@@ -1,5 +1,5 @@
 import paper from 'paper';
-import { isOverlayItem } from './selection.js';
+import { isOverlayItem, artworkLayers } from './selection.js';
 
 // Snapping while dragging: snap the moving selection's bounding box to a grid
 // and/or to other objects' edges and centres. Returns an adjusted delta plus
@@ -13,12 +13,15 @@ function candidates(movingItems) {
   const xs = [];
   const ys = [];
   const moving = new Set(movingItems);
-  paper.project.activeLayer.children.forEach((it) => {
-    if (isOverlayItem(it) || moving.has(it)) return;
-    const b = it.bounds;
-    if (!b || (!b.width && !b.height)) return;
-    xs.push(b.left, b.center.x, b.right);
-    ys.push(b.top, b.center.y, b.bottom);
+  artworkLayers().forEach((layer) => {
+    if (!layer.visible) return;
+    layer.children.forEach((it) => {
+      if (isOverlayItem(it) || !it.visible || moving.has(it)) return;
+      const b = it.bounds;
+      if (!b || (!b.width && !b.height)) return;
+      xs.push(b.left, b.center.x, b.right);
+      ys.push(b.top, b.center.y, b.bottom);
+    });
   });
   return { xs, ys };
 }

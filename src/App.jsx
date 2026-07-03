@@ -4,6 +4,7 @@ import ControlBar from './components/ControlBar/ControlBar.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
+import LayersPanel from './components/Panels/LayersPanel.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import FindFontDialog from './components/FindFontDialog/FindFontDialog.jsx';
@@ -28,6 +29,8 @@ export default function App() {
   const [fontsOpen, setFontsOpen] = useState(false);
   const [findFontOpen, setFindFontOpen] = useState(false);
   const [hiddenChars, setHiddenChars] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(true);
+  const [isoDepth, setIsoDepth] = useState(0); // isolation-mode nesting depth
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
   const actionRef = useRef(null);
@@ -149,6 +152,9 @@ export default function App() {
         case 'toggleColumns':
           setColumns((c) => (c === 2 ? 1 : 2));
           break;
+        case 'toggleLayers':
+          setLayersOpen((v) => !v);
+          break;
         case 'openFonts':
           setFontsOpen(true);
           break;
@@ -162,6 +168,8 @@ export default function App() {
         case 'rotateViewCW':
         case 'rotateViewCCW':
         case 'rotateViewReset':
+        case 'isolate':
+        case 'exitIsolation':
           viewRef.current?.(cmd);
           break;
         case 'fileNew':
@@ -195,7 +203,15 @@ export default function App() {
 
   return (
     <div className="app">
-      <MenuBar sel={sel} snap={snap} columns={columns} hiddenChars={hiddenChars} onCommand={handleCommand} />
+      <MenuBar
+        sel={sel}
+        snap={snap}
+        columns={columns}
+        hiddenChars={hiddenChars}
+        layersOpen={layersOpen}
+        isoDepth={isoDepth}
+        onCommand={handleCommand}
+      />
       <ControlBar
         toolLabel={TOOL_LABELS[activeTool] || 'Tool'}
         sel={sel}
@@ -225,13 +241,17 @@ export default function App() {
           snapRef={snapRef}
           onZoomChange={setZoom}
           onRotationChange={setRotation}
+          onIsolationChange={setIsoDepth}
         />
-        <Properties
-          sel={sel}
-          onChange={handleStyleChange}
-          onAction={handleAction}
-          onManageFonts={() => setFontsOpen(true)}
-        />
+        <div className="side-col">
+          <Properties
+            sel={sel}
+            onChange={handleStyleChange}
+            onAction={handleAction}
+            onManageFonts={() => setFontsOpen(true)}
+          />
+          {layersOpen && <LayersPanel />}
+        </div>
       </div>
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
       {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}

@@ -395,9 +395,10 @@ OpenVector/
 ```
 
 > Реальное состояние дерева на сейчас: есть `canvas/{tools,operations}`,
-> `components/{MenuBar,ControlBar,Toolbar,Properties,Canvas,StatusBar,FontPicker,FontsDialog}`,
-> `styles/`, `state/` (пока только `fonts.js`, сессия 19).
-> Папки `effects/`, `Panels/`, `AIPanel/`, `i18n/`, `plugins/` появятся по мере
+> `components/{MenuBar,ControlBar,Toolbar,Properties,Panels,Canvas,StatusBar,FontPicker,FontsDialog,FindFontDialog}`,
+> `styles/`, `state/` (`fonts.js`, `selection.js`, `document.js` — сессии 19/22),
+> `Panels/` (LayersPanel — сессия 22).
+> Папки `effects/`, `AIPanel/`, `i18n/`, `plugins/` появятся по мере
 > соответствующих фаз. (Временный `TopBar/` удалён — его заменили Menu Bar + Control Bar.)
 
 ---
@@ -970,7 +971,62 @@ i18next пока не подключаем — это отдельный пун�
 - Контур ≠ метрики канвы: advance от opentype может чуть отличаться от `measureText` (браузер
   мог рендерить другой бинарник) — на глаз неотличимо, позиция каждого глифа своя, не суммируется.
 
-### Сверка с планом 20 фаз — что уже сделано
+### Сессия 22 — прогресс (✅ итерация 6.1)
+
+Объём: **фаза 6.1** — организация объектов. Закрыт и отложенный рефактор «единый стор выделения».
+
+- [x] **Единый стор выделения** (`src/state/selection.js`): один источник правды, подписки для
+      React/Canvas; `alive`-проверка по цепочке до слоя в project.layers (переживает удаление слоя);
+      `pruneSelection` фильтрует hidden/locked по цепочке. **Выделение переживает смену инструмента**:
+      `createSelection` в `operations/selection.js` теперь — тонкая обёртка над стором; оверлей —
+      модульный синглтон; `dispose()` (в deactivate инструментов) снимает колбэки, НЕ сбрасывая стор.
+      Canvas держит постоянный экземпляр (`docSelRef`) → App/такс-бар питаются от стора при любом
+      инструменте; шорткаты и меню (⌘A/⌘G/⌘D/⌘2/⌘3, Group/булевы/…) работают с фолбэком
+      `runSelectionAction(docSelection)` когда активный инструмент без `runAction`.
+- [x] **Слой оверлеев** `__overlay` (`data.isOverlayLayer`, всегда сверху, getOverlayLayer):
+      рамка выделения, marquee, гайды, виджет радиуса — не зависят от пользовательских слоёв.
+      `addOverlay(item)` — общий хелпер.
+- [x] **Layers панель** (`components/Panels/LayersPanel.jsx`, первый модуль в Panels/): слои
+      (верхний в списке = верхний на холсте), создание/удаление (кнопки в шапке), активация кликом,
+      переименование dblclick (слоёв и объектов), глаз/замок у слоёв и объектов, вложенность групп
+      (disclosure ▸/▾, отступы), подписи объектов (Text “…”, Rectangle, Compound Path…), свотч
+      заливки/обводки, выделение кликом (Shift = добавить), подсветка выделенных, **drag&drop**:
+      на строку слоя = в этот слой наверх, на строку объекта = вставить над ним (с защитой от
+      дропа в своё поддерево). Обновление — по `state/document.js` (bumpDocument из Canvas после
+      каждого жеста: mouseup/keydown/экшены) + подписка на стор выделения.
+- [x] **Lock/Hide**: Object-меню Lock Selection (⌘2) / Unlock All (⌥⌘2) / Hide Selection (⌘3) /
+      Show All (⌥⌘3) + команды в `runSelectionAction`; `operations/visibility.js` — Unlock All
+      пропускает системные локи (оверлеи, стрелки, hiddenMark, isoDim). Заблокированное не хитится.
+- [x] **Isolation Mode** (`operations/isolation.js`): dblclick по группе (из любого инструмента) →
+      изоляция; вложенный dblclick — глубже (chain). Всё вне изолируемой группы затемняется
+      (opacity ×0.25) и локается; выход восстанавливает точно. **Хлебные крошки** на холсте
+      (Document › Group › …, клик по крошке = выход на уровень), Escape = уровень вверх, dblclick
+      по пустому = уровень вверх; после полного выхода группа выделена. Object-меню: Isolate
+      Selected Group / Exit Isolation Mode. **Новые объекты, нарисованные в изоляции, усыновляются
+      группой** (`adoptNewItems` в Canvas.afterMutation: всё незалоченное на уровне слоя → в группу).
+      `pickItem.topLevel` останавливается на изоляционном корне → клик выбирает ДЕТЕЙ группы.
+- [x] **Мультислойность везде**: selectAll/marquee/wand — `editableItems()` (видимые незалоченные
+      слои, в изоляции — дети корня); snapping/zoomFit — по всем видимым слоям; `groupItems`
+      кладёт группу в контейнер переднего элемента (не в activeLayer); нож режет только
+      видимое/незалоченное по цепочке; File > New чистит все слои и создаёт «Layer 1».
+- [x] Текст: `data.editing` на время правки (оверлей скрыт — визуал у каретки), стор держит
+      текст (Properties работает); после коммита текст остаётся выделенным.
+- [x] Window > Layers (тоггл панели); правая колонка `.side-col` = Properties (растёт, скролл) +
+      Layers (240px). Arrange из 6.1 был готов ранее (сессия 10).
+
+Заметки / решения сессии 22:
+- `new paper.Layer()` АВТО-активируется и встаёт поверх — после создания оверлей-слой
+  возвращаем наверх (`project.insertLayer(layers.length, ol)`), прежний active восстанавливаем
+  вручную (в getOverlayLayer).
+- Illustrator-паттерн «рисование в изоляции добавляет в группу» реализован БЕЗ правки инструментов:
+  apply() изоляции локает всё преж-существующее на уровне слоёв → после mouseup всё незалоченное
+  новое на уровне слоя = свежесозданное → `root.addChild` (координаты сохраняются, матрица группы
+  единичная). Перо в процессе рисования усыновляется тоже — безвредно (координаты не меняются).
+- Грабли теста (не кода): клик по кнопке меню и чтение дропдауна — РАЗНЫЕ eval (React флашит после
+  return); повторный клик по заголовку меню ТОГГЛИТ (закрывает). Синтетический DnD работает через
+  `new DataTransfer()` + DragEvent(dragstart/dragover/drop) с одним dt.
+- Отложено: Delete-клавиша при не-selection инструментах (сейчас Delete работает только в
+  инструментах выделения); автовыделение новонарисованной фигуры (AI-поведение) — к 6.2/7.1.
 
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
 > Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
@@ -987,33 +1043,32 @@ i18next пока не подключаем — это отдельный пун�
 - **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
 - **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
 - **5.3 (Типографика):** 🟡 почти всё ✅ — размер/leading/tracking/justification, bold/italic (вес 100–900), baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: файлы/Google via Fontsource-WOFF/локальные via queryLocalFonts), **Find Font** (диалог замены), подменю в MenuBar · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар (нужно посимвольное выделение)
-- **6.1 (Организация):** 🟡 Align + Distribute, Group/Ungroup ✅ · ⬜ Arrange (z-order), Lock/Hide, Isolation Mode, Layers панель
+- **6.1 (Организация):** ✅ ГОТОВО — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, крошки, затемнение, adoption новых объектов), Layers панель (создание/удаление/переименование/глаз/замок/вложенность/drag между слоями), **единый стор выделения** (переживает смену инструмента; команды работают при любом инструменте)
 - **6.2 (Pathfinder):** 🟡 Add/Subtract/Intersect/Exclude ✅ · ⬜ Divide/Trim/Merge/Crop/Outline, Shape Builder, Compound Path, path-ops
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
 - **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
 - **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
-Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**, **слои**,
-**Menu Bar / Control Bar**, **Undo/Redo** (фаза 20.1).
+Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
+**Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 6.1 Организация (слои + единый стор выделения,
-Arrange, Lock/Hide, Isolation Mode). Затем 6.2 Pathfinder. Отложено:
+**Следующее по плану (ранние пробелы):** 6.2 Pathfinder (Divide/Trim/Merge/Crop/Outline,
+Shape Builder, Compound Path Make/Release, path-ops). Затем 7.1 Трансформации. Отложено:
 live-параметры polygon/star/ellipse (с 3.x/7.1); хвост 2.2 (Reference Point, Reset BB +
-поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1.
+поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1; Delete-клавиша и
+автовыделение новой фигуры при не-selection инструментах — к 6.2/7.1.
 
 > Грабли Paper: `project.getItems(fn)` с голой функцией НЕ работает (трактует fn как класс) —
 > нужно `getItems({ match: fn })`. Иначе фильтр молча возвращает 0.
 
 ### Отложенные архитектурные решения
 
-- **Единый стор выделения (инфраструктура, НЕ отдельный пункт плана).** Сейчас каждый инструмент
-  держит выделение у себя (свой `createSelection`); при переключении инструментов оно сбрасывается, и
-  команды меню работают только на активном Select. **Решение: сделать общий источник правды для
-  выделения вместе со слоями — в фазе 6.1** (панель Layers всё равно обязана читать/задавать выделение
-  из одного места, она и вынудит этот рефактор). Раньше 6.1 не трогаем — переделывать под слои.
+- ~~Единый стор выделения~~ — **✅ СДЕЛАНО в 6.1 (сессия 22)**: `src/state/selection.js` +
+  постоянный экземпляр в Canvas; выделение переживает смену инструмента, команды меню/шорткаты
+  работают при любом инструменте (фолбэк `runSelectionAction`).
 - **Настройки выделения (фича) — фаза 15.2**, раздел Preferences → «Selection & Anchor Display»
   (допуск клика, размер/вид опорных точек, выбор объекта только по контуру и т.п.). Смежное:
-  Select-меню (Same/Inverse/**Save Selection**/Above-Below) — 15.1; Isolation Mode — 6.1.
+  Select-меню (Same/Inverse/**Save Selection**/Above-Below) — 15.1.
 - **Контекстная чистка неприменимых кнопок (фидбек пользователя, TODO).** Сейчас Properties/Control
   Bar/контекст-бар показывают весь набор операций при 2+ выделенных, даже если операция бессмысленна
   (напр. Intersect/Exclude на смежных кусках ножа без перекрытия → пустой результат; align/distribute

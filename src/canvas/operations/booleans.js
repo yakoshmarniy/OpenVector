@@ -6,7 +6,13 @@ import paper from 'paper';
 
 export function groupItems(items) {
   if (!items || items.length < 2) return null;
-  return new paper.Group(items.slice()); // reparents items into the group
+  // Keep the group where the front-most member sat (its layer / container) —
+  // `new Group()` would otherwise drop it into the active layer.
+  const top = items.reduce((a, b) => (b.index > a.index ? b : a));
+  const parent = top.parent;
+  const g = new paper.Group(items.slice()); // reparents items into the group
+  if (parent && g.parent !== parent) parent.addChild(g);
+  return g;
 }
 
 export function ungroupItems(group) {

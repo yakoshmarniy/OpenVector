@@ -71,7 +71,7 @@ export function createGroupSelectTool(ctx = {}) {
     },
 
     deactivate() {
-      selection.clear();
+      selection.dispose();
     },
   };
 }

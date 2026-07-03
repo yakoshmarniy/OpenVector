@@ -1,8 +1,10 @@
 import paper from 'paper';
-import { isOverlayItem } from './selection.js';
+import { editableItems } from './selection.js';
 import { groupItems, ungroupItems, booleanOp } from './booleans.js';
 import { alignItems, distributeItems } from './align.js';
 import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
+import { unlockAllItems, showAllItems } from './visibility.js';
+import { pruneSelection } from '../../state/selection.js';
 
 const ALIGN_MODES = {
   alignLeft: 'left',
@@ -21,14 +23,21 @@ const ALIGN_MODES = {
 export function runSelectionAction(selection, name) {
   // Commands that don't need an existing selection.
   if (name === 'selectAll') {
-    const all = paper.project.activeLayer.children.filter(
-      (it) => !isOverlayItem(it) && !it.locked,
-    );
-    selection.setTargets(all);
+    selection.setTargets(editableItems());
     return;
   }
   if (name === 'deselect') {
     selection.clear();
+    return;
+  }
+  if (name === 'unlockAll') {
+    unlockAllItems();
+    paper.view.update();
+    return;
+  }
+  if (name === 'showAll') {
+    showAllItems();
+    paper.view.update();
     return;
   }
 
@@ -63,9 +72,22 @@ export function runSelectionAction(selection, name) {
       return;
     case 'arrangeForward':
       items.forEach((t) => {
-        if (t.nextSibling && !isOverlayItem(t.nextSibling)) t.insertAbove(t.nextSibling);
+        if (t.nextSibling) t.insertAbove(t.nextSibling);
       });
       selection.draw();
+      return;
+    case 'lockSelection':
+      items.forEach((t) => {
+        t.locked = true;
+      });
+      pruneSelection();
+      return;
+    case 'hideSelection':
+      items.forEach((t) => {
+        t.visible = false;
+      });
+      pruneSelection();
+      paper.view.update();
       return;
     case 'arrangeBackward':
       items.forEach((t) => {

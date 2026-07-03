@@ -4,7 +4,7 @@ import styles from './MenuBar.module.css';
 // Top menu bar. Items map to app commands (onCommand). Features that belong to
 // later phases are shown disabled so the structure is honest. Labels are plain
 // text for now; they move to i18next t() when i18n lands.
-function buildMenus({ sel, snap, columns, hiddenChars }) {
+function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
   const has = sel.count >= 1;
   const multi = sel.count >= 2;
   const group = sel.count === 1 && sel.isGroup;
@@ -55,8 +55,13 @@ function buildMenus({ sel, snap, columns, hiddenChars }) {
         { label: 'Intersect', cmd: 'intersect', enabled: multi },
         { label: 'Exclude', cmd: 'exclude', enabled: multi },
         sep,
-        { label: 'Lock', enabled: false },
-        { label: 'Hide', enabled: false },
+        { label: 'Isolate Selected Group', cmd: 'isolate', enabled: group },
+        { label: 'Exit Isolation Mode', cmd: 'exitIsolation', enabled: isoDepth > 0 },
+        sep,
+        { label: 'Lock Selection', cmd: 'lockSelection', enabled: has, accel: '⌘2' },
+        { label: 'Unlock All', cmd: 'unlockAll', accel: '⌥⌘2' },
+        { label: 'Hide Selection', cmd: 'hideSelection', enabled: has, accel: '⌘3' },
+        { label: 'Show All', cmd: 'showAll', accel: '⌥⌘3' },
       ],
     },
     {
@@ -124,18 +129,18 @@ function buildMenus({ sel, snap, columns, hiddenChars }) {
         { label: 'Two-Column Toolbar', cmd: 'toggleColumns', checked: columns === 2 },
         sep,
         { label: 'Properties', enabled: false },
-        { label: 'Layers', enabled: false },
+        { label: 'Layers', cmd: 'toggleLayers', checked: !!layersOpen },
         { label: 'Color', enabled: false },
       ],
     },
   ];
 }
 
-export default function MenuBar({ sel, snap, columns, hiddenChars, onCommand }) {
+export default function MenuBar({ sel, snap, columns, hiddenChars, layersOpen, isoDepth, onCommand }) {
   const [open, setOpen] = useState(null);
   const [sub, setSub] = useState(null); // index of the item whose submenu is open
   const barRef = useRef(null);
-  const menus = buildMenus({ sel, snap, columns, hiddenChars });
+  const menus = buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth });
 
   useEffect(() => {
     setSub(null);

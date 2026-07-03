@@ -1,6 +1,14 @@
 import paper from 'paper';
 import { hitRegion, isTextItem } from './textLayout.js';
 import { refreshArrowheads } from './arrowheads.js';
+import {
+  subscribeSelection,
+  getSelectedItems,
+  setSelectedItems,
+  toggleSelectedItem,
+  clearSelection,
+} from '../../state/selection.js';
+import { isolationRoot, isTransientItem } from './isolation.js';
 
 // On-screen size of resize handles, in pixels (kept constant across zoom).
 const HANDLE_PX = 8;
@@ -15,11 +23,74 @@ export function isOverlayItem(item) {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// Layers
+
+// Artwork layers = every layer except the dedicated overlay layer on top.
+export function artworkLayers() {
+  return paper.project.layers.filter((l) => !(l.data && l.data.isOverlayLayer));
+}
+
+// The overlay layer hosts selection boxes, marquees, guides and widgets so
+// they stay visible above (and independent of) user layers. It must never
+// become the active layer — new artwork goes to the user's layer.
+export function getOverlayLayer() {
+  const project = paper.project;
+  let ol = project.layers.find((l) => l.data && l.data.isOverlayLayer);
+  if (!ol) {
+    const prev = project.activeLayer;
+    ol = new paper.Layer(); // note: constructing a layer activates it
+    ol.data.isOverlayLayer = true;
+    ol.name = '__overlay';
+    if (prev) prev.activate();
+  }
+  if (project.layers[project.layers.length - 1] !== ol) {
+    project.insertLayer(project.layers.length, ol);
+  }
+  return ol;
+}
+
+// Move a freshly created helper item (marquee, guides, widget…) onto the
+// overlay layer and flag it out of hit-tests and exports.
+export function addOverlay(item) {
+  item.data[OVERLAY_FLAG] = true;
+  item.locked = true;
+  getOverlayLayer().addChild(item);
+  return item;
+}
+
+// Items the user can currently select: children of the isolation root while
+// isolated, otherwise the top-level items of visible, unlocked layers.
+// Locked covers system items too (overlays, arrowheads, dimmed artwork).
+export function editableItems() {
+  const root = isolationRoot();
+  if (root) {
+    return root.children.filter((it) => !it.locked && it.visible && !isTransientItem(it));
+  }
+  const out = [];
+  artworkLayers().forEach((l) => {
+    if (!l.visible || l.locked) return;
+    l.children.forEach((it) => {
+      if (isOverlayItem(it) || it.locked || !it.visible || isTransientItem(it)) return;
+      out.push(it);
+    });
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Picking
+
 // Walk up to the item that sits directly in a layer (so clicking a child of a
 // group — or a glyph of a text group — selects the whole top-level object).
+// Inside isolation the walk stops at the isolated group: its direct children
+// are what get selected.
 function topLevel(item) {
+  const root = isolationRoot();
   let it = item;
-  while (it && it.parent && !(it.parent instanceof paper.Layer)) it = it.parent;
+  while (it && it.parent && !(it.parent instanceof paper.Layer) && it.parent !== root) {
+    it = it.parent;
+  }
   return it;
 }
 
@@ -36,7 +107,9 @@ export function pickItem(point) {
 
   const texts = paper.project.getItems({ match: (it) => isTextItem(it) });
   for (let i = texts.length - 1; i >= 0; i -= 1) {
-    if (!isOverlayItem(texts[i]) && hitRegion(texts[i]).contains(point)) return texts[i];
+    const t = texts[i];
+    if (isOverlayItem(t) || t.locked || !t.visible) continue;
+    if (hitRegion(t).contains(point)) return topLevel(t);
   }
   return null;
 }
@@ -108,145 +181,163 @@ function unionBounds(items) {
   return b;
 }
 
+// ---------------------------------------------------------------------------
+// Shared overlay renderer (module singleton — the store is global, so is the
+// box). Text items being edited are skipped: the caret owns that visual.
+
+let overlayGroup = null;
+const changeCbs = new Set();
+const boundsCbs = new Set();
+let storeSubscribed = false;
+
+const visibleTargets = () =>
+  getSelectedItems().filter((t) => !(t.data && t.data.editing));
+
+function reportBounds() {
+  if (!boundsCbs.size) return;
+  const targets = visibleTargets();
+  if (!targets.length) {
+    boundsCbs.forEach((cb) => cb(null));
+    return;
+  }
+  const b = unionBounds(targets);
+  const tl = paper.view.projectToView(b.topLeft);
+  const br = paper.view.projectToView(b.bottomRight);
+  const rect = { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y };
+  boundsCbs.forEach((cb) => cb(rect));
+}
+
+function removeOverlay() {
+  if (overlayGroup) {
+    overlayGroup.remove();
+    overlayGroup = null;
+  }
+}
+
+function drawOverlay() {
+  removeOverlay();
+  if (!paper.project) return;
+  const targets = visibleTargets();
+  // Keep any arrowheads following their paths as they move / resize / rotate.
+  targets.forEach((t) => refreshArrowheads(t));
+  if (!targets.length) {
+    reportBounds();
+    return;
+  }
+  const zoom = paper.view.zoom;
+  const hs = HANDLE_PX / zoom;
+
+  overlayGroup = new paper.Group();
+  overlayGroup.data[OVERLAY_FLAG] = true;
+  overlayGroup.locked = true;
+
+  if (targets.length > 1) {
+    targets.forEach((t) => {
+      const ib = new paper.Path.Rectangle(t.bounds);
+      ib.strokeColor = '#5b6b78';
+      ib.strokeWidth = 1 / zoom;
+      ib.fillColor = null;
+      overlayGroup.addChild(ib);
+    });
+  }
+
+  const b = unionBounds(targets);
+  const box = new paper.Path.Rectangle(b);
+  box.strokeColor = '#6f8595';
+  box.strokeWidth = 1 / zoom;
+  box.dashArray = [4 / zoom, 3 / zoom];
+  box.fillColor = null;
+  overlayGroup.addChild(box);
+
+  if (targets.length === 1) {
+    HANDLE_NAMES.forEach((name) => {
+      const c = handlePoint(b, name);
+      const h = new paper.Path.Rectangle({
+        rectangle: new paper.Rectangle(c.subtract(hs / 2), new paper.Size(hs, hs)),
+      });
+      h.fillColor = '#cfd3d7';
+      h.strokeColor = '#3a3d41';
+      h.strokeWidth = 1 / zoom;
+      h.data.handle = name;
+      overlayGroup.addChild(h);
+    });
+  }
+
+  getOverlayLayer().addChild(overlayGroup);
+  overlayGroup.bringToFront();
+  reportBounds();
+}
+
+function onStoreChange(items) {
+  drawOverlay();
+  changeCbs.forEach((cb) => cb(items.slice()));
+}
+
 /**
- * Selection overlay supporting one or many targets. A single target shows the
- * dashed box plus eight resize handles; multiple targets show a thin box per
- * item plus the union box (move-only, no per-item resize).
+ * View over the global selection store. Multiple instances share one store
+ * and one overlay; onChange/onBounds callbacks (used by the canvas) are
+ * registered per instance and removed by dispose(). dispose() does NOT clear
+ * the selection — that's the point: it survives tool switches.
  */
 export function createSelection(onChange, onBounds) {
-  let targets = [];
-  let group = null;
-
-  function notify() {
-    if (onChange) onChange(targets.slice());
+  if (!storeSubscribed) {
+    subscribeSelection(onStoreChange);
+    storeSubscribed = true;
   }
-
-  // Report the selection's on-screen (view) rect for the contextual task bar.
-  function reportBounds() {
-    if (!onBounds) return;
-    if (!targets.length) {
-      onBounds(null);
-      return;
-    }
-    const b = unionBounds(targets);
-    const tl = paper.view.projectToView(b.topLeft);
-    const br = paper.view.projectToView(b.bottomRight);
-    onBounds({ x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y });
-  }
-
-  function remove() {
-    if (group) {
-      group.remove();
-      group = null;
-    }
-  }
-
-  function draw() {
-    remove();
-    // Keep any arrowheads following their paths as they move / resize / rotate.
-    targets.forEach((t) => refreshArrowheads(t));
-    if (!targets.length) {
-      reportBounds();
-      return;
-    }
-    const zoom = paper.view.zoom;
-    const hs = HANDLE_PX / zoom;
-
-    group = new paper.Group();
-    group.data[OVERLAY_FLAG] = true;
-    group.locked = true;
-
-    if (targets.length > 1) {
-      targets.forEach((t) => {
-        const ib = new paper.Path.Rectangle(t.bounds);
-        ib.strokeColor = '#5b6b78';
-        ib.strokeWidth = 1 / zoom;
-        ib.fillColor = null;
-        group.addChild(ib);
-      });
-    }
-
-    const b = unionBounds(targets);
-    const box = new paper.Path.Rectangle(b);
-    box.strokeColor = '#6f8595';
-    box.strokeWidth = 1 / zoom;
-    box.dashArray = [4 / zoom, 3 / zoom];
-    box.fillColor = null;
-    group.addChild(box);
-
-    if (targets.length === 1) {
-      HANDLE_NAMES.forEach((name) => {
-        const c = handlePoint(b, name);
-        const h = new paper.Path.Rectangle({
-          rectangle: new paper.Rectangle(c.subtract(hs / 2), new paper.Size(hs, hs)),
-        });
-        h.fillColor = '#cfd3d7';
-        h.strokeColor = '#3a3d41';
-        h.strokeWidth = 1 / zoom;
-        h.data.handle = name;
-        group.addChild(h);
-      });
-    }
-
-    group.bringToFront();
-    reportBounds();
-  }
+  if (onChange) changeCbs.add(onChange);
+  if (onBounds) boundsCbs.add(onBounds);
 
   return {
     get targets() {
-      return targets;
+      return getSelectedItems();
     },
     get target() {
-      return targets[0] || null;
+      return getSelectedItems()[0] || null;
     },
 
     get bounds() {
+      const targets = getSelectedItems();
       return targets.length ? unionBounds(targets) : null;
     },
 
     has(item) {
-      return targets.includes(item);
+      return getSelectedItems().includes(item);
     },
 
     setTargets(items) {
-      targets = (items || []).filter(Boolean);
-      draw();
-      notify();
+      setSelectedItems(items);
     },
 
     setTarget(item) {
-      targets = item ? [item] : [];
-      draw();
-      notify();
+      setSelectedItems(item ? [item] : []);
     },
 
     toggle(item) {
-      if (!item) return;
-      const i = targets.indexOf(item);
-      if (i >= 0) targets.splice(i, 1);
-      else targets.push(item);
-      draw();
-      notify();
+      toggleSelectedItem(item);
     },
 
     clear() {
-      targets = [];
-      remove();
-      reportBounds();
-      notify();
+      clearSelection();
     },
 
-    draw,
+    // Redraw the overlay without re-announcing the selection (used on every
+    // drag frame — App state must not churn there).
+    draw: drawOverlay,
 
     hitHandle(point) {
-      if (!group || targets.length !== 1) return null;
+      if (!overlayGroup || getSelectedItems().length !== 1) return null;
       const hs = HANDLE_PX / paper.view.zoom;
-      for (const child of group.children) {
+      for (const child of overlayGroup.children) {
         if (child.data && child.data.handle && child.bounds.expand(hs).contains(point)) {
           return child.data.handle;
         }
       }
       return null;
+    },
+
+    dispose() {
+      if (onChange) changeCbs.delete(onChange);
+      if (onBounds) boundsCbs.delete(onBounds);
     },
   };
 }
