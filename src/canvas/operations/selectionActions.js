@@ -4,7 +4,21 @@ import { groupItems, ungroupItems, booleanOp } from './booleans.js';
 import { alignItems, distributeItems } from './align.js';
 import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
 import { unlockAllItems, showAllItems } from './visibility.js';
+import { pathfinderOp } from './pathfinder.js';
+import { makeCompoundPath, releaseCompoundPath } from './compound.js';
+import {
+  joinPaths,
+  averagePoints,
+  outlineStrokes,
+  offsetPaths,
+  simplifyPaths,
+  splitIntoGrid,
+  cleanUpDocument,
+} from './pathOps.js';
 import { pruneSelection } from '../../state/selection.js';
+
+const PATHFINDER_OPS = ['divide', 'trim', 'merge', 'crop', 'outline'];
+const AVERAGE_AXES = { averageBoth: 'both', averageH: 'h', averageV: 'v' };
 
 const ALIGN_MODES = {
   alignLeft: 'left',
@@ -20,7 +34,10 @@ const ALIGN_MODES = {
  * by every tool that holds an object selection (Select, Magic Wand, Knife) so
  * the menu / Properties / Control Bar buttons work no matter which is active.
  */
-export function runSelectionAction(selection, name) {
+export function runSelectionAction(selection, rawName) {
+  // Commands may carry an argument after a colon (e.g. "offsetPath:10").
+  const [name, arg] = rawName.split(':');
+
   // Commands that don't need an existing selection.
   if (name === 'selectAll') {
     selection.setTargets(editableItems());
@@ -40,9 +57,26 @@ export function runSelectionAction(selection, name) {
     paper.view.update();
     return;
   }
+  if (name === 'cleanUp') {
+    cleanUpDocument();
+    pruneSelection();
+    paper.view.update();
+    return;
+  }
 
   const items = selection.targets.slice();
   if (!items.length) return;
+
+  if (PATHFINDER_OPS.includes(name)) {
+    const result = pathfinderOp(items, name);
+    if (result) selection.setTarget(result);
+    return;
+  }
+  if (AVERAGE_AXES[name]) {
+    if (averagePoints(items, AVERAGE_AXES[name])) selection.draw();
+    paper.view.update();
+    return;
+  }
 
   switch (name) {
     case 'delete':
@@ -111,6 +145,41 @@ export function runSelectionAction(selection, name) {
     case 'ungroup': {
       const kids = ungroupItems(items[0]);
       if (kids) selection.setTargets(kids);
+      return;
+    }
+    case 'compoundMake': {
+      const cp = makeCompoundPath(items);
+      if (cp) selection.setTarget(cp);
+      return;
+    }
+    case 'compoundRelease': {
+      const kids = releaseCompoundPath(items[0]);
+      if (kids) selection.setTargets(kids);
+      return;
+    }
+    case 'pathJoin': {
+      const joined = joinPaths(items);
+      if (joined) selection.setTarget(joined);
+      return;
+    }
+    case 'outlineStroke': {
+      const results = outlineStrokes(items);
+      if (results.length) selection.setTargets(results);
+      return;
+    }
+    case 'offsetPath': {
+      const copies = offsetPaths(items, Number(arg));
+      if (copies.length) selection.setTargets(copies);
+      return;
+    }
+    case 'simplify':
+      if (simplifyPaths(items)) selection.draw();
+      paper.view.update();
+      return;
+    case 'splitGrid': {
+      const [rows, cols, gutter] = (arg || '').split(',').map(Number);
+      const cells = splitIntoGrid(items, rows, cols, gutter || 0);
+      if (cells.length) selection.setTargets(cells);
       return;
     }
     default:

@@ -18,6 +18,7 @@ export const TOOLS = {
   PAINTBRUSH: 'paintbrush',
   BLOB_BRUSH: 'blobBrush',
   SHAPER: 'shaper',
+  SHAPE_BUILDER: 'shapeBuilder',
   ERASER: 'eraser',
   SCISSORS: 'scissors',
   KNIFE: 'knife',

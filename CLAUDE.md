@@ -1028,6 +1028,51 @@ i18next пока не подключаем — это отдельный пун�
 - Отложено: Delete-клавиша при не-selection инструментах (сейчас Delete работает только в
   инструментах выделения); автовыделение новонарисованной фигуры (AI-поведение) — к 6.2/7.1.
 
+### Сессия 23 — прогресс (✅ итерация 6.2)
+
+Объём: **фаза 6.2** — Pathfinder и path-операции. Все пункты чеклиста закрыты.
+
+- [x] **`operations/pathfinder.js`** — Divide, Trim, Merge, Crop, Outline. Ядро — `atomicRegions(paths)`:
+      декомпозиция фигур (bottom→top) на непересекающиеся атомарные регионы (итеративно: новая фигура P
+      против каждого куска Q → Q∩P / Q−P / остаток P; стиль региона — от верхней накрывающей фигуры).
+      Результат — Group на месте переднего оригинала; заливки сохраняются, обводки сбрасываются (как в
+      Illustrator); пустой результат → null, оригиналы не трогаем (паттерн booleanOp). Merge = Trim +
+      unite кусков с одинаковой заливкой; Outline = открытые куски контуров, разрезанные во всех
+      пересечениях, stroke = fill исходной фигуры.
+- [x] **Shape Builder Tool** (`shapeBuilderTool.js`, свой слот в Toolbar): работает по выделению (клик
+      мимо регионов выделяет фигуру, Shift добавляет). Ховер подсвечивает атомарный регион, клик отделяет
+      его, drag через несколько регионов объединяет, **Alt = удалить**. Регионы-превью — невидимые пути
+      на оверлей-слое (addOverlay, хит вручную через contains). Жест пересобирает ТОЛЬКО затронутые
+      фигуры (каждая → она минус объединение выбранных регионов); результат остаётся выделенным →
+      rebuild регионов по подписке на стор.
+- [x] **Compound Path** (`operations/compound.js`): Make (⌘8, 2+ путей; стиль от нижнего, fillRule
+      evenodd → дырки) и Release (⌥⌘8; дети получают стиль компаунда). Properties: Make у 2+, Release у
+      выделенного CompoundPath (`sel.isCompound` из App).
+- [x] **Path-операции** (`operations/pathOps.js`): **Join** (⌘J; 1 открытый путь → закрыть, 2 → соединить
+      ближайшие концы с автопереворотом), **Average** (Both/Horizontal/Vertical — все опорные точки),
+      **Outline Stroke** (через **paperjs-offset** offsetStroke; путь с заливкой → Group [заливка,
+      контур обводки]), **Offset Path** (PaperOffset.offset; оригинал остаётся, копия выделяется),
+      **Simplify** (path.simplify 2.5), **Split Into Grid** (rows×cols+gutter по bounds), **Clean Up**
+      (stray points, неокрашенные пути, пустые группы; системное/локнутое пропускает).
+- [x] **UI**: Object-меню — подменю Pathfinder (9 операций), Compound Path (Make/Release), Path
+      (7 команд); в подменю MenuBar добавлена поддержка сепараторов. Properties (2+): грид из 9
+      pathfinder-кнопок + Make Compound Path. Шорткаты в Canvas: ⌘J, ⌘8, ⌥⌘8.
+- [x] Новая зависимость: **paperjs-offset@2** (оффсет-геометрия, Paper.js сам не умеет).
+
+Заметки / решения сессии 23:
+- **Параметризованные команды**: `runSelectionAction` принимает `"offsetPath:10"` / `"splitGrid:3,3,10"`
+  — App показывает `window.prompt` и передаёт аргумент после двоеточия. Нормальные диалоги — к 15.x.
+- Average при объектном выделении усредняет ВСЕ точки путей (это же делает Illustrator при выделении
+  целых объектов); Average по выбранным точкам — когда посегментное выделение дойдёт до UI-команд.
+- Divide непересекающихся фигур честно даёт Group из целых кусков — атомарные регионы без
+  перекрытий = сами фигуры.
+- Shape Builder: стиль объединённого куска — от источника ПЕРВОГО выбранного региона (Illustrator берёт
+  объект под стартом жеста). Донор читается после удаления оригиналов — безопасно (remove() только
+  отцепляет item, свойства читаются).
+- `cp.area` у CompoundPath с детьми одного winding СУММИРУЕТ их (дырка не вычитается) — визуально
+  дырка есть (evenodd, contains() подтверждает); числу не верить.
+- Плавающей Pathfinder-панели нет — всё в Properties (как Character/Paragraph); панели — 15.3.
+
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
 > Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
 > (прежний план шёл иначе), поэтому ранние фазы частично закрыты.
@@ -1044,7 +1089,7 @@ i18next пока не подключаем — это отдельный пун�
 - **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
 - **5.3 (Типографика):** 🟡 почти всё ✅ — размер/leading/tracking/justification, bold/italic (вес 100–900), baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: файлы/Google via Fontsource-WOFF/локальные via queryLocalFonts), **Find Font** (диалог замены), подменю в MenuBar · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар (нужно посимвольное выделение)
 - **6.1 (Организация):** ✅ ГОТОВО — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, крошки, затемнение, adoption новых объектов), Layers панель (создание/удаление/переименование/глаз/замок/вложенность/drag между слоями), **единый стор выделения** (переживает смену инструмента; команды работают при любом инструменте)
-- **6.2 (Pathfinder):** 🟡 Add/Subtract/Intersect/Exclude ✅ · ⬜ Divide/Trim/Merge/Crop/Outline, Shape Builder, Compound Path, path-ops
+- **6.2 (Pathfinder):** ✅ ГОТОВО — все 9 операций (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; меню Object > Pathfinder + грид в Properties), Shape Builder Tool (клик/drag/Alt-удаление, подсветка регионов), Compound Path Make/Release (⌘8/⌥⌘8), path-ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · значения Offset/Grid пока через prompt (диалоги — 15.x)
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
 - **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
 - **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
@@ -1052,11 +1097,11 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
 **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 6.2 Pathfinder (Divide/Trim/Merge/Crop/Outline,
-Shape Builder, Compound Path Make/Release, path-ops). Затем 7.1 Трансформации. Отложено:
-live-параметры polygon/star/ellipse (с 3.x/7.1); хвост 2.2 (Reference Point, Reset BB +
-поворотный бокс, Transform Again, Drawing/Screen Modes) — до 7.1; Delete-клавиша и
-автовыделение новой фигуры при не-selection инструментах — к 6.2/7.1.
+**Следующее по плану (ранние пробелы):** 7.1 Трансформации (Transform панель, Rotate/Reflect/
+Scale/Shear/Reshape, Transform Each, Free Transform) — туда же подтянуть хвост 2.2 (Reference
+Point, Reset BB + поворотный бокс, Transform Again, Drawing/Screen Modes). Отложено:
+live-параметры polygon/star/ellipse (с 3.x/7.1); Delete-клавиша и автовыделение новой фигуры
+при не-selection инструментах — к 7.1; диалоги Offset Path / Split Into Grid вместо prompt — 15.x.
 
 > Грабли Paper: `project.getItems(fn)` с голой функцией НЕ работает (трактует fn как класс) —
 > нужно `getItems({ match: fn })`. Иначе фильтр молча возвращает 0.

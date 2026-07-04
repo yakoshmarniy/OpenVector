@@ -201,6 +201,17 @@ function ShaperIcon() {
   );
 }
 
+function ShapeBuilderIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="9" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="15" cy="10" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M12 5.4a6 6 0 0 1 0 9.2 6 6 0 0 1 0-9.2z" fill="currentColor" />
+      <path d="M17.5 17.5v4M15.5 19.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function EraserIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -366,6 +377,7 @@ export const TOOL_ITEMS = [
   { id: TOOLS.PAINTBRUSH, label: 'Paintbrush', Icon: PaintbrushIcon },
   { id: TOOLS.BLOB_BRUSH, label: 'Blob Brush', Icon: BlobBrushIcon },
   { id: TOOLS.SHAPER, label: 'Shaper', Icon: ShaperIcon },
+  { id: TOOLS.SHAPE_BUILDER, label: 'Shape Builder', Icon: ShapeBuilderIcon },
   { id: TOOLS.ERASER, label: 'Eraser', Icon: EraserIcon },
   { id: TOOLS.SCISSORS, label: 'Scissors', Icon: ScissorsIcon },
   { id: TOOLS.KNIFE, label: 'Knife', Icon: KnifeIcon },

@@ -26,6 +26,14 @@ const BOOLEANS = [
   { id: 'exclude', label: 'Exclude' },
 ];
 
+const PATHFINDERS = [
+  { id: 'divide', label: 'Divide' },
+  { id: 'trim', label: 'Trim' },
+  { id: 'merge', label: 'Merge' },
+  { id: 'crop', label: 'Crop' },
+  { id: 'outline', label: 'Outline' },
+];
+
 function LineIcon({ kind }) {
   const dash = { solid: undefined, dashed: '5 3', dotted: '0.1 3' }[kind];
   return (
@@ -384,13 +392,22 @@ export default function Properties({ sel, onChange, onAction, onManageFonts }) {
           <button type="button" className={styles.action} onClick={() => onAction('group')}>
             Group
           </button>
+          <span className={styles.subLabel}>Pathfinder</span>
           <div className={styles.actionGrid}>
             {BOOLEANS.map((b) => (
               <button key={b.id} type="button" className={styles.action} onClick={() => onAction(b.id)}>
                 {b.label}
               </button>
             ))}
+            {PATHFINDERS.map((b) => (
+              <button key={b.id} type="button" className={styles.action} onClick={() => onAction(b.id)}>
+                {b.label}
+              </button>
+            ))}
           </div>
+          <button type="button" className={styles.action} onClick={() => onAction('compoundMake')}>
+            Make Compound Path
+          </button>
         </div>
       )}
 
@@ -418,7 +435,17 @@ export default function Properties({ sel, onChange, onAction, onManageFonts }) {
       )}
 
       {count === 1 && !isGroup && style && (
-        <StyleControls style={style} onChange={onChange} onManageFonts={onManageFonts} />
+        <>
+          {sel.isCompound && (
+            <div className={styles.actions}>
+              <p className={styles.heading}>Compound Path</p>
+              <button type="button" className={styles.action} onClick={() => onAction('compoundRelease')}>
+                Release
+              </button>
+            </div>
+          )}
+          <StyleControls style={style} onChange={onChange} onManageFonts={onManageFonts} />
+        </>
       )}
     </aside>
   );

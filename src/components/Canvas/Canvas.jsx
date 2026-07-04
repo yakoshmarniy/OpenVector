@@ -42,6 +42,7 @@ import { createJoinTool } from '../../canvas/tools/joinTool.js';
 import { createPaintbrushTool } from '../../canvas/tools/paintbrushTool.js';
 import { createBlobBrushTool } from '../../canvas/tools/blobBrushTool.js';
 import { createShaperTool } from '../../canvas/tools/shaperTool.js';
+import { createShapeBuilderTool } from '../../canvas/tools/shapeBuilderTool.js';
 import { createEraserTool } from '../../canvas/tools/eraserTool.js';
 import { createScissorsTool } from '../../canvas/tools/scissorsTool.js';
 import { createKnifeTool } from '../../canvas/tools/knifeTool.js';
@@ -80,6 +81,7 @@ const TOOL_FACTORIES = {
   [TOOLS.PAINTBRUSH]: createPaintbrushTool,
   [TOOLS.BLOB_BRUSH]: createBlobBrushTool,
   [TOOLS.SHAPER]: createShaperTool,
+  [TOOLS.SHAPE_BUILDER]: createShapeBuilderTool,
   [TOOLS.ERASER]: createEraserTool,
   [TOOLS.SCISSORS]: createScissorsTool,
   [TOOLS.KNIFE]: createKnifeTool,
@@ -445,6 +447,17 @@ export default function Canvas({
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyD') {
         e.preventDefault();
         runToolAction('duplicate');
+        return;
+      }
+      // Join paths (⌘J) and Compound Path make / release (⌘8 / ⌥⌘8).
+      if ((e.metaKey || e.ctrlKey) && e.code === 'KeyJ') {
+        e.preventDefault();
+        runToolAction('pathJoin');
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.code === 'Digit8') {
+        e.preventDefault();
+        runToolAction(e.altKey ? 'compoundRelease' : 'compoundMake');
         return;
       }
       // Lock / hide (⌘2 / ⌘3; with Alt — unlock all / show all).

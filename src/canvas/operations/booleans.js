@@ -29,7 +29,7 @@ const BOOL_OPS = ['unite', 'subtract', 'intersect', 'exclude'];
 
 // An empty / sub-pixel boolean result (e.g. intersect of shapes that don't
 // overlap). We must not keep it — and must not destroy the originals for it.
-function isDegenerate(p) {
+export function isDegenerate(p) {
   if (!p) return true;
   if (p.className === 'CompoundPath') return p.children.length === 0;
   if (!p.segments || p.segments.length === 0) return true;

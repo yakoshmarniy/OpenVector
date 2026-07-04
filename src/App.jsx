@@ -15,7 +15,7 @@ import { setShowHiddenChars } from './canvas/operations/textLayout.js';
 import { changeCase, smartPunctuation, fitHeadline } from './canvas/operations/typography.js';
 import { createOutlines } from './canvas/operations/outlines.js';
 
-const emptySel = { count: 0, isGroup: false, style: null };
+const emptySel = { count: 0, isGroup: false, isCompound: false, style: null };
 const TOOL_LABELS = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i.label]));
 
 export default function App() {
@@ -49,7 +49,8 @@ export default function App() {
     selItemsRef.current = items;
     const single = items.length === 1 ? items[0] : null;
     const isGroup = !!(single && single.className === 'Group' && !(single.data && single.data.isText));
-    setSel({ count: items.length, isGroup, style: single ? readStyle(single) : null });
+    const isCompound = !!(single && single.className === 'CompoundPath');
+    setSel({ count: items.length, isGroup, isCompound, style: single ? readStyle(single) : null });
   }, []);
 
   const handleStyleChange = useCallback((patch) => {
@@ -136,6 +137,22 @@ export default function App() {
           Promise.all(items.map(createOutlines)).catch((err) => {
             window.alert(`Create Outlines failed: ${err.message}`);
           });
+          break;
+        }
+        case 'offsetPath': {
+          const v = window.prompt('Offset distance (px, negative = inset):', '10');
+          if (v === null) break;
+          const d = Number(v);
+          if (Number.isFinite(d) && d !== 0) actionRef.current?.(`offsetPath:${d}`);
+          break;
+        }
+        case 'splitGrid': {
+          const v = window.prompt('Split into grid — rows, columns, gutter (px):', '3,3,10');
+          if (v === null) break;
+          const [rows, cols, gutter] = v.split(',').map((s) => Number(s.trim()));
+          if (rows >= 1 && cols >= 1) {
+            actionRef.current?.(`splitGrid:${Math.round(rows)},${Math.round(cols)},${gutter >= 0 ? gutter : 0}`);
+          }
           break;
         }
         case 'toggleHiddenChars':

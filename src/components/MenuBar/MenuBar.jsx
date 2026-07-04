@@ -8,6 +8,7 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
   const has = sel.count >= 1;
   const multi = sel.count >= 2;
   const group = sel.count === 1 && sel.isGroup;
+  const compound = sel.count === 1 && !!sel.isCompound;
   const text = sel.count === 1 && !!sel.style?.isText;
   const areaText = text && sel.style.textMode === 'area' && sel.style.orientation !== 'vertical';
   const sep = { separator: true };
@@ -50,10 +51,48 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
         { label: 'Send Backward', cmd: 'arrangeBackward', enabled: has, accel: '⌘[' },
         { label: 'Send to Back', cmd: 'arrangeBack', enabled: has, accel: '⌘⇧[' },
         sep,
-        { label: 'Unite', cmd: 'unite', enabled: multi },
-        { label: 'Subtract', cmd: 'subtract', enabled: multi },
-        { label: 'Intersect', cmd: 'intersect', enabled: multi },
-        { label: 'Exclude', cmd: 'exclude', enabled: multi },
+        {
+          label: 'Pathfinder',
+          enabled: multi,
+          items: [
+            { label: 'Unite', cmd: 'unite' },
+            { label: 'Subtract', cmd: 'subtract' },
+            { label: 'Intersect', cmd: 'intersect' },
+            { label: 'Exclude', cmd: 'exclude' },
+            sep,
+            { label: 'Divide', cmd: 'divide' },
+            { label: 'Trim', cmd: 'trim' },
+            { label: 'Merge', cmd: 'merge' },
+            { label: 'Crop', cmd: 'crop' },
+            { label: 'Outline', cmd: 'outline' },
+          ],
+        },
+        {
+          label: 'Compound Path',
+          enabled: multi || compound,
+          items: [
+            { label: 'Make', cmd: 'compoundMake', enabled: multi, accel: '⌘8' },
+            { label: 'Release', cmd: 'compoundRelease', enabled: compound, accel: '⌥⌘8' },
+          ],
+        },
+        {
+          label: 'Path',
+          items: [
+            { label: 'Join', cmd: 'pathJoin', enabled: has, accel: '⌘J' },
+            {
+              label: 'Average (Both)', cmd: 'averageBoth', enabled: has,
+            },
+            { label: 'Average Horizontal', cmd: 'averageH', enabled: has },
+            { label: 'Average Vertical', cmd: 'averageV', enabled: has },
+            sep,
+            { label: 'Outline Stroke', cmd: 'outlineStroke', enabled: has },
+            { label: 'Offset Path…', cmd: 'offsetPath', enabled: has },
+            { label: 'Simplify', cmd: 'simplify', enabled: has },
+            { label: 'Split Into Grid…', cmd: 'splitGrid', enabled: has },
+            sep,
+            { label: 'Clean Up', cmd: 'cleanUp' },
+          ],
+        },
         sep,
         { label: 'Isolate Selected Group', cmd: 'isolate', enabled: group },
         { label: 'Exit Isolation Mode', cmd: 'exitIsolation', enabled: isoDepth > 0 },
@@ -208,20 +247,24 @@ export default function MenuBar({ sel, snap, columns, hiddenChars, layersOpen, i
                     </button>
                     {sub === ii && item.enabled !== false && (
                       <div className={styles.subMenu} role="menu">
-                        {item.items.map((si) => (
-                          <button
-                            key={si.label}
-                            type="button"
-                            role="menuitem"
-                            className={styles.item}
-                            disabled={si.enabled === false || !si.cmd}
-                            onClick={() => choose(si)}
-                          >
-                            <span className={styles.check}>{si.checked ? '✓' : ''}</span>
-                            <span className={styles.itemLabel}>{si.label}</span>
-                            {si.accel && <span className={styles.accel}>{si.accel}</span>}
-                          </button>
-                        ))}
+                        {item.items.map((si, si2) =>
+                          si.separator ? (
+                            <div key={`ssep-${si2}`} className={styles.sep} />
+                          ) : (
+                            <button
+                              key={si.label}
+                              type="button"
+                              role="menuitem"
+                              className={styles.item}
+                              disabled={si.enabled === false || !si.cmd}
+                              onClick={() => choose(si)}
+                            >
+                              <span className={styles.check}>{si.checked ? '✓' : ''}</span>
+                              <span className={styles.itemLabel}>{si.label}</span>
+                              {si.accel && <span className={styles.accel}>{si.accel}</span>}
+                            </button>
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
