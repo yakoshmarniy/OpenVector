@@ -15,6 +15,19 @@ import {
   splitIntoGrid,
   cleanUpDocument,
 } from './pathOps.js';
+import {
+  moveItems,
+  rotateItems,
+  scaleItems,
+  shearItems,
+  flipItems,
+  transformEach,
+  transformAgain,
+  hasLastTransform,
+  recordTransform,
+  unionBounds,
+  getScaleStrokes,
+} from './transform.js';
 import { pruneSelection } from '../../state/selection.js';
 
 const PATHFINDER_OPS = ['divide', 'trim', 'merge', 'crop', 'outline'];
@@ -79,6 +92,75 @@ export function runSelectionAction(selection, rawName) {
   }
 
   switch (name) {
+    case 'flipH':
+    case 'flipV':
+      flipItems(items, name === 'flipH' ? 'h' : 'v');
+      recordTransform({ kind: 'reflect', angle: name === 'flipH' ? 90 : 0, pivot: null });
+      selection.draw();
+      return;
+    case 'transformAgain': {
+      // ⌘D. With no recorded transform yet, fall back to a plain duplicate.
+      if (!hasLastTransform()) {
+        runSelectionAction(selection, 'duplicate');
+        return;
+      }
+      const out = transformAgain(items);
+      if (out && out !== items) selection.setTargets(out);
+      else selection.draw();
+      return;
+    }
+    case 'moveBy': {
+      const [dx, dy] = (arg || '').split(',').map(Number);
+      if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+      moveItems(items, dx, dy);
+      recordTransform({ kind: 'move', dx, dy });
+      selection.draw();
+      return;
+    }
+    case 'rotateBy': {
+      const angle = Number(arg);
+      if (!Number.isFinite(angle) || !angle) return;
+      const pivot = unionBounds(items).center;
+      rotateItems(items, angle, pivot);
+      recordTransform({ kind: 'rotate', angle, pivot: { x: pivot.x, y: pivot.y } });
+      selection.draw();
+      return;
+    }
+    case 'scaleBy': {
+      const [sx, sy] = (arg || '').split(',').map(Number);
+      if (!Number.isFinite(sx) || !Number.isFinite(sy) || !sx || !sy) return;
+      const pivot = unionBounds(items).center;
+      scaleItems(items, sx, sy, pivot);
+      recordTransform({
+        kind: 'scale', sx, sy, pivot: { x: pivot.x, y: pivot.y }, withStrokes: getScaleStrokes(),
+      });
+      selection.draw();
+      return;
+    }
+    case 'shearBy': {
+      const deg = Number(arg);
+      if (!Number.isFinite(deg) || !deg) return;
+      const shx = Math.tan((deg * Math.PI) / 180);
+      const pivot = unionBounds(items).center;
+      shearItems(items, shx, 0, pivot);
+      recordTransform({ kind: 'shear', shx, shy: 0, pivot: { x: pivot.x, y: pivot.y } });
+      selection.draw();
+      return;
+    }
+    case 'transformEach': {
+      const [sx, sy, dx, dy, angle] = (arg || '').split(',').map(Number);
+      const opts = {
+        sx: Number.isFinite(sx) && sx ? sx : 1,
+        sy: Number.isFinite(sy) && sy ? sy : 1,
+        dx: Number.isFinite(dx) ? dx : 0,
+        dy: Number.isFinite(dy) ? dy : 0,
+        angle: Number.isFinite(angle) ? angle : 0,
+      };
+      transformEach(items, opts);
+      recordTransform({ kind: 'each', opts });
+      selection.draw();
+      return;
+    }
     case 'delete':
       items.forEach((t) => {
         clearArrowheads(t);
@@ -94,6 +176,8 @@ export function runSelectionAction(selection, rawName) {
         return c;
       });
       selection.setTargets(clones);
+      // ⌘D again repeats the duplicate+offset (Transform Again semantics).
+      recordTransform({ kind: 'move', dx: 12, dy: 12, copy: true });
       return;
     }
     case 'arrangeFront':

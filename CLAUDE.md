@@ -1073,6 +1073,63 @@ i18next пока не подключаем — это отдельный пун�
   дырка есть (evenodd, contains() подтверждает); числу не верить.
 - Плавающей Pathfinder-панели нет — всё в Properties (как Character/Paragraph); панели — 15.3.
 
+### Сессия 24 — прогресс (✅ итерация 7.1)
+
+Объём: **фаза 7.1** — базовые трансформации + Transform Again и Reference Point из хвоста 2.2.
+
+- [x] **`operations/transform.js`** — ядро: refPoint (9 позиций), unionBounds, move/rotate/scale/
+      shear/reflect/flipItems, transformEach (вокруг СВОЕГО центра каждого объекта), пресет
+      **Scale Strokes & Effects** (get/setScaleStrokes; при масштабе strokeWidth × средний фактор),
+      **Transform Again** (recordTransform/transformAgain: move/rotate/scale/shear/reflect/each,
+      `copy:true` = сначала клонировать — даёт классику «поворот копии → ⌘D по кругу»),
+      **free distort** (collectPaths/snapshotPaths/distortPaths — билинейный ремап сегментов и
+      ручек из исходного rect в произвольный квад; каждый кадр от СНАПШОТА, не инкрементально).
+- [x] **Transform-секция в Properties** (`TransformSection.jsx`, при любом выделении ≥1):
+      селектор Reference Point 3×3, X/Y/W/H относительно выбранной опорной точки, Rotate/Shear
+      (Δ°-поля: коммит по Enter/blur, сброс в 0 — DeltaInput), Flip H/V, чекбокс Scale strokes.
+      Панель читает стор выделения напрямую (subscribeSelection+subscribeDocument), мутации —
+      прямые вызовы ops + свой `createSelection().draw()` + bumpDocument.
+- [x] **4 инструмента** (`transformTools.js`, общая фабрика): Rotate, Reflect, Scale, Shear.
+      Перемещаемый пивот (клик = переставить, Escape = сброс в центр, маркер-перекрестье на
+      оверлее), drag = трансформация вокруг пивота, Shift = констрейн (45°/пропорции/15°),
+      **Alt-drag = трансформировать копию**. Жест записывается для Transform Again. Scale
+      масштабирует обводки ОДИН раз на mouseup (по накопленному фактору, не по кадрам).
+      Reflect: ось = направление drag от пивота; смена оси θ1→θ2 применяется как rotate 2Δθ.
+- [x] **Reshape** (`reshapeTool.js`): потянуть за любую точку пути — соседние опорные точки
+      следуют с гауссовым falloff по КРИВОЙ (σ = 15% длины, у замкнутых — расстояние по кольцу).
+- [x] **Free Transform** (`freeTransformTool.js`): квад-виджет по bounds выделения; угол = scale
+      (Shift = пропорции), **⌘+угол = free distort**, **⌘⇧+угол = perspective** (соседний угол
+      по оси drag движется навстречу), ребро = scale оси, **⌘+ребро = skew**. Каждый жест
+      стартует от свежих осевых bounds и запекается на mouseup. Дисторт — только Path-геометрия
+      (текст-группы не трогаются, v1).
+- [x] **⌘D = Transform Again** (Illustrator-совместимо): нет записанного трансформа → фолбэк на
+      duplicate. Записываются: move/Alt-копия/nudge/поворот за угол (selectTool), жесты 4
+      инструментов, duplicate (как move+copy 12,12), правки панели, меню-команды.
+      Edit > Duplicate остался в меню, но без акселератора.
+- [x] **Object > Transform** подменю: Transform Again ⌘D, Move…/Rotate…/Scale…/Shear… (prompt,
+      как Offset Path), Reflect Horizontal/Vertical, Transform Each… (prompt: sx%,sy%,dx,dy,angle).
+      Команды selectionActions: `moveBy:` `rotateBy:` `scaleBy:` `shearBy:` `transformEach:` +
+      `flipH`/`flipV`/`transformAgain`.
+- [x] Toolbar: группы [Rotate, Reflect], [Scale, Shear, Reshape], [Free Transform] + 6 иконок.
+- [ ] Отложено: поворотный bounding box + Reset Bounding Box (рефактор оверлея), Drawing Modes,
+      Screen Modes (F), гомография для perspective (сейчас билинейный ремап), дисторт текста,
+      диалоги вместо prompt (15.x).
+
+Заметки / решения сессии 24:
+- **Грабли нового кода**: стор выделения нотифицирует только на ИЗМЕНЕНИЯХ — инструмент,
+  рисующий свой оверлей (пивот-маркер, квад Free Transform), обязан отрисовать его сразу в
+  фабрике (drawMarker()/drawWidget()), иначе до первого изменения выделения виджета нет
+  и ручки не хитятся.
+- Free distort через снапшот геометрии: билинейный ремап неинвертируем, поэтому каждый кадр
+  сегменты восстанавливаются из снапшота mousedown и мапятся заново. Для прямоугольного/
+  параллелограммного квада ремап точен (= аффинный).
+- Инкрементальные жесты (rotate/scale/shear) применяют step = desired − applied (у scale —
+  ratio) — без дрейфа при любой длине drag.
+- paper: `strokeScaling` не влияет на Path с applyMatrix=true (матрица запекается в сегменты,
+  strokeWidth не меняется) — потому Scale Strokes реализован явным умножением strokeWidth.
+- Тест-грабли: «5000%» в статус-баре после серии синтетических жестов — артефакт тестовых
+  манипуляций (paper.view.zoom при этом был 1); после reload не воспроизводится.
+
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
 > Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
 > (прежний план шёл иначе), поэтому ранние фазы частично закрыты.
@@ -1080,7 +1137,7 @@ i18next пока не подключаем — это отдельный пун�
 - **1.1 (Layout):** ✅ ГОТОВО — Menu Bar (8 меню с дропдаунами/акселераторами), Control Bar (контекстный), Toolbar/Canvas/Properties/Status Bar, тёмная тема
 - **1.2 (Холст/навигация):** ✅ ГОТОВО — зум/пан, Rotate View (инструмент + меню View + статус-бар), Rectangle, Contextual Task Bar
 - **2.1 (Toolbar/выделение):** ✅ ГОТОВО — 1/2 колонки + flyout, Select/Direct/Group, Magic Wand, Lasso, Hand/Zoom, drawer (список всех инструментов)
-- **2.2 (Bounding box/трансформации):** 🟡 масштаб ручками, **поворот за угол** (Shift=15°), Shift-констрейн перемещения, **Alt-копия при drag**, **Alt-масштаб от центра**, **nudge стрелками** (Shift=10) ✅ · ⬜ Reference Point (9 поз.), Reset BB + поворотный bounding-box, Transform Again, Drawing Modes, Screen Modes (F) — отложены, завязаны на поворотный бокс и Transform-панель (7.1)
+- **2.2 (Bounding box/трансформации):** 🟡 масштаб ручками, **поворот за угол** (Shift=15°), Shift-констрейн перемещения, **Alt-копия при drag**, **Alt-масштаб от центра**, **nudge стрелками** (Shift=10), **Reference Point (9 поз., в Transform-секции)**, **Transform Again (⌘D)** ✅ · ⬜ Reset BB + поворотный bounding-box, Drawing Modes, Screen Modes (F) — отложены (рефактор оверлея)
 - **3.1 (Примитивы):** 🟡 все фигуры ✅; **live rectangle — скругление углов виджетом на холсте** ✅; поворот любой фигуры за угол с курсором-стрелкой ✅ · ⬜ live-параметры polygon/star/ellipse (стороны/лучи/pie-углы) — отложено
 - **3.2 (Заливка/обводка):** ✅ ГОТОВО — заливка, обводка (цвет+толщина), тип линии (solid/dashed/dotted), концы (butt/round/square), углы (miter/round/bevel), настраиваемый пунктир (Dash/Gap), стрелки на концах (Start/End + размер; живые — следуют за путём), opacity, Fill/Stroke индикатор в Toolbar (X — фокус, Shift+X — swap)
 - **4.1 (Pen):** ✅ ГОТОВО (Pen, Add/Delete/Convert Anchor, Curvature)
@@ -1090,6 +1147,7 @@ i18next пока не подключаем — это отдельный пун�
 - **5.3 (Типографика):** 🟡 почти всё ✅ — размер/leading/tracking/justification, bold/italic (вес 100–900), baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: файлы/Google via Fontsource-WOFF/локальные via queryLocalFonts), **Find Font** (диалог замены), подменю в MenuBar · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар (нужно посимвольное выделение)
 - **6.1 (Организация):** ✅ ГОТОВО — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, крошки, затемнение, adoption новых объектов), Layers панель (создание/удаление/переименование/глаз/замок/вложенность/drag между слоями), **единый стор выделения** (переживает смену инструмента; команды работают при любом инструменте)
 - **6.2 (Pathfinder):** ✅ ГОТОВО — все 9 операций (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; меню Object > Pathfinder + грид в Properties), Shape Builder Tool (клик/drag/Alt-удаление, подсветка регионов), Compound Path Make/Release (⌘8/⌥⌘8), path-ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · значения Offset/Grid пока через prompt (диалоги — 15.x)
+- **7.1 (Трансформации):** ✅ ГОТОВО — Transform-секция в Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), инструменты Rotate/Reflect/Scale/Shear (пивот кликом, Shift-констрейн, Alt-копия), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, с фолбэком duplicate), Object > Transform подменю · ⬜ поворотный бокс/Reset BB, Drawing/Screen Modes — отложены
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
 - **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
 - **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
@@ -1097,11 +1155,11 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
 **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 7.1 Трансформации (Transform панель, Rotate/Reflect/
-Scale/Shear/Reshape, Transform Each, Free Transform) — туда же подтянуть хвост 2.2 (Reference
-Point, Reset BB + поворотный бокс, Transform Again, Drawing/Screen Modes). Отложено:
-live-параметры polygon/star/ellipse (с 3.x/7.1); Delete-клавиша и автовыделение новой фигуры
-при не-selection инструментах — к 7.1; диалоги Offset Path / Split Into Grid вместо prompt — 15.x.
+**Следующее по плану (ранние пробелы):** 7.2 Деформация и ширина (Puppet Warp, Width Tool +
+Variable Width Profiles, Dimension/Measure Tool). Отложено ранее: поворотный бокс + Reset BB,
+Drawing/Screen Modes (хвост 2.2/7.1); live-параметры polygon/star/ellipse (с 3.x);
+Delete-клавиша и автовыделение новой фигуры при не-selection инструментах;
+диалоги Offset/Grid/Move/Rotate/Scale/Shear/Transform Each вместо prompt — 15.x.
 
 > Грабли Paper: `project.getItems(fn)` с голой функцией НЕ работает (трактует fn как класс) —
 > нужно `getItems({ match: fn })`. Иначе фильтр молча возвращает 0.

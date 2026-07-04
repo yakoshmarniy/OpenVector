@@ -358,6 +358,68 @@ function SpiralIcon() {
   );
 }
 
+function RotateIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M19 12a7 7 0 1 1-7-7" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M12 2.5l3 2.5-3 2.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+function ReflectIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3v18" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2.5 2" />
+      <path d="M9 8L4 16h5V8z" fill="currentColor" />
+      <path d="M15 8l5 8h-5V8z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ScaleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="4" y="10" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 14L19 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M19 10V5h-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ShearIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 6h11l-5 12H4L9 6z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M4 3.5h7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M9 3.5l-1.5-1.2M9 3.5L7.5 4.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ReshapeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 18c4-1 5-7 8-11" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 7l4-3 3 4-4 3z" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="4" cy="18" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function FreeTransformIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 5h13v13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeDasharray="3 2" />
+      <path d="M5 9l14 1-9 9-4-1L5 9z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <rect x="3.4" y="7.4" width="3.2" height="3.2" fill="currentColor" />
+      <rect x="17.4" y="8.4" width="3.2" height="3.2" fill="currentColor" />
+      <rect x="8.4" y="17.4" width="3.2" height="3.2" fill="currentColor" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
@@ -378,6 +440,12 @@ export const TOOL_ITEMS = [
   { id: TOOLS.BLOB_BRUSH, label: 'Blob Brush', Icon: BlobBrushIcon },
   { id: TOOLS.SHAPER, label: 'Shaper', Icon: ShaperIcon },
   { id: TOOLS.SHAPE_BUILDER, label: 'Shape Builder', Icon: ShapeBuilderIcon },
+  { id: TOOLS.ROTATE, label: 'Rotate', Icon: RotateIcon },
+  { id: TOOLS.REFLECT, label: 'Reflect', Icon: ReflectIcon },
+  { id: TOOLS.SCALE, label: 'Scale', Icon: ScaleIcon },
+  { id: TOOLS.SHEAR, label: 'Shear', Icon: ShearIcon },
+  { id: TOOLS.RESHAPE, label: 'Reshape', Icon: ReshapeIcon },
+  { id: TOOLS.FREE_TRANSFORM, label: 'Free Transform', Icon: FreeTransformIcon },
   { id: TOOLS.ERASER, label: 'Eraser', Icon: EraserIcon },
   { id: TOOLS.SCISSORS, label: 'Scissors', Icon: ScissorsIcon },
   { id: TOOLS.KNIFE, label: 'Knife', Icon: KnifeIcon },

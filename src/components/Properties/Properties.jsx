@@ -1,5 +1,6 @@
 import styles from './Properties.module.css';
 import FontPicker from '../FontPicker/FontPicker.jsx';
+import TransformSection from './TransformSection.jsx';
 
 // labels are plain text for now; will move to i18next t() when i18n lands.
 
@@ -364,6 +365,7 @@ export default function Properties({ sel, onChange, onAction, onManageFonts }) {
 
   return (
     <aside className={styles.panel} aria-label="Properties">
+      <TransformSection />
       {count >= 2 && (
         <div className={styles.actions}>
           <p className={styles.heading}>{count} objects selected</p>

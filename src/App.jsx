@@ -139,6 +139,48 @@ export default function App() {
           });
           break;
         }
+        case 'movePrompt': {
+          const v = window.prompt('Move — horizontal, vertical (px):', '10,10');
+          if (v === null) break;
+          const [dx, dy] = v.split(',').map((s) => Number(s.trim()));
+          if (Number.isFinite(dx) && Number.isFinite(dy)) actionRef.current?.(`moveBy:${dx},${dy}`);
+          break;
+        }
+        case 'rotatePrompt': {
+          const v = window.prompt('Rotate — angle (degrees, CW):', '45');
+          if (v === null) break;
+          const a = Number(v);
+          if (Number.isFinite(a) && a !== 0) actionRef.current?.(`rotateBy:${a}`);
+          break;
+        }
+        case 'scalePrompt': {
+          const v = window.prompt('Scale — uniform % or "width%, height%":', '150');
+          if (v === null) break;
+          const parts = v.split(',').map((s) => Number(s.trim()));
+          const sx = parts[0] / 100;
+          const sy = (parts.length > 1 ? parts[1] : parts[0]) / 100;
+          if (sx > 0 && sy > 0) actionRef.current?.(`scaleBy:${sx},${sy}`);
+          break;
+        }
+        case 'shearPrompt': {
+          const v = window.prompt('Shear — angle (degrees):', '15');
+          if (v === null) break;
+          const a = Number(v);
+          if (Number.isFinite(a) && a !== 0 && Math.abs(a) < 89) actionRef.current?.(`shearBy:${a}`);
+          break;
+        }
+        case 'transformEachPrompt': {
+          const v = window.prompt(
+            'Transform Each — scaleX%, scaleY%, moveX, moveY, angle:',
+            '100,100,0,0,0',
+          );
+          if (v === null) break;
+          const [sx, sy, dx, dy, angle] = v.split(',').map((s) => Number(s.trim()));
+          if (sx > 0 && sy > 0) {
+            actionRef.current?.(`transformEach:${sx / 100},${sy / 100},${dx || 0},${dy || 0},${angle || 0}`);
+          }
+          break;
+        }
         case 'offsetPath': {
           const v = window.prompt('Offset distance (px, negative = inset):', '10');
           if (v === null) break;

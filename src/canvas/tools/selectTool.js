@@ -8,6 +8,7 @@ import {
 } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
 import { snapMove } from '../operations/snapping.js';
+import { recordTransform } from '../operations/transform.js';
 import {
   isLiveRect,
   rectAxisAligned,
@@ -54,6 +55,7 @@ export function createSelectTool(ctx = {}) {
   let moveStart = null;
   let moveOrigin = [];
   let moveUnion = null;
+  let moveCopied = false; // Alt-drag left the originals and moved clones
   let guides = null;
   // Rotation (drag just outside a corner): fixed centre + accumulated angle.
   let rotateCenter = null;
@@ -196,7 +198,8 @@ export function createSelectTool(ctx = {}) {
         } else {
           if (!selection.has(item)) selection.setTarget(item);
           // Alt+drag leaves the originals and moves duplicates.
-          if (e && e.altKey) selection.setTargets(selection.targets.map((t) => t.clone()));
+          moveCopied = !!(e && e.altKey);
+          if (moveCopied) selection.setTargets(selection.targets.map((t) => t.clone()));
           mode = 'move';
           moveStart = point;
           moveOrigin = selection.targets.map((t) => t.position.clone());
@@ -258,6 +261,20 @@ export function createSelectTool(ctx = {}) {
     },
 
     onMouseUp(point) {
+      if (mode === 'move' && selection.targets.length && moveOrigin.length) {
+        // Record the finished move (or Alt-copy) for Transform Again (⌘D).
+        const d = selection.targets[0].position.subtract(moveOrigin[0]);
+        if (Math.abs(d.x) > 0.5 || Math.abs(d.y) > 0.5) {
+          recordTransform({ kind: 'move', dx: d.x, dy: d.y, copy: moveCopied });
+        }
+      }
+      if (mode === 'rotate' && rotateCenter && rotateApplied) {
+        recordTransform({
+          kind: 'rotate',
+          angle: rotateApplied,
+          pivot: { x: rotateCenter.x, y: rotateCenter.y },
+        });
+      }
       if (mode === 'marquee') {
         clearMarquee();
         if (marqueeStart && point) {
@@ -278,6 +295,7 @@ export function createSelectTool(ctx = {}) {
       moveStart = null;
       moveOrigin = [];
       moveUnion = null;
+      moveCopied = false;
       rotateCenter = null;
       drawWidget();
     },
@@ -301,6 +319,7 @@ export function createSelectTool(ctx = {}) {
         selection.targets.forEach((t) => {
           t.position = t.position.add(d);
         });
+        recordTransform({ kind: 'move', dx: d.x, dy: d.y });
         selection.draw();
         drawWidget();
         return;

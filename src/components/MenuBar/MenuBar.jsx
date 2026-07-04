@@ -33,7 +33,7 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
         { label: 'Copy', enabled: false, accel: '⌘C' },
         { label: 'Paste', enabled: false, accel: '⌘V' },
         sep,
-        { label: 'Duplicate', cmd: 'duplicate', enabled: has, accel: '⌘D' },
+        { label: 'Duplicate', cmd: 'duplicate', enabled: has },
         { label: 'Delete', cmd: 'delete', enabled: has, accel: '⌫' },
         sep,
         { label: 'Select All', cmd: 'selectAll', accel: '⌘A' },
@@ -43,6 +43,23 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
     {
       title: 'Object',
       items: [
+        {
+          label: 'Transform',
+          enabled: has,
+          items: [
+            { label: 'Transform Again', cmd: 'transformAgain', accel: '⌘D' },
+            sep,
+            { label: 'Move…', cmd: 'movePrompt' },
+            { label: 'Rotate…', cmd: 'rotatePrompt' },
+            { label: 'Reflect Horizontal', cmd: 'flipH' },
+            { label: 'Reflect Vertical', cmd: 'flipV' },
+            { label: 'Scale…', cmd: 'scalePrompt' },
+            { label: 'Shear…', cmd: 'shearPrompt' },
+            sep,
+            { label: 'Transform Each…', cmd: 'transformEachPrompt' },
+          ],
+        },
+        sep,
         { label: 'Group', cmd: 'group', enabled: multi, accel: '⌘G' },
         { label: 'Ungroup', cmd: 'ungroup', enabled: group, accel: '⌘⇧G' },
         sep,

@@ -247,3 +247,64 @@
   color: #f0f1f2;
   border-color: var(--ov-accent-active);
 }
+
+/* --- Transform section --- */
+.transformSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--ov-panel-border);
+}
+
+.transformBody {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+}
+
+.refRow {
+  display: flex;
+  gap: 4px;
+}
+
+.refDot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-text-dim);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.refDot:hover {
+  border-color: var(--ov-text);
+}
+
+.refDotActive {
+  background: var(--ov-accent, #7fd4ff);
+  border-color: var(--ov-accent, #7fd4ff);
+}
+
+.transformFields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tfLabel {
+  width: 12px;
+  color: var(--ov-text-dim);
+  font-size: 11px;
+  text-align: right;
+}

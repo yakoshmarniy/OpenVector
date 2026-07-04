@@ -43,6 +43,14 @@ import { createPaintbrushTool } from '../../canvas/tools/paintbrushTool.js';
 import { createBlobBrushTool } from '../../canvas/tools/blobBrushTool.js';
 import { createShaperTool } from '../../canvas/tools/shaperTool.js';
 import { createShapeBuilderTool } from '../../canvas/tools/shapeBuilderTool.js';
+import {
+  createRotateTool,
+  createReflectTool,
+  createScaleTool,
+  createShearTool,
+} from '../../canvas/tools/transformTools.js';
+import { createReshapeTool } from '../../canvas/tools/reshapeTool.js';
+import { createFreeTransformTool } from '../../canvas/tools/freeTransformTool.js';
 import { createEraserTool } from '../../canvas/tools/eraserTool.js';
 import { createScissorsTool } from '../../canvas/tools/scissorsTool.js';
 import { createKnifeTool } from '../../canvas/tools/knifeTool.js';
@@ -82,6 +90,12 @@ const TOOL_FACTORIES = {
   [TOOLS.BLOB_BRUSH]: createBlobBrushTool,
   [TOOLS.SHAPER]: createShaperTool,
   [TOOLS.SHAPE_BUILDER]: createShapeBuilderTool,
+  [TOOLS.ROTATE]: createRotateTool,
+  [TOOLS.REFLECT]: createReflectTool,
+  [TOOLS.SCALE]: createScaleTool,
+  [TOOLS.SHEAR]: createShearTool,
+  [TOOLS.RESHAPE]: createReshapeTool,
+  [TOOLS.FREE_TRANSFORM]: createFreeTransformTool,
   [TOOLS.ERASER]: createEraserTool,
   [TOOLS.SCISSORS]: createScissorsTool,
   [TOOLS.KNIFE]: createKnifeTool,
@@ -444,9 +458,10 @@ export default function Canvas({
         runToolAction(e.shiftKey ? 'deselect' : 'selectAll');
         return;
       }
+      // ⌘D = Transform Again (Illustrator); duplicates when nothing recorded.
       if ((e.metaKey || e.ctrlKey) && e.code === 'KeyD') {
         e.preventDefault();
-        runToolAction('duplicate');
+        runToolAction('transformAgain');
         return;
       }
       // Join paths (⌘J) and Compound Path make / release (⌘8 / ⌥⌘8).
