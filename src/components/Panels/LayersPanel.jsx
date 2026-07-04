@@ -24,7 +24,7 @@ function labelOf(it) {
 }
 
 const EyeIcon = ({ off }) => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     <path d="M1.5 8s2.4-4.2 6.5-4.2S14.5 8 14.5 8 12.1 12.2 8 12.2 1.5 8 1.5 8Z" />
     <circle cx="8" cy="8" r="2" />
     {off && <path d="M2.5 13.5 13.5 2.5" />}
@@ -32,14 +32,14 @@ const EyeIcon = ({ off }) => (
 );
 
 const LockIcon = () => (
-  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     <rect x="3.5" y="7" width="9" height="6.5" rx="1" />
     <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
   </svg>
 );
 
 const TrashIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
     <path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5 5 13.5h6l.5-9" />
   </svg>
 );
@@ -224,7 +224,7 @@ export default function LayersPanel() {
       <div className={styles.header}>
         <span className={styles.title}>Layers</span>
         <button type="button" className={styles.headBtn} title="New layer" onClick={addLayer}>
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M8 3v10M3 8h10" />
           </svg>
         </button>
