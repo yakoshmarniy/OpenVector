@@ -5,6 +5,7 @@ import {
   computeResizeBounds,
   editableItems,
   addOverlay,
+  itemHitsRect,
 } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
 import { snapMove } from '../operations/snapping.js';
@@ -280,7 +281,7 @@ export function createSelectTool(ctx = {}) {
         if (marqueeStart && point) {
           const rect = normRect(marqueeStart, point);
           if (rect.width > 2 || rect.height > 2) {
-            const hits = editableItems().filter((it) => rect.intersects(it.bounds));
+            const hits = editableItems().filter((it) => itemHitsRect(it, rect));
             if (marqueeAdditive) hits.forEach((h) => !selection.has(h) && selection.toggle(h));
             else selection.setTargets(hits);
           }

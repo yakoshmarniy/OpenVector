@@ -114,6 +114,25 @@ export function pickItem(point) {
   return null;
 }
 
+// True when the marquee rectangle touches the item's real GEOMETRY — outline
+// crossed, item fully enclosed, or the rect sitting on painted fill. A bare
+// bounding-box overlap is not enough: dragging through the empty notch of an
+// L-shape (or inside a pen squiggle's hull) must not select it.
+export function itemHitsRect(item, rect) {
+  if (!rect.intersects(item.bounds)) return false; // cheap prefilter
+  if (rect.contains(item.bounds)) return true; // fully enclosed
+  if (item.className === 'Path' || item.className === 'CompoundPath') {
+    const probe = new paper.Path.Rectangle({ rectangle: rect, insert: false });
+    if (item.intersects(probe)) return true;
+    return !!(item.fillColor && item.contains(rect.center));
+  }
+  if (item.children && item.children.length) {
+    return item.children.some((c) => itemHitsRect(c, rect));
+  }
+  // Leaf items without path geometry (text glyphs, rasters) keep bbox hits.
+  return true;
+}
+
 function handlePoint(bounds, name) {
   switch (name) {
     case 'nw': return bounds.topLeft;
@@ -214,6 +233,31 @@ function removeOverlay() {
   }
 }
 
+// Accent outline tracing the item's real geometry (Illustrator-style): every
+// path inside the target is cloned onto the overlay. Returns false when the
+// item has no path geometry (text, rasters) — callers fall back to a rect.
+function addShapeOutline(group, item, zoom, color) {
+  let found = false;
+  const walk = (it) => {
+    if (!it.visible) return; // e.g. the hidden guide path inside on-path text
+    if (it.className === 'Path') {
+      const o = it.clone({ insert: false });
+      o.data = {}; // the clone copies data (live-rect flags, arrow config…)
+      o.fillColor = null;
+      o.strokeColor = color;
+      o.strokeWidth = 1 / zoom;
+      o.dashArray = [];
+      o.opacity = 1;
+      group.addChild(o);
+      found = true;
+    } else if (it.children) {
+      it.children.forEach(walk);
+    }
+  };
+  walk(item);
+  return found;
+}
+
 function drawOverlay() {
   removeOverlay();
   if (!paper.project) return;
@@ -231,15 +275,18 @@ function drawOverlay() {
   overlayGroup.data[OVERLAY_FLAG] = true;
   overlayGroup.locked = true;
 
-  if (targets.length > 1) {
-    targets.forEach((t) => {
+  // Highlight each selected object along its actual shape, so a pen path or
+  // star reads as selected in its own form, not as a bounding rectangle.
+  const OUTLINE = '#7fb2d9'; // muted blue — readable on the grey fills
+  targets.forEach((t) => {
+    if (!addShapeOutline(overlayGroup, t, zoom, OUTLINE)) {
       const ib = new paper.Path.Rectangle(t.bounds);
-      ib.strokeColor = '#5b6b78';
+      ib.strokeColor = OUTLINE;
       ib.strokeWidth = 1 / zoom;
       ib.fillColor = null;
       overlayGroup.addChild(ib);
-    });
-  }
+    }
+  });
 
   const b = unionBounds(targets);
   const box = new paper.Path.Rectangle(b);
