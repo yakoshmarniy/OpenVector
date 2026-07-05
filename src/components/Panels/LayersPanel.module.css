@@ -72,6 +72,15 @@
 
 .activeLayer {
   border-left-color: var(--ov-accent-active);
+  background: rgba(111, 133, 149, 0.22);
+}
+
+.activeLayer:hover {
+  background: rgba(111, 133, 149, 0.3);
+}
+
+.activeLayer .layerName {
+  color: #d7dde2;
 }
 
 .selectedRow {
