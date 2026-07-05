@@ -16,10 +16,11 @@ const HL_STROKE = '#8fb0c4';
 const isPathLike = (it) => it.className === 'Path' || it.className === 'CompoundPath';
 
 export function createShapeBuilderTool(ctx = {}) {
-  let regions = []; // { geom (hidden path on the overlay layer), src }
+  let regions = []; // { geom (unpainted path on the overlay layer), src }
   let hover = null; // highlight overlay under the cursor
   let picked = []; // region indexes collected during the current gesture
   let marks = []; // highlight overlays for picked regions
+  let borders = []; // dashed region borders (make the decomposition visible)
   let dragging = false;
 
   const clearHover = () => {
@@ -31,9 +32,31 @@ export function createShapeBuilderTool(ctx = {}) {
     marks = [];
     picked = [];
   };
+  const clearBorders = () => {
+    borders.forEach((b) => b.remove());
+    borders = [];
+  };
   const clearRegions = () => {
+    clearBorders();
     regions.forEach((r) => r.geom.remove());
     regions = [];
+  };
+
+  // Dashed seams along every region so the decomposition is visible while the
+  // tool is active — after a merge the seam between the pieces disappears.
+  const drawBorders = () => {
+    clearBorders();
+    const z = paper.view.zoom;
+    regions.forEach((r) => {
+      const c = r.geom.clone({ insert: false });
+      c.data = {};
+      c.fillColor = null;
+      c.strokeColor = new paper.Color(HL_STROKE);
+      c.strokeWidth = 1 / z;
+      c.dashArray = [3 / z, 3 / z];
+      c.opacity = 0.7;
+      borders.push(addOverlay(c));
+    });
   };
 
   const selection = createSelection(() => rebuild());
@@ -47,9 +70,15 @@ export function createShapeBuilderTool(ctx = {}) {
     paths.sort((a, b) => a.index - b.index);
     regions = atomicRegions(paths);
     regions.forEach((r) => {
-      r.geom.visible = false; // hit-tested manually, never rendered
+      // Keep the geometry VISIBLE but unpainted: paper's boolean fast-path for
+      // disjoint operands copies them into the result, and a visible=false
+      // region would leak invisibility into the merged compound (bogus bounds,
+      // wrong degenerate checks — merging non-overlapping shapes broke).
+      r.geom.fillColor = null;
+      r.geom.strokeColor = null;
       addOverlay(r.geom);
     });
+    drawBorders();
   }
 
   function regionAt(point) {
@@ -184,6 +213,7 @@ export function createShapeBuilderTool(ctx = {}) {
     onViewChange() {
       selection.draw();
       clearHover();
+      drawBorders(); // seam width/dash are sized in screen pixels
     },
 
     refreshSelection() {
