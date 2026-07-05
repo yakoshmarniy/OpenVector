@@ -190,9 +190,10 @@ export default function LayersPanel() {
     commitChange();
   };
 
-  // --- Drag & drop: move an item into a layer (on top) or above an item ---
+  // --- Drag & drop: items move into a layer (on top) or above an item;
+  // layer rows reorder the layer stack (drop = place above the target). ---
   const onDragStart = (row, e) => {
-    e.dataTransfer.setData('text/plain', String(row.id));
+    e.dataTransfer.setData('text/plain', `${row.kind}:${row.id}`);
     e.dataTransfer.effectAllowed = 'move';
   };
 
@@ -207,7 +208,20 @@ export default function LayersPanel() {
   const onDrop = (row, e) => {
     e.preventDefault();
     setDropKey(null);
-    const id = Number(e.dataTransfer.getData('text/plain'));
+    const [kind, rawId] = (e.dataTransfer.getData('text/plain') || '').split(':');
+    const id = Number(rawId);
+    if (kind === 'layer') {
+      const dragged = artworkLayers().find((l) => l.id === id);
+      if (!dragged) return;
+      // The list is topmost-first, so dropping on a row puts the layer above
+      // that row's layer in the canvas stacking order.
+      const target = row.kind === 'layer' ? row.layer : row.item.layer;
+      if (!target || target === dragged) return;
+      dragged.insertAbove(target);
+      getOverlayLayer(); // keep the overlay layer on top of everything
+      commitChange();
+      return;
+    }
     const item = paper.project.getItem({ match: (it) => it.id === id });
     if (!item) return;
     const target = refOf(row);
@@ -245,8 +259,8 @@ export default function LayersPanel() {
               className={classes.join(' ')}
               style={isLayer ? undefined : { paddingLeft: 4 + row.depth * 12 }}
               onClick={(e) => onRowClick(row, e)}
-              draggable={!isLayer}
-              onDragStart={(e) => !isLayer && onDragStart(row, e)}
+              draggable={!editing}
+              onDragStart={(e) => !editing && onDragStart(row, e)}
               onDragOver={(e) => onDragOver(row, e)}
               onDrop={(e) => onDrop(row, e)}
             >
