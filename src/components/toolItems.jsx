@@ -420,6 +420,48 @@ function FreeTransformIcon() {
   );
 }
 
+function WidthIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 12C8 5.5 16 5.5 21 12C16 18.5 8 18.5 3 12z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M3 12h18" stroke="currentColor" strokeWidth="1" strokeDasharray="2.5 2" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PuppetWarpIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 18c4 1 8-2 9-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="15" cy="7" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <circle cx="15" cy="7" r="1" fill="currentColor" />
+      <path d="M15 10v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="5" cy="18.5" r="1.6" fill="currentColor" />
+    </svg>
+  );
+}
+
+function MeasureIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="1.5" y="13.2" width="20" height="6.5" rx="1" transform="rotate(-35 12 16)" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7 14.8l1.6 2.3M10.6 12.3l1.1 1.6M14 9.9l1.6 2.3M17.6 7.4l1.1 1.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function DimensionIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 8v12M20 8v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M4 14h16" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M4 14l3-2v4zM20 14l-3-2v4z" fill="currentColor" />
+      <path d="M9 5h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
@@ -446,6 +488,10 @@ export const TOOL_ITEMS = [
   { id: TOOLS.SHEAR, label: 'Shear', Icon: ShearIcon },
   { id: TOOLS.RESHAPE, label: 'Reshape', Icon: ReshapeIcon },
   { id: TOOLS.FREE_TRANSFORM, label: 'Free Transform', Icon: FreeTransformIcon },
+  { id: TOOLS.WIDTH, label: 'Width', Icon: WidthIcon },
+  { id: TOOLS.PUPPET_WARP, label: 'Puppet Warp', Icon: PuppetWarpIcon },
+  { id: TOOLS.MEASURE, label: 'Measure', Icon: MeasureIcon },
+  { id: TOOLS.DIMENSION, label: 'Dimension', Icon: DimensionIcon },
   { id: TOOLS.ERASER, label: 'Eraser', Icon: EraserIcon },
   { id: TOOLS.SCISSORS, label: 'Scissors', Icon: ScissorsIcon },
   { id: TOOLS.KNIFE, label: 'Knife', Icon: KnifeIcon },

@@ -1,6 +1,13 @@
 import paper from 'paper';
 import { isTextItem, readTextStyle, applyTextStyle } from './textLayout.js';
 import { refreshArrowheads } from './arrowheads.js';
+import {
+  hasWidthProfile,
+  getWidthProfile,
+  setBaseWidth,
+  applyWidthPreset,
+  refreshWidthEnvelope,
+} from './widthProfile.js';
 
 // Read/write the visual style of a Paper.js item as plain serialisable values,
 // so React (the Properties panel) can drive it without touching paper directly.
@@ -27,7 +34,9 @@ export function readStyle(item) {
     fillColor: item.fillColor ? item.fillColor.toCSS(true) : DEFAULT_FILL,
     hasStroke: !!item.strokeColor,
     strokeColor: item.strokeColor ? item.strokeColor.toCSS(true) : DEFAULT_STROKE,
-    strokeWidth: item.strokeWidth ?? 0,
+    // With a width profile the native strokeWidth is 0 — report the nominal.
+    strokeWidth: hasWidthProfile(item) ? getWidthProfile(item).base : (item.strokeWidth ?? 0),
+    widthPreset: hasWidthProfile(item) ? (getWidthProfile(item).preset || 'custom') : 'uniform',
     strokeCap,
     strokeJoin: item.strokeJoin || 'miter',
     dashArray,
@@ -50,7 +59,11 @@ export function applyStyle(item, patch) {
   }
   if ('fillColor' in patch) item.fillColor = patch.fillColor;
   if ('strokeColor' in patch) item.strokeColor = patch.strokeColor;
-  if ('strokeWidth' in patch) item.strokeWidth = patch.strokeWidth;
+  if ('strokeWidth' in patch) {
+    if (hasWidthProfile(item)) setBaseWidth(item, patch.strokeWidth);
+    else item.strokeWidth = patch.strokeWidth;
+  }
+  if ('widthPreset' in patch) applyWidthPreset(item, patch.widthPreset);
   if ('strokeCap' in patch) item.strokeCap = patch.strokeCap;
   if ('strokeJoin' in patch) item.strokeJoin = patch.strokeJoin;
   if ('dashArray' in patch) item.dashArray = patch.dashArray || [];
@@ -66,4 +79,6 @@ export function applyStyle(item, patch) {
 
   // Stroke colour / width / arrow toggles all change the heads — rebuild them.
   refreshArrowheads(item);
+  // Same for the variable-width envelope (colour, weight, opacity, preset).
+  refreshWidthEnvelope(item);
 }

@@ -3,6 +3,7 @@ import { editableItems } from './selection.js';
 import { groupItems, ungroupItems, booleanOp } from './booleans.js';
 import { alignItems, distributeItems } from './align.js';
 import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
+import { clearWidthEnvelope, refreshWidthEnvelope } from './widthProfile.js';
 import { unlockAllItems, showAllItems } from './visibility.js';
 import { pathfinderOp } from './pathfinder.js';
 import { makeCompoundPath, releaseCompoundPath } from './compound.js';
@@ -164,6 +165,7 @@ export function runSelectionAction(selection, rawName) {
     case 'delete':
       items.forEach((t) => {
         clearArrowheads(t);
+        clearWidthEnvelope(t);
         t.remove();
       });
       selection.clear();
@@ -173,6 +175,7 @@ export function runSelectionAction(selection, rawName) {
         const c = t.clone();
         c.position = c.position.add(new paper.Point(12, 12));
         refreshArrowheads(c); // build the clone's own heads (config is copied)
+        refreshWidthEnvelope(c);
         return c;
       });
       selection.setTargets(clones);

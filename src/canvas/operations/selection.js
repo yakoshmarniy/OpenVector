@@ -1,6 +1,7 @@
 import paper from 'paper';
 import { hitRegion, isTextItem } from './textLayout.js';
 import { refreshArrowheads } from './arrowheads.js';
+import { refreshWidthEnvelope, isWidthEnvelope } from './widthProfile.js';
 import {
   subscribeSelection,
   getSelectedItems,
@@ -104,6 +105,20 @@ export function pickItem(point) {
     match: (r) => !isOverlayItem(r.item),
   });
   if (hit) return topLevel(hit.item);
+
+  // Variable-width strokes: the spine path has strokeWidth 0 (not stroke-
+  // hittable) and its envelope is locked (hitTest skips locked items even
+  // with the `locked` option in this paper build) — probe the envelopes by
+  // hand and give the click to the owning path, so the whole stroke body is
+  // clickable.
+  const envs = paper.project.getItems({ match: (it) => isWidthEnvelope(it) && it.visible });
+  for (let i = envs.length - 1; i >= 0; i -= 1) {
+    const e = envs[i];
+    if (e.contains(point)) {
+      const owner = e.parent && e.parent.children.find((c) => c.id === e.data.ownerId);
+      if (owner && !owner.locked && owner.visible) return topLevel(owner);
+    }
+  }
 
   const texts = paper.project.getItems({ match: (it) => isTextItem(it) });
   for (let i = texts.length - 1; i >= 0; i -= 1) {
@@ -240,6 +255,7 @@ function addShapeOutline(group, item, zoom, color) {
   let found = false;
   const walk = (it) => {
     if (!it.visible) return; // e.g. the hidden guide path inside on-path text
+    if (isWidthEnvelope(it)) return; // the spine outline already reads as selected
     if (it.className === 'Path') {
       const o = it.clone({ insert: false });
       o.data = {}; // the clone copies data (live-rect flags, arrow config…)
@@ -262,8 +278,12 @@ function drawOverlay() {
   removeOverlay();
   if (!paper.project) return;
   const targets = visibleTargets();
-  // Keep any arrowheads following their paths as they move / resize / rotate.
-  targets.forEach((t) => refreshArrowheads(t));
+  // Keep arrowheads and variable-width envelopes following their paths as
+  // they move / resize / rotate.
+  targets.forEach((t) => {
+    refreshArrowheads(t);
+    refreshWidthEnvelope(t);
+  });
   if (!targets.length) {
     reportBounds();
     return;

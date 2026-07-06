@@ -276,6 +276,25 @@ function StyleControls({ style, onChange, onManageFonts }) {
       {!style.isText && (
         <div className={styles.strokeDetail}>
           <div className={styles.row}>
+            <span className={styles.label}>Profile</span>
+            <select
+              className={styles.select}
+              title="Variable width profile"
+              aria-label="Variable width profile"
+              value={style.widthPreset ?? 'uniform'}
+              disabled={!style.hasStroke}
+              onChange={(e) => onChange({ widthPreset: e.target.value })}
+            >
+              <option value="uniform">Uniform</option>
+              <option value="p1">Width Profile 1</option>
+              <option value="p2">Width Profile 2</option>
+              <option value="p3">Width Profile 3</option>
+              <option value="p4">Width Profile 4</option>
+              {style.widthPreset === 'custom' && <option value="custom">Custom</option>}
+            </select>
+          </div>
+
+          <div className={styles.row}>
             <span className={styles.label}>Line</span>
             <Seg options={LINE_TYPES} value={style.lineType} disabled={!style.hasStroke}
               onPick={(id) => onChange({

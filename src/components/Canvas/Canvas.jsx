@@ -51,6 +51,10 @@ import {
 } from '../../canvas/tools/transformTools.js';
 import { createReshapeTool } from '../../canvas/tools/reshapeTool.js';
 import { createFreeTransformTool } from '../../canvas/tools/freeTransformTool.js';
+import { createWidthTool } from '../../canvas/tools/widthTool.js';
+import { createPuppetWarpTool } from '../../canvas/tools/puppetWarpTool.js';
+import { createMeasureTool } from '../../canvas/tools/measureTool.js';
+import { createDimensionTool } from '../../canvas/tools/dimensionTool.js';
 import { createEraserTool } from '../../canvas/tools/eraserTool.js';
 import { createScissorsTool } from '../../canvas/tools/scissorsTool.js';
 import { createKnifeTool } from '../../canvas/tools/knifeTool.js';
@@ -96,6 +100,10 @@ const TOOL_FACTORIES = {
   [TOOLS.SHEAR]: createShearTool,
   [TOOLS.RESHAPE]: createReshapeTool,
   [TOOLS.FREE_TRANSFORM]: createFreeTransformTool,
+  [TOOLS.WIDTH]: createWidthTool,
+  [TOOLS.PUPPET_WARP]: createPuppetWarpTool,
+  [TOOLS.MEASURE]: createMeasureTool,
+  [TOOLS.DIMENSION]: createDimensionTool,
   [TOOLS.ERASER]: createEraserTool,
   [TOOLS.SCISSORS]: createScissorsTool,
   [TOOLS.KNIFE]: createKnifeTool,

@@ -9,12 +9,13 @@ let chain = []; // isolated groups, outermost first
 let dimmed = []; // { item, opacity, locked } saved for restore
 
 // System items that must never be dimmed, adopted or unlocked wholesale:
-// selection/pen/text overlays, arrowheads and hidden-character marks.
+// selection/pen/text overlays, arrowheads, variable-width envelopes and
+// hidden-character marks.
 export function isTransientItem(it) {
   const d = it.data;
   return !!(d && (
     d.isSelectionOverlay || d.isTextOverlay || d.isPenOverlay
-    || d.isArrow || d.hiddenMark
+    || d.isArrow || d.isWidthEnvelope || d.hiddenMark
   ));
 }
 

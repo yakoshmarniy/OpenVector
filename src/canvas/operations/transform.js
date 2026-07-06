@@ -46,7 +46,16 @@ export function setScaleStrokes(v) {
 export function scaleStrokeWidths(items, factor) {
   if (!Number.isFinite(factor) || factor <= 0 || factor === 1) return;
   const walk = (it) => {
-    if (it.strokeWidth) it.strokeWidth *= factor;
+    // Variable-width profiles scale as a whole (base + every width point).
+    const prof = it.data && it.data.width;
+    if (prof) {
+      prof.base *= factor;
+      prof.points.forEach((p) => {
+        p.w *= factor;
+      });
+    } else if (it.strokeWidth) {
+      it.strokeWidth *= factor;
+    }
     if (it.children) it.children.forEach(walk);
   };
   items.forEach(walk);
