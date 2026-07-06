@@ -1178,6 +1178,57 @@ i18next пока не подключаем — это отдельный пун�
   связь. Урок: результат жеста должен быть виден даже при идентичных стилях.
 - paper `layer.insertAbove(otherLayer)` честно переставляет слои в project.layers (слои — те же Item).
 
+### Сессия 27 — прогресс (✅ итерация 7.2)
+
+Объём: **фаза 7.2** — деформация и ширина. Все 4 пункта чеклиста закрыты (v1).
+
+- [x] **`operations/widthProfile.js`** — переменная ширина обводки. Профиль в
+      `path.data.width = {base, preset, points:[{o: 0..1, w: px}]}`. Paper не умеет variable-width
+      stroke → рендер отдельным ЗАЛИТЫМ конвертом (`data.isWidthEnvelope` + `ownerId`, паттерн
+      arrowheads: перестраивается на каждом redraw оверлея и в applyStyle → следует за
+      move/transform/reshape). Пока профиль есть — у пути `strokeWidth = 0` (paper не рисует
+      нулевую обводку), номинал живёт в `base`, itemStyle маппит его в панель. Закрытый путь →
+      конверт = CompoundPath из двух колец (evenodd). Ширина на концах интерполируется к base
+      (одна точка = веретено, как в Illustrator). Панельная правка Width масштабирует профиль
+      пропорционально; scaleStrokeWidths (Scale Strokes & Effects) масштабирует base+точки.
+- [x] **Width Tool** (`widthTool.js`): клик по обводке — новая точка ширины, drag = ширина
+      (2×расстояние до оси); маркеры: перекладина + квадраты по краям (drag = ширина) + точка на
+      спайне (drag = сдвиг вдоль пути); Alt-клик по маркеру / Delete — удалить точку; последняя
+      точка удалена → профиль снят, нативная обводка восстановлена. Ховер подсвечивает путь.
+- [x] **Variable Width Profiles**: селект Profile в Properties (Uniform + 4 пресета + Custom),
+      `applyWidthPreset` строит точки от номинала; кастомные правки → preset='custom'.
+- [x] **Puppet Warp** (`puppetWarpTool.js` + `operations/puppetWarp.js`): пины + rigid MLS
+      (Schaefer 2006, без меша — поле деформации считается по вершинам: якоря + КОНЦЫ ручек,
+      кривые гнутся). Клик по объекту = таргет, клик по таргету = пин, drag выбранных пинов =
+      деформация ОТ СНАПШОТА; при изменении набора пинов снапшот перезапекается (re-base) —
+      жесты компонуются без дрейфа. Shift-клик = мультивыбор пинов, A = все пины, Delete =
+      удалить пины (деформация остаётся), Escape = снять выбор/пины. 1 пин = чистый перенос.
+- [x] **Measure Tool**: drag → оверлей-ридаут D/∠/W/H (Shift = 45°), висит до следующего замера.
+- [x] **Dimension Tool**: drag → размерная аннотация КАК АРТВОРК (линия, засечки, стрелки наружу,
+      подпись «N px» вдоль линии, переворот если вверх ногами; Shift = 45°); группа выделяется и
+      двигается как обычный объект, `data.isDimension`.
+- [x] Toolbar: группы [Width, Puppet Warp] и [Measure, Dimension] + 4 иконки.
+- [ ] Отложено: Show Mesh и поворот пина (Puppet Warp), несимметричные точки ширины
+      (Alt-полуширина в Illustrator), маркеры Width для путей внутри групп (сам конверт в
+      группах работает — маркеров/добавления точек нет).
+
+Заметки / решения сессии 27:
+- **Путь с профилем не хитился**: strokeWidth=0 → stroke-hit paper не срабатывает, конверт
+  locked, а опция `{locked:true}` в project.hitTest в нашей сборке paper НЕ работает (проверено).
+  Фикс в `pickItem`: ручной проход конвертов (`getItems({match}) + contains`) → клик по ЛЮБОМУ
+  месту тела обводки отдаётся пути-владельцу.
+- Клон группы копирует детский конверт со СТАРЫМ ownerId → orphan-sweep в refreshWidthEnvelope
+  (конверты без owner среди siblings удаляются). Delete-команда чистит конверты как стрелки.
+- `isTransientItem` (isolation.js) — центральный фильтр системных айтемов (Layers, Unlock All,
+  adoption) — конверт добавлен туда одной строкой. Контур выделения (addShapeOutline) конверт
+  пропускает: выделение подсвечивает спайн.
+- Vite не читает PORT из env — в vite.config.js добавлен `server.port = process.env.PORT`
+  (нужно preview-харнессу с autoPort; конфиг `openvector-any` в .claude/launch.json).
+- Грабли теста: превью-вьюпорт после рестарта сервера бывает 0×0 → `preview_resize` с явными
+  width/height, затем руками `paper.view.viewSize = stage.clientSize` (ResizeObserver в headless
+  не добегает). Слот тулбара после выбора из drawer показывает выбранный инструмент — кнопки
+  `aria-label="Width"` в рейле может не быть, брать из drawer.
+
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
 > Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
 > (прежний план шёл иначе), поэтому ранние фазы частично закрыты.
@@ -1196,6 +1247,7 @@ i18next пока не подключаем — это отдельный пун�
 - **6.1 (Организация):** ✅ ГОТОВО — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, крошки, затемнение, adoption новых объектов), Layers панель (создание/удаление/переименование/глаз/замок/вложенность/drag между слоями), **единый стор выделения** (переживает смену инструмента; команды работают при любом инструменте)
 - **6.2 (Pathfinder):** ✅ ГОТОВО — все 9 операций (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; меню Object > Pathfinder + грид в Properties), Shape Builder Tool (клик/drag/Alt-удаление, подсветка регионов), Compound Path Make/Release (⌘8/⌥⌘8), path-ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · значения Offset/Grid пока через prompt (диалоги — 15.x)
 - **7.1 (Трансформации):** ✅ ГОТОВО — Transform-секция в Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), инструменты Rotate/Reflect/Scale/Shear (пивот кликом, Shift-констрейн, Alt-копия), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, с фолбэком duplicate), Object > Transform подменю · ⬜ поворотный бокс/Reset BB, Drawing/Screen Modes — отложены
+- **7.2 (Деформация/ширина):** ✅ ГОТОВО — Width Tool (точки ширины: drag/сдвиг/Alt-удаление), Variable Width Profiles (Uniform + 4 пресета в Properties), рендер конвертом (isWidthEnvelope), Puppet Warp (пины, rigid MLS, Shift-мультивыбор, A = все, Delete с сохранением деформации), Measure (D/∠/W/H ридаут), Dimension (размерная аннотация-артворк) · ⬜ Show Mesh/поворот пина, несимметричные точки ширины — отложены
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
 - **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
 - **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
@@ -1203,8 +1255,8 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
 **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 7.2 Деформация и ширина (Puppet Warp, Width Tool +
-Variable Width Profiles, Dimension/Measure Tool). Отложено ранее: поворотный бокс + Reset BB,
+**Следующее по плану (ранние пробелы):** 7.3 Liquify (Warp, Twirl, Pucker, Bloat, Scallop,
+Crystallize, Wrinkle + опции кистей). Отложено ранее: поворотный бокс + Reset BB,
 Drawing/Screen Modes (хвост 2.2/7.1); live-параметры polygon/star/ellipse (с 3.x);
 Delete-клавиша и автовыделение новой фигуры при не-selection инструментах;
 диалоги Offset/Grid/Move/Rotate/Scale/Shear/Transform Each вместо prompt — 15.x.
