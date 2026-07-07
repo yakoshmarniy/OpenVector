@@ -1,1354 +1,1391 @@
 # OpenVector
 
-Опенсорсный векторный редактор — бесплатная альтернатива Adobe Illustrator.
-Целевая аудитория: дизайнеры, которым нужна бесплатная альтернатива Illustrator.
-GitHub: https://github.com/yakoshmarniy/OpenVector  ·  Лицензия: MIT
+Open-source vector editor — a free alternative to Adobe Illustrator.
+Target audience: designers who need a free Illustrator alternative.
+GitHub: https://github.com/yakoshmarniy/OpenVector  ·  License: MIT
 
-> ⚠️ Канонический remote — **yakoshmarniy** (см. «Git и релизы»). В исходном тексте
-> плана был указан `koshmrniy/OpenVector` — это 404, не использовать.
+> ⚠️ The canonical remote is **yakoshmarniy** (see "Git & releases"). The original plan
+> text referenced `koshmrniy/OpenVector` — that's a 404, do not use it.
 
----
-
-## Стек
-
-- **Vite** — сборка
-- **React** — UI (функциональные компоненты + хуки)
-- **Paper.js** — векторная графика на canvas
-- **i18next** — мультиязычность (EN по умолчанию, RU, расширяемо)
-- **WebSocket** — коллаборация (фаза 19.2)
-- **Electron** — десктоп (фаза 19.3, не сейчас)
+> 📝 **Docs language rule (user directive, 2026-07-07):** ALL project documents
+> (CLAUDE.md, ITERATION.md, `_claude-notes/` checkpoints, future README/docs) are written
+> in **English** — Cyrillic tokenizes ~1.5–2× more expensively, and CLAUDE.md is loaded
+> into context every session. Chat with the user stays in Russian.
 
 ---
 
-## Карта интерфейса
+## Stack
+
+- **Vite** — build
+- **React** — UI (functional components + hooks)
+- **Paper.js** — vector graphics on canvas
+- **i18next** — internationalization (EN default, RU, extensible)
+- **WebSocket** — collaboration (phase 19.2)
+- **Electron** — desktop (phase 19.3, not now)
+
+---
+
+## UI map
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ MENU BAR: File Edit Object Type Select Effect View Window │
 ├──────────────────────────────────────────────────────────┤
-│ CONTROL BAR (контекстная под выбранный инструмент/объект) │
+│ CONTROL BAR (contextual for the active tool/object)      │
 ├──────┬───────────────────────────────────────┬───────────┤
 │ TOOL │                                       │PROPERTIES │
 │ BAR  │            CANVAS                      │ + PANELS  │
-│      │        (холст + артборды)             │ (Layers,  │
+│      │        (canvas + artboards)           │ (Layers,  │
 │ Fill │                                       │  Color,   │
 │Stroke│       [Contextual Task Bar]           │  Swatches │
 │Modes │                                       │  …)       │
 ├──────┴───────────────────────────────────────┴───────────┤
-│ STATUS BAR: масштаб | единицы | артборд | инфо           │
+│ STATUS BAR: zoom | units | artboard | info               │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## План разработки (20 фаз)
+## Development plan (20 phases)
 
-**Авторитетный план.** Нумерация: **Фаза.Итерация** (например 3.2 = фаза 3, вторая
-итерация). Одна итерация = один промпт = посильный кусок на сессию. Claude берёт ОДНУ
-итерацию, реализует её пункты, коммитит, обновляет статус, останавливается. Не лезть в
-следующую итерацию без явной просьбы. Порядок пунктов внутри итерации можно менять, если
-так логичнее.
+**The authoritative plan.** Numbering: **Phase.Iteration** (e.g. 3.2 = phase 3, second
+iteration). One iteration = one prompt = a manageable chunk per session. Claude takes ONE
+iteration, implements its items, commits, updates status, stops. Do not start the next
+iteration without an explicit request. The order of items within an iteration may be
+changed if it makes more sense.
 
-> Чеклисты ниже — список задач. **Фактическое состояние выполнения на сейчас** — в
-> разделе «Текущий статус → Сверка с планом 20 фаз». Чтобы не вести учёт в двух местах,
-> галочки в самом плане оставлены пустыми.
+> The checklists below are the task list. **The actual completion state right now** is in
+> "Current status → Reconciliation with the 20-phase plan". To avoid double bookkeeping,
+> the checkboxes in the plan itself are left empty.
 
-Карта: итерации 1–7 → рабочий MVP · 8–14 → паритет с Illustrator ·
-15–17 → профессиональный уровень · 18–20 → AI, плагины, коллаборация, релиз.
+Map: iterations 1–7 → working MVP · 8–14 → Illustrator parity ·
+15–17 → professional level · 18–20 → AI, plugins, collaboration, release.
 
-### ФАЗА 1 — Каркас и холст
+### PHASE 1 — Skeleton and canvas
 
-**1.1 — Layout приложения**
-- [ ] Структура окна: Menu Bar, Control Bar, Toolbar, Canvas, Properties, Status Bar
-- [ ] Тёмная тема, базовые стили, разметка панелей (пока пустых)
-- [ ] Status Bar: поля под масштаб, единицы, активный артборд
+**1.1 — App layout**
+- [ ] Window structure: Menu Bar, Control Bar, Toolbar, Canvas, Properties, Status Bar
+- [ ] Dark theme, base styles, panel scaffolding (empty for now)
+- [ ] Status Bar: fields for zoom, units, active artboard
 
-**1.2 — Холст и навигация**
-- [ ] Холст на весь экран (Paper.js)
-- [ ] Зум (колесо), панорамирование (пробел+drag), Rotate View
-- [ ] Rectangle Tool (рисование drag-ом) — проверка что движок работает
-- [ ] Contextual Task Bar (всплывает под выделением)
+**1.2 — Canvas and navigation**
+- [ ] Full-screen canvas (Paper.js)
+- [ ] Zoom (wheel), panning (space+drag), Rotate View
+- [ ] Rectangle Tool (drag to draw) — sanity check that the engine works
+- [ ] Contextual Task Bar (pops up under the selection)
 
-### ФАЗА 2 — Выделение и Toolbar
+### PHASE 2 — Selection and Toolbar
 
-**2.1 — Toolbar и инструменты выделения**
-- [ ] Toolbar: одна/две колонки, drawer со всеми инструментами, группировка (зажать → вложенные)
+**2.1 — Toolbar and selection tools**
+- [ ] Toolbar: one/two columns, drawer with all tools, grouping (long-press → nested)
 - [ ] Selection, Direct Selection, Group Selection
 - [ ] Magic Wand, Lasso
 - [ ] Hand, Zoom
 
-> Lasso — ОДИН инструмент (freehand-выбор опорных точек), как в Illustrator. Других вариантов
-> нет и не планируется: Polygonal/Magnetic Lasso — это Photoshop (растр), вне векторной парности.
+> Lasso is ONE tool (freehand anchor-point selection), as in Illustrator. No other variants
+> exist or are planned: Polygonal/Magnetic Lasso is Photoshop (raster), outside vector parity.
 
-**2.2 — Bounding box и трансформации мышью**
-- [ ] Bounding box: масштаб, поворот, Reset Bounding Box
-- [ ] Reference Point selector (9 позиций)
-- [ ] Модификаторы: Shift (пропорции/45°), Alt (от центра / копия при drag)
-- [ ] Nudge стрелками (настраиваемый шаг), Transform Again
-- [ ] Drawing Modes (Normal/Behind/Inside), Screen Modes (клавиша F)
+**2.2 — Bounding box and mouse transforms**
+- [ ] Bounding box: scale, rotate, Reset Bounding Box
+- [ ] Reference Point selector (9 positions)
+- [ ] Modifiers: Shift (proportions/45°), Alt (from center / copy on drag)
+- [ ] Arrow-key nudge (configurable step), Transform Again
+- [ ] Drawing Modes (Normal/Behind/Inside), Screen Modes (F key)
 
-### ФАЗА 3 — Фигуры
+### PHASE 3 — Shapes
 
-**3.1 — Примитивы**
+**3.1 — Primitives**
 - [ ] Rectangle, Rounded Rectangle, Ellipse, Polygon, Star, Line, Arc, Spiral, Flare
-- [ ] Live shapes (виджеты на холсте, скругление углов)
+- [ ] Live shapes (on-canvas widgets, corner rounding)
 
-> Отдельного инструмента «Rounded Rectangle» нет: любой прямоугольник — live, углы
-> скругляются виджетом на холсте (см. сессию 16). Дублирующий инструмент удалён (сессия 17).
+> There is no separate "Rounded Rectangle" tool: every rectangle is live, corners are
+> rounded with an on-canvas widget (see session 16). The duplicate tool was removed (session 17).
 
-**3.2 — Заливка и обводка**
-- [ ] Заливка цветом
-- [ ] Обводка (цвет, толщина, тип, концы, углы, пунктир, стрелки)
-- [ ] Прозрачность / Opacity
+**3.2 — Fill and stroke**
+- [ ] Color fill
+- [ ] Stroke (color, width, type, caps, joins, dashes, arrowheads)
+- [ ] Transparency / Opacity
 
-### ФАЗА 4 — Pen и рисование
+### PHASE 4 — Pen and drawing
 
-**4.1 — Pen и кривые**
+**4.1 — Pen and curves**
 - [ ] Pen Tool, Add/Delete/Convert Anchor Point, Curvature Tool
 
-**4.2 — Свободное рисование и резка**
+**4.2 — Freehand drawing and cutting**
 - [ ] Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper
 - [ ] Eraser, Scissors, Knife
 - [ ] Rectangular/Polar Grid Tools
 
-### ФАЗА 5 — Текст
+### PHASE 5 — Text
 
 **5.1 — Type Tools**
-- [ ] Point, Area, on a Path, Vertical (все варианты), Touch Type
+- [ ] Point, Area, on a Path, Vertical (all variants), Touch Type
 
-**5.2 — Шрифты**
-- [ ] Системные шрифты, загрузка .ttf/.otf, Google Fonts, менеджер, превью
-- [ ] Retype (распознать шрифт из изображения)
+**5.2 — Fonts**
+- [ ] System fonts, .ttf/.otf upload, Google Fonts, manager, previews
+- [ ] Retype (recognize a font from an image)
 
-**5.3 — Типографика**
-- [ ] Character панель (размер, кернинг, трекинг, baseline shift, leading)
-- [ ] Paragraph панель (выравнивание, отступы, интервалы)
+**5.3 — Typography**
+- [ ] Character panel (size, kerning, tracking, baseline shift, leading)
+- [ ] Paragraph panel (alignment, indents, spacing)
 - [ ] Create Outlines, Find Font, Change Case, Smart Punctuation
 - [ ] Threaded Text, Text Wrap, Show Hidden Characters, Fit Headline
-- [ ] Tabs, Glyphs панели
+- [ ] Tabs, Glyphs panels
 
-### ФАЗА 6 — Организация объектов
+### PHASE 6 — Object organization
 
-**6.1 — Порядок, группы, слои**
+**6.1 — Order, groups, layers**
 - [ ] Arrange (Bring to Front/Back, Forward/Backward)
-- [ ] Align панель (выравнивание + Distribute; объекты/холст/артборд)
+- [ ] Align panel (alignment + Distribute; objects/canvas/artboard)
 - [ ] Group/Ungroup, Lock/Unlock, Hide/Show
-- [ ] Isolation Mode (двойной клик, хлебные крошки, затемнение)
-- [ ] Layers панель (создание, удаление, переименование, скрытие, блокировка, sublayers, drag между слоями)
+- [ ] Isolation Mode (double-click, breadcrumbs, dimming)
+- [ ] Layers panel (create, delete, rename, hide, lock, sublayers, drag between layers)
 
-**6.2 — Pathfinder и path-операции**
-- [ ] Pathfinder панель (Add, Subtract, Intersect, Exclude, Divide, Trim, Merge, Crop, Outline)
+**6.2 — Pathfinder and path operations**
+- [ ] Pathfinder panel (Add, Subtract, Intersect, Exclude, Divide, Trim, Merge, Crop, Outline)
 - [ ] Shape Builder Tool
 - [ ] Compound Path (Make/Release)
-- [ ] Path-операции: Join, Average, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up
+- [ ] Path ops: Join, Average, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up
 
-### ФАЗА 7 — Трансформации и деформация
+### PHASE 7 — Transforms and distortion
 
-**7.1 — Базовые трансформации**
-- [ ] Transform панель (X, Y, W, H, угол, shear, Scale Strokes & Effects)
+**7.1 — Basic transforms**
+- [ ] Transform panel (X, Y, W, H, angle, shear, Scale Strokes & Effects)
 - [ ] Rotate, Reflect (+ Flip H/V), Scale, Shear, Reshape, Transform Each (Relative/Absolute)
 - [ ] Free Transform (+ Perspective Distort, Free Distort, Constrain)
 
-**7.2 — Деформация и ширина**
-- [ ] Puppet Warp (black/white pins, мин. 3, Show Mesh, Rotate pin, Select All Pins)
+**7.2 — Distortion and width**
+- [ ] Puppet Warp (black/white pins, min. 3, Show Mesh, Rotate pin, Select All Pins)
 - [ ] Width Tool, Variable Width Profiles
 - [ ] Dimension Tool, Measure Tool
 
 **7.3 — Liquify**
 - [ ] Warp, Twirl, Pucker, Bloat, Scallop, Crystallize, Wrinkle
-- [ ] Опции: Width/Height, Intensity, Simplify, Twirl Rate, Detail, Complexity, Brush Affects Anchor Points / In-Out Tangent Handles
+- [ ] Options: Width/Height, Intensity, Simplify, Twirl Rate, Detail, Complexity, Brush Affects Anchor Points / In-Out Tangent Handles
 
-### ФАЗА 8 — Цвет
+### PHASE 8 — Color
 
-**8.1 — Базовый цвет и Swatches**
-- [ ] Color панель (RGB/HSB/CMYK/Hex/Lab), Color Picker (превью, out-of-gamut)
+**8.1 — Base color and Swatches**
+- [ ] Color panel (RGB/HSB/CMYK/Hex/Lab), Color Picker (preview, out-of-gamut)
 - [ ] Eyedropper
-- [ ] Swatches панель: Global Colors, Spot Colors, Pantone (TPX/TCX, Coated/Uncoated), Color Books
-- [ ] Create Swatch из изображения (Object Mosaic), Create Swatch Info
+- [ ] Swatches panel: Global Colors, Spot Colors, Pantone (TPX/TCX, Coated/Uncoated), Color Books
+- [ ] Create Swatch from an image (Object Mosaic), Create Swatch Info
 - [ ] Document Color Mode (RGB/CMYK)
 
-**8.2 — Гармонии и Recolor**
-- [ ] Color Guide: Harmony Rules (Complementary, Monochromatic, Triad, Analogous, High Contrast, Pentagram), вариации (Tints/Shades, Warm/Cool, Vivid/Muted)
-- [ ] Recolor Artwork (полный диалог): Harmony Rules, base color, Link/Unlink, рандомизация порядка/насыщенности, Add/Remove Color, ограничение библиотекой
-- [ ] Цветовые круги: smooth / segmented / color bars; H/S/B sliders
+**8.2 — Harmonies and Recolor**
+- [ ] Color Guide: Harmony Rules (Complementary, Monochromatic, Triad, Analogous, High Contrast, Pentagram), variations (Tints/Shades, Warm/Cool, Vivid/Muted)
+- [ ] Recolor Artwork (full dialog): Harmony Rules, base color, Link/Unlink, order/saturation randomization, Add/Remove Color, library constraint
+- [ ] Color wheels: smooth / segmented / color bars; H/S/B sliders
 
-### ФАЗА 9 — Градиенты, обводка, стили
+### PHASE 9 — Gradients, stroke, styles
 
-**9.1 — Градиенты и Mesh**
-- [ ] Gradient панель + Gradient Tool: линейный, радиальный, конический
-- [ ] Gradient presets, dither, перцептивная интерполяция
+**9.1 — Gradients and Mesh**
+- [ ] Gradient panel + Gradient Tool: linear, radial, conical
+- [ ] Gradient presets, dither, perceptual interpolation
 - [ ] Mesh Tool, Create Gradient Mesh
 
-**9.2 — Stroke, Appearance, стили**
-- [ ] Stroke панель (полная: профили ширины, стрелки независимого размера)
-- [ ] Appearance панель (несколько заливок/обводок на объекте)
-- [ ] Graphic Styles панель (сохранить/применить набор)
+**9.2 — Stroke, Appearance, styles**
+- [ ] Stroke panel (full: width profiles, independently sized arrowheads)
+- [ ] Appearance panel (multiple fills/strokes per object)
+- [ ] Graphic Styles panel (save/apply a set)
 
-### ФАЗА 10 — Эффекты
+### PHASE 10 — Effects
 
-**10.1 — Архитектура и Stylize**
-- [ ] Raster vs vector effects, Document Raster Effects Settings (dpi), редактирование через Appearance, Apply Last Effect
-- [ ] Stylize: Drop Shadow, Inner/Outer Glow, Feather, Round Corners, Scribble (опции), Add Arrowheads
+**10.1 — Architecture and Stylize**
+- [ ] Raster vs vector effects, Document Raster Effects Settings (dpi), editing via Appearance, Apply Last Effect
+- [ ] Stylize: Drop Shadow, Inner/Outer Glow, Feather, Round Corners, Scribble (options), Add Arrowheads
 
-**10.2 — Warp и Distort**
+**10.2 — Warp and Distort**
 - [ ] Warp: Arc, Arch, Bulge, Shell, Flag, Wave, Fish, Rise, Fisheye, Inflate, Squeeze, Twist
 - [ ] Distort & Transform: Free Distort, Pucker & Bloat, Roughen (Smooth/Corner, Detail), Transform, Twist, Zig Zag (Relative/Absolute, Ridges)
-- [ ] Effect > Pathfinder (живой), Convert to Shape, Offset Path (как эффект)
+- [ ] Effect > Pathfinder (live), Convert to Shape, Offset Path (as an effect)
 
 **10.3 — 3D, Photoshop, SVG**
 - [ ] 3D and Materials: Extrude & Bevel, Revolve, Inflate, Rotate, Materials
 - [ ] Photoshop Effects: Artistic, Blur, Brush Strokes, Distort, Pixelate, Sketch, Stylize, Texture
-- [ ] SVG Filters + SVG Interactivity панель
+- [ ] SVG Filters + SVG Interactivity panel
 
-### ФАЗА 11 — Спецтехники
+### PHASE 11 — Special techniques
 
-**11.1 — Маски, Blend, Live Paint**
+**11.1 — Masks, Blend, Live Paint**
 - [ ] Clipping Mask (Make/Release/Edit), Opacity Mask
 - [ ] Blend Tool (Make/Release/Expand, Blend Options)
 - [ ] Live Paint (Bucket, Selection, Make/Merge/Release/Gap Options/Expand)
-- [ ] Blending Modes (Transparency панель: все 16 + Isolate Blending, Knockout)
+- [ ] Blending Modes (Transparency panel: all 16 + Isolate Blending, Knockout)
 
-**11.2 — Символы и кисти**
-- [ ] Symbols: панель + Symbol Tools (Sprayer/Shifter/Scruncher/Sizer/Spinner/Stainer/Screener/Styler)
+**11.2 — Symbols and brushes**
+- [ ] Symbols: panel + Symbol Tools (Sprayer/Shifter/Scruncher/Sizer/Spinner/Stainer/Screener/Styler)
 - [ ] Symbol Options: Dynamic/Static, Registration Point, 9-Slice Scaling, Break Link, Replace, Redefine, Reset Transformations
-- [ ] Brushes: панель + 5 типов (Calligraphic, Scatter, Art, Pattern, Bristle)
-- [ ] Brush архитектура: parameter-only vs object-based, Base Object, Colorization Method, Apply/Leave Strokes, Brush Libraries
+- [ ] Brushes: panel + 5 types (Calligraphic, Scatter, Art, Pattern, Bristle)
+- [ ] Brush architecture: parameter-only vs object-based, Base Object, Colorization Method, Apply/Leave Strokes, Brush Libraries
 
-**11.3 — Паттерны, Repeat, Envelope, Perspective**
-- [ ] Pattern Options (Tile Types: Grid, Brick, Hex), паттерн как заливка/обводка
+**11.3 — Patterns, Repeat, Envelope, Perspective**
+- [ ] Pattern Options (Tile Types: Grid, Brick, Hex), pattern as fill/stroke
 - [ ] Intertwine (Make/Edit/Release)
-- [ ] Repeat: Radial, Grid, Mirror (виджеты, instances, spacing, Expand)
+- [ ] Repeat: Radial, Grid, Mirror (widgets, instances, spacing, Expand)
 - [ ] Envelope Distort (Warp/Mesh/Top Object, Edit/Release)
 - [ ] Perspective Grid + Selection Tool
 
-### ФАЗА 12 — Изображения и трассировка
+### PHASE 12 — Images and tracing
 
-**12.1 — Вставка растра**
-- [ ] Place (вставить растр/SVG), Links панель
+**12.1 — Raster placement**
+- [ ] Place (insert raster/SVG), Links panel
 - [ ] Crop Image, Rasterize, Create Object Mosaic
 
 **12.2 — Image Trace**
-- [ ] Image Trace (Make/Expand/Release) + панель (порог, цвета, детализация, пути, углы, пресеты)
+- [ ] Image Trace (Make/Expand/Release) + panel (threshold, colors, detail, paths, corners, presets)
 
-### ФАЗА 13 — Артборды, сетки, навигация
+### PHASE 13 — Artboards, grids, navigation
 
-**13.1 — Артборды**
-- [ ] Artboard Tool: несколько артбордов, rename (в т.ч. множественный), resize, duplicate, Fit to Artwork, Rearrange, Artboards панель
+**13.1 — Artboards**
+- [ ] Artboard Tool: multiple artboards, rename (incl. bulk), resize, duplicate, Fit to Artwork, Rearrange, Artboards panel
 
-**13.2 — Сетки, направляющие, привязка**
-- [ ] Rulers, Guides (Make/Lock/Clear/from Object, стиль Lines/Dots, цвет), Smart Guides
+**13.2 — Grids, guides, snapping**
+- [ ] Rulers, Guides (Make/Lock/Clear/from Object, Lines/Dots style, color), Smart Guides
 - [ ] Snapping: to Grid, Pixel, Point, Glyph, Tangent; limit to active artboard; tolerance
 
-**13.3 — Режимы просмотра**
+**13.3 — View modes**
 - [ ] Preview/Outline (Ctrl+Y), Pixel Preview, Overprint Preview, Transparency Grid
 - [ ] Show/Hide: Bounding Box, Edges, Text Threads, Gradient Annotator
-- [ ] Navigator, Info панели; New View, New Window (dual-monitor)
+- [ ] Navigator, Info panels; New View, New Window (dual-monitor)
 
-### ФАЗА 14 — Файлы, экспорт, печать
+### PHASE 14 — Files, export, print
 
-**14.1 — Открытие и сохранение**
-- [ ] File: New (+ из шаблона), Open/Recent, Save/Save As/Save a Copy, Revert, стартовый экран, вкладки документов
-- [ ] Импорт/открытие: SVG, PNG, JPG, TIFF, PDF, EPS, попытка .ai; drag&drop в окно
+**14.1 — Opening and saving**
+- [ ] File: New (+ from template), Open/Recent, Save/Save As/Save a Copy, Revert, start screen, document tabs
+- [ ] Import/open: SVG, PNG, JPG, TIFF, PDF, EPS, best-effort .ai; drag&drop into the window
 
-**14.2 — Экспорт растра и SVG**
+**14.2 — Raster and SVG export**
 - [ ] Export As: PNG, JPG, TIFF, BMP, GIF, WebP; Export for Screens; Export Selection
-- [ ] SVG-экспорт (полный): Minify, Presentation Attributes/Inline/Internal CSS, Object IDs, decimal precision, responsive, global swatches → CSS variables, Use Artboards
+- [ ] SVG export (full): Minify, Presentation Attributes/Inline/Internal CSS, Object IDs, decimal precision, responsive, global swatches → CSS variables, Use Artboards
 - [ ] Save as PDF, EPS; Package
 - [ ] Web: Slices (+ URL), Image Maps, rollover, SVG Interactivity
 
-**14.3 — Допечатная подготовка**
+**14.3 — Prepress**
 - [ ] Bleed, Trim/Crop/Registration Marks, Overprint Preview/Fill/Stroke, Separations Preview, Ink Manager
 - [ ] Color Management: Assign/Convert Profile, Color Settings, Flattener Preview, Transparency Flattener Presets, Proof Setup/Colors, Gamut Warning
 
-### ФАЗА 15 — Меню, настройки, рабочее пространство
+### PHASE 15 — Menus, settings, workspace
 
-**15.1 — Меню Edit и Select**
+**15.1 — Edit and Select menus**
 - [ ] Edit: Cut/Copy/Paste (+ in Place, in Front/Back, on All Artboards), Find/Replace, Check Spelling, Define Pattern, Edit Colors (Adjust/Saturate/Desaturate/Invert/Convert Grayscale)
 - [ ] Select: All/Deselect/Reselect/Inverse, Same (Fill/Stroke/Opacity/Mode), Object (Text/Masks/Stray Points), Save Selection, Above/Below
 
 **15.2 — Preferences**
-- [ ] 15 разделов: General (Keyboard Increment, Constrain Angle, Corner Radius, Anti-aliasing, Reset), Selection & Anchor Display, Type, Units & Undo, Guides & Grid, Smart Guides, Slices, Hyphenation (+ user dictionary), Plug-ins & Scratch Disks, User Interface (тема, яркость, масштаб UI), Performance (GPU), File Handling & Clipboard, Appearance of Black, Devices
-- [ ] Search Preferences (Ctrl+K → сразу поиск)
-- [ ] Keyboard Shortcuts (кастомизация, экспорт/импорт наборов)
+- [ ] 15 sections: General (Keyboard Increment, Constrain Angle, Corner Radius, Anti-aliasing, Reset), Selection & Anchor Display, Type, Units & Undo, Guides & Grid, Smart Guides, Slices, Hyphenation (+ user dictionary), Plug-ins & Scratch Disks, User Interface (theme, brightness, UI scale), Performance (GPU), File Handling & Clipboard, Appearance of Black, Devices
+- [ ] Search Preferences (Ctrl+K → straight to search)
+- [ ] Keyboard Shortcuts (customization, set export/import)
 
-**15.3 — Рабочее пространство и ввод**
-- [ ] Workspace (сохранить/переключить/сбросить, пресеты), Control Bar, Properties Panel, Discover Panel
-- [ ] Единицы (px/pt/mm/cm/inch), Document Setup, метаданные, ICC профили
-- [ ] Управление/ввод: контекстное меню, multi-touch, графический планшет (давление/наклон)
-- [ ] Поведение панелей: float/dock, Tab/Shift+Tab, полноэкранный, сохранение раскладки, Application Frame
+**15.3 — Workspace and input**
+- [ ] Workspace (save/switch/reset, presets), Control Bar, Properties Panel, Discover Panel
+- [ ] Units (px/pt/mm/cm/inch), Document Setup, metadata, ICC profiles
+- [ ] Control/input: context menu, multi-touch, graphics tablet (pressure/tilt)
+- [ ] Panel behavior: float/dock, Tab/Shift+Tab, fullscreen, layout persistence, Application Frame
 
-### ФАЗА 16 — Автоматизация
+### PHASE 16 — Automation
 
-**16.1 — Actions и Graphs**
-- [ ] Actions панель (запись, воспроизведение, batch, Delete Unused Panel Items)
-- [ ] Scripts (поддержка .jsx)
-- [ ] Graph Tool (9 типов: Column, Stacked Column, Bar, Stacked Bar, Line, Area, Scatter, Pie, Radar)
-- [ ] Graph Type Options (оси Value/Category, Drop Shadow, Legend, Column/Cluster Width), Graph Data, Graph Design
+**16.1 — Actions and Graphs**
+- [ ] Actions panel (record, playback, batch, Delete Unused Panel Items)
+- [ ] Scripts (.jsx support)
+- [ ] Graph Tool (9 types: Column, Stacked Column, Bar, Stacked Bar, Line, Area, Scatter, Pie, Radar)
+- [ ] Graph Type Options (Value/Category axes, Drop Shadow, Legend, Column/Cluster Width), Graph Data, Graph Design
 
 **16.2 — Variables / Data Merge**
-- [ ] Variables панель: типы (Text @, Linked File, Graph %, Visibility #)
-- [ ] Capture Data Set, Save/Load Library (XML), batch-вывод, импорт CSV
+- [ ] Variables panel: types (Text @, Linked File, Graph %, Visibility #)
+- [ ] Capture Data Set, Save/Load Library (XML), batch output, CSV import
 
-### ФАЗА 17 — Восточноазиатская типографика (CJK)
+### PHASE 17 — East Asian typography (CJK)
 
-**17.1 — Японский набор: основы**
+**17.1 — Japanese composition: basics**
 - [ ] Show East Asian Options, Composite Fonts (Kanji/Kana/Roman/Number/Punctuation)
 - [ ] Tsume, Aki, Mojisoroe
-- [ ] Mojikumi (пресеты JIS X 4051: YakumonoHankaku, GyomatsuYakumono*, TsumeGumi, BetaGumi; custom Basic/Detailed/Stretched)
+- [ ] Mojikumi (JIS X 4051 presets: YakumonoHankaku, GyomatsuYakumono*, TsumeGumi, BetaGumi; custom Basic/Detailed/Stretched)
 - [ ] Kinsoku (Hard/Soft, Push In/Out First/Out Only, Bunri-Kinshi, Burasagari, custom)
 
-**17.2 — Спец-функции и OpenType**
+**17.2 — Special features and OpenType**
 - [ ] Tate-chu-yoko, Warichu, Ruby/Furigana, Kenten, Shatai, Kurikaeshi
-- [ ] OpenType панель (Ligatures Standard/Discretionary/Contextual, Swash, Stylistic Alt/Sets, Titling, Figure types, Position, Ordinals, Fractions, Proportional/Tabular Metrics)
+- [ ] OpenType panel (Ligatures Standard/Discretionary/Contextual, Swash, Stylistic Alt/Sets, Titling, Figure types, Position, Ordinals, Fractions, Proportional/Tabular Metrics)
 
-### ФАЗА 18 — AI (на пользовательских ключах)
+### PHASE 18 — AI (user-provided keys)
 
-**18.1 — Подключение и генерация**
-- [ ] AI Integration: менеджер ключей (6 провайдеров), Test, выбор модели, индикатор расхода, «ключи только на устройстве»
-- [ ] Генерация: Text to Vector (+ Style Reference, редактируемый текст), Generative Shape Fill, Generative Expand, Generate Pattern/Palette/Variations/Icon Set/Background
+**18.1 — Connection and generation**
+- [ ] AI Integration: key manager (6 providers), Test, model selection, usage indicator, "keys stay on device"
+- [ ] Generation: Text to Vector (+ Style Reference, editable text), Generative Shape Fill, Generative Expand, Generate Pattern/Palette/Variations/Icon Set/Background
 
-**18.2 — Обработка и умный UI**
-- [ ] Обработка: AI Image Trace, Remove Background, Auto-colorize, Style Transfer, Auto-simplify, Smart Crop Marks, AI Retype
-- [ ] Умный UI: Natural Language Commands, AI Suggestions, Auto-align, Smart Duplicate, Discover Panel
+**18.2 — Processing and smart UI**
+- [ ] Processing: AI Image Trace, Remove Background, Auto-colorize, Style Transfer, Auto-simplify, Smart Crop Marks, AI Retype
+- [ ] Smart UI: Natural Language Commands, AI Suggestions, Auto-align, Smart Duplicate, Discover Panel
 
-### ФАЗА 19 — Платформа: плагины, коллаборация, десктоп
+### PHASE 19 — Platform: plugins, collaboration, desktop
 
-**19.1 — Плагины**
-- [ ] Plugin API + Manager (установка из .zip/GitHub URL, sandbox, документация)
+**19.1 — Plugins**
+- [ ] Plugin API + Manager (install from .zip/GitHub URL, sandbox, documentation)
 
-**19.2 — Коллаборация**
-- [ ] WebSocket: курсоры в реальном времени, комментарии, история изменений, Share link, Cloud Documents
+**19.2 — Collaboration**
+- [ ] WebSocket: real-time cursors, comments, change history, Share link, Cloud Documents
 
-**19.3 — Electron (десктоп)**
-- [ ] Нативное меню, открытие/сохранение через диалог, drag&drop файлов, автообновление
+**19.3 — Electron (desktop)**
+- [ ] Native menu, open/save via dialogs, file drag&drop, auto-update
 
-### ФАЗА 20 — Производительность, редизайн, релиз
+### PHASE 20 — Performance, redesign, release
 
-**20.1 — История и производительность**
-- [ ] Undo/Redo (100 шагов, история, восстановление после краша, автосохранение, бэкапы)
-- [ ] Оптимизация больших файлов, lazy rendering, GPU-ускорение
+**20.1 — History and performance**
+- [ ] Undo/Redo (100 steps, history, crash recovery, autosave, backups)
+- [ ] Large-file optimization, lazy rendering, GPU acceleration
 
-**20.2 — Редизайн**
-- [ ] UI-редизайн, светлая тема, кастомные темы, иконки, анимации, адаптивность
+**20.2 — Redesign**
+- [ ] UI redesign, light theme, custom themes, icons, animations, responsiveness
 
-**20.3 — Релиз**
-- [ ] Все горячие клавиши (совместимость с Illustrator), онбординг
-- [ ] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, сайт, Product Hunt
-
----
-
-## Модель AI — детали реализации
-
-Пользователь вводит свой API ключ в Настройки > AI Integration. Ключ хранится **ТОЛЬКО локально** (localStorage в браузере, electron-store в десктопе). OpenVector никогда не видит ключи пользователей.
-
-Запросы идут напрямую: устройство пользователя → API провайдера (OpenAI / Anthropic / и т.д.)
-
-Это написано явно в интерфейсе и в README — это важно для доверия.
-
-**UI страницы AI Integration:**
-- Поле для каждого провайдера (Anthropic, OpenAI, Gemini, Stability, Replicate, Fal.ai)
-- Кнопка "Test" — проверить что ключ работает
-- Индикатор статуса (активен / не задан / ошибка)
-- Выбор модели для каждого типа задач
-- Индикатор расхода токенов (если API возвращает эту информацию)
-- Предупреждение: "Ключи хранятся только на вашем устройстве"
-
-**Поддерживаемые API (пользователь выбирает):**
-- Anthropic (Claude) — текстовые команды, генерация SVG
-- OpenAI (GPT-4o / DALL-E) — генерация, текстовые команды
-- Google Gemini — альтернатива GPT
-- Stability AI — генерация изображений
-- Replicate — доступ к open-source моделям
-- Fal.ai — быстрая и дешёвая генерация
+**20.3 — Release**
+- [ ] All keyboard shortcuts (Illustrator-compatible), onboarding
+- [ ] README, CONTRIBUTING.md, CODE_OF_CONDUCT.md, website, Product Hunt
 
 ---
 
-## Структура папок
+## AI model — implementation details
+
+The user enters their API key in Settings > AI Integration. The key is stored **ONLY locally** (localStorage in the browser, electron-store on desktop). OpenVector never sees user keys.
+
+Requests go directly: user's device → provider API (OpenAI / Anthropic / etc.)
+
+This is stated explicitly in the UI and in the README — it matters for trust.
+
+**AI Integration page UI:**
+- A field per provider (Anthropic, OpenAI, Gemini, Stability, Replicate, Fal.ai)
+- "Test" button — verify the key works
+- Status indicator (active / not set / error)
+- Model selection per task type
+- Token usage indicator (if the API returns it)
+- Warning: "Keys are stored only on your device"
+
+**Supported APIs (user's choice):**
+- Anthropic (Claude) — text commands, SVG generation
+- OpenAI (GPT-4o / DALL-E) — generation, text commands
+- Google Gemini — GPT alternative
+- Stability AI — image generation
+- Replicate — access to open-source models
+- Fal.ai — fast and cheap generation
+
+---
+
+## Folder structure
 
 ```
 OpenVector/
-├── CLAUDE.md              ← этот файл, читать в начале каждой сессии
+├── CLAUDE.md              ← this file, read at the start of every session
 ├── package.json
 ├── vite.config.js
 ├── index.html
 ├── public/
 └── src/
-    ├── main.jsx           ← точка входа
-    ├── App.jsx            ← корневой компонент
-    ├── canvas/            ← вся логика Paper.js
-    │   ├── tools/         ← каждый инструмент отдельным файлом
-    │   ├── operations/    ← булевы, трансформации, path-операции
-    │   └── effects/       ← эффекты, фильтры (фаза 10)
+    ├── main.jsx           ← entry point
+    ├── App.jsx            ← root component
+    ├── canvas/            ← all Paper.js logic
+    │   ├── tools/         ← each tool in its own file
+    │   ├── operations/    ← booleans, transforms, path ops
+    │   └── effects/       ← effects, filters (phase 10)
     ├── components/
-    │   ├── Toolbar/       ← левая панель инструментов
-    │   ├── Properties/    ← правая контекстная панель
-    │   ├── Panels/        ← плавающие панели (Layers, Color, Swatches…)
-    │   ├── MenuBar/       ← верхнее меню
-    │   ├── ControlBar/    ← контекстная панель под меню
-    │   ├── StatusBar/     ← нижняя строка
-    │   ├── Canvas/        ← обёртка холста
-    │   └── AIPanel/       ← AI-инструменты (фаза 18)
-    ├── state/             ← глобальное состояние, история (undo/redo)
-    ├── i18n/              ← переводы EN и RU
-    ├── plugins/           ← система плагинов (фаза 19)
-    └── styles/            ← глобальные стили, темы
+    │   ├── Toolbar/       ← left tool rail
+    │   ├── Properties/    ← right contextual panel
+    │   ├── Panels/        ← floating panels (Layers, Color, Swatches…)
+    │   ├── MenuBar/       ← top menu
+    │   ├── ControlBar/    ← contextual bar under the menu
+    │   ├── StatusBar/     ← bottom bar
+    │   ├── Canvas/        ← canvas wrapper
+    │   └── AIPanel/       ← AI tools (phase 18)
+    ├── state/             ← global state, history (undo/redo)
+    ├── i18n/              ← EN and RU translations
+    ├── plugins/           ← plugin system (phase 19)
+    └── styles/            ← global styles, themes
 ```
 
-> Реальное состояние дерева на сейчас: есть `canvas/{tools,operations}`,
+> Actual tree state right now: `canvas/{tools,operations}`,
 > `components/{MenuBar,ControlBar,Toolbar,Properties,Panels,Canvas,StatusBar,FontPicker,FontsDialog,FindFontDialog}`,
-> `styles/`, `state/` (`fonts.js`, `selection.js`, `document.js` — сессии 19/22),
-> `Panels/` (LayersPanel — сессия 22).
-> Папки `effects/`, `AIPanel/`, `i18n/`, `plugins/` появятся по мере
-> соответствующих фаз. (Временный `TopBar/` удалён — его заменили Menu Bar + Control Bar.)
+> `styles/`, `state/` (`fonts.js`, `selection.js`, `document.js` — sessions 19/22),
+> `Panels/` (LayersPanel — session 22).
+> `effects/`, `AIPanel/`, `i18n/`, `plugins/` will appear with their phases.
+> (The temporary `TopBar/` was removed — replaced by Menu Bar + Control Bar.)
 
 ---
 
-## Соглашения по коду
+## Code conventions
 
-- Каждый инструмент — отдельный файл в `src/canvas/tools/`
-- Компоненты — функциональные, с хуками
-- Стили — **CSS Modules** (решение сессии 1, без доп. зависимостей)
-- Все строки UI через `t('key')` — без хардкода (когда подключим i18next)
-- Коммиты на английском: `feat:`, `fix:`, `refactor:`
-- Никаких console.log в продакшне
+- Each tool is a separate file in `src/canvas/tools/`
+- Components are functional, with hooks
+- Styles — **CSS Modules** (session 1 decision, no extra dependencies)
+- All UI strings go through `t('key')` — no hardcoding (once i18next is wired up)
+- Commits in English: `feat:`, `fix:`, `refactor:`
+- No console.log in production
 
 ---
 
-## Git и релизы
+## Git & releases
 
-**КАЖДОЕ изменение коммитится и пушится на GitHub сразу, с чётким описательным названием.**
-Постоянное правило пользователя: не копить правки. Любое осмысленное действие — фича, багфикс,
-рефактор, удаление инструмента, правка плана/доков — это отдельный коммит + `git push origin main`
-в тот же заход, без отдельного подтверждения. Сообщение коммита (английский, в настоящем времени)
-должно ясно говорить ЧТО сделано: `feat: …`, `fix: …`, `refactor: …`, `docs: …`, `chore: …`.
-Группируем в один коммит только то, что логически одно действие; разные действия — разные коммиты.
-Тег `phase-X.Y` ставим, когда закрыта итерация (см. ниже).
+**EVERY change is committed and pushed to GitHub immediately, with a clear descriptive message.**
+Standing user rule: don't accumulate edits. Any meaningful action — feature, bugfix,
+refactor, tool removal, plan/docs edit — is its own commit + `git push origin main`
+in the same pass, no separate confirmation. The commit message (English, present tense)
+must clearly say WHAT was done: `feat: …`, `fix: …`, `refactor: …`, `docs: …`, `chore: …`.
+Group into one commit only what is logically one action; different actions — different commits.
+Tag `phase-X.Y` when an iteration is closed (see below).
 
-**Каждая завершённая итерация заливается на GitHub как отдельное нововведение.**
-Это постоянное указание пользователя — отдельного подтверждения на пуш итерации не нужно
-(предусловия ниже должны быть выполнены).
+**Every completed iteration is pushed to GitHub as a distinct feature.**
+This is a standing user directive — no separate confirmation needed to push an iteration
+(the preconditions below must hold).
 
-Порядок (после того как итерация собрана `npm run build` и проверена в браузере):
-1. Один коммит на итерацию: `feat: phase X.Y — <короткое название>` (английский).
-   В конце коммита — trailer `Co-Authored-By: ...` (как требует харнесс).
+Procedure (after the iteration is built with `npm run build` and verified in the browser):
+1. One commit per iteration: `feat: phase X.Y — <short title>` (English).
+   End the commit with the `Co-Authored-By: ...` trailer (as the harness requires).
 2. `git push origin main`.
-3. Тег на итерацию: `git tag phase-X.Y -m "<название>"` → `git push origin phase-X.Y`.
-4. Если итерация частичная — пушим что готово, в теле коммита перечисляем отложенное.
+3. Tag the iteration: `git tag phase-X.Y -m "<title>"` → `git push origin phase-X.Y`.
+4. If the iteration is partial — push what's ready, list the deferred items in the commit body.
 
-**Теги — история нумераций:**
-- `iter-1`…`iter-8` — самый первый план (история).
-- `np-1`…`np-5` — план «61 итерация» (история). np-5 = свободное рисование.
-- `phase-X.Y` — текущий план 20 фаз. Так тегаем дальше.
+**Tags — numbering history:**
+- `iter-1`…`iter-8` — the very first plan (history).
+- `np-1`…`np-5` — the "61 iterations" plan (history). np-5 = freehand drawing.
+- `phase-X.Y` — the current 20-phase plan. Tag this way going forward.
 
-**Предусловия (✅ выполнены 2026-06-20):**
-- OpenVector — отдельный git-репозиторий (`.git` в папке, ветка `main`).
+**Preconditions (✅ satisfied 2026-06-20):**
+- OpenVector is its own git repository (`.git` in the folder, branch `main`).
 - Remote: `origin` → `git@github.com:yakoshmarniy/OpenVector.git` (SSH).
-- Авторизация: SSH-ключ `~/.ssh/id_ed25519` добавлен в аккаунт `yakoshmarniy`, пуш работает.
-- Залито: `main` + теги по `np-5` включительно. Дальше пушим каждую итерацию по правилу выше
+- Auth: SSH key `~/.ssh/id_ed25519` added to the `yakoshmarniy` account, push works.
+- Uploaded: `main` + tags through `np-5`. From here on, push every iteration per the rule above
   (`GIT_SSH_COMMAND='ssh -o BatchMode=yes' git push`).
 
 ---
 
-## Мультиязычность
+## Internationalization
 
-- Язык по умолчанию: English
-- Поддерживаемые: EN, RU
-- Библиотека: i18next + react-i18next
-- Все строки интерфейса через t('key') — никаких хардкод строк в компонентах
+- Default language: English
+- Supported: EN, RU
+- Library: i18next + react-i18next
+- All UI strings via t('key') — no hardcoded strings in components
 
 ---
 
-## Текущий статус
+## Current status
 
-### Сессия 1 — прогресс (✅ завершена)
+### Session 1 — progress (✅ done)
 
-- [x] 1. Структура папок создана (точно как в этом файле)
-- [x] 2. Инициализация Vite + React
-- [x] 3. Подключён Paper.js
-- [x] 4. Базовый холст на весь экран, тёмный фон
-- [x] 5. Зум (колёсико) и панорамирование (пробел + drag)
-- [x] 6. Инструмент Rectangle (рисование прямоугольника drag-ом)
-- [x] 7. Минимальная панель инструментов слева (Select, Rectangle)
+- [x] 1. Folder structure created (exactly as in this file)
+- [x] 2. Vite + React initialized
+- [x] 3. Paper.js wired up
+- [x] 4. Basic full-screen canvas, dark background
+- [x] 5. Zoom (wheel) and panning (space + drag)
+- [x] 6. Rectangle tool (drag to draw a rectangle)
+- [x] 7. Minimal left toolbar (Select, Rectangle)
 
-Решение по стилям: **CSS Modules** (без доп. зависимостей).
-i18next пока не подключаем — это отдельный пункт чеклиста, не входит в задачи этой сессии.
+Styling decision: **CSS Modules** (no extra dependencies).
+i18next not wired up yet — it's a separate checklist item, out of this session's scope.
 
-Запуск: `npm install` → `npm run dev`. Сборка: `npm run build` (проверена, проходит).
+Run: `npm install` → `npm run dev`. Build: `npm run build` (verified, passes).
 
-Заметки / решения сессии 1:
-- ID инструментов вынесены в `src/canvas/tools/toolIds.js` — иначе циклический импорт
-  (App ↔ Toolbar/Canvas) ловит TDZ и приложение не монтируется.
-- Координаты мыши берём из `clientX/Y − rect` холста, не из `offsetX` — слушатели
-  mousemove/mouseup висят на `window`, чтобы тянуть фигуру за пределами холста.
-- StrictMode выключен в `main.jsx`, иначе `paper.setup()` вызывается дважды.
-- Select делает минимум: клик — выделить, drag — переместить. Без масштаба/поворота.
+Session 1 notes / decisions:
+- Tool IDs extracted to `src/canvas/tools/toolIds.js` — otherwise a circular import
+  (App ↔ Toolbar/Canvas) hits TDZ and the app fails to mount.
+- Mouse coordinates come from `clientX/Y − rect` of the canvas, not `offsetX` — the
+  mousemove/mouseup listeners sit on `window` so a shape can be dragged beyond the canvas.
+- StrictMode is disabled in `main.jsx`, otherwise `paper.setup()` runs twice.
+- Select does the minimum: click to select, drag to move. No scale/rotate.
 
-### Сессия 2 — прогресс (✅ завершена)
+### Session 2 — progress (✅ done)
 
-Объём согласован с пользователем: трансформация фигур + новые инструменты.
+Scope agreed with the user: shape transforms + new tools.
 
-- [x] Маркеры-ручки у выделенной фигуры (8 шт.) — изменение размера мышкой
-- [x] Модификаторы: Shift при рисовании = квадрат/круг; Shift при ресайзе = пропорции;
-      Shift для линии = угол кратно 45°
-- [x] Delete/Backspace — удалить выделенное; Escape — снять выделение
-- [x] Курсоры при наведении (resize над ручкой, move над фигурой)
-- [x] Инструмент Ellipse (эллипс/круг, drag-ом)
-- [x] Инструмент Line (линия, drag-ом)
+- [x] Handle markers on the selected shape (8 of them) — mouse resizing
+- [x] Modifiers: Shift while drawing = square/circle; Shift while resizing = proportions;
+      Shift for a line = angle snapped to 45°
+- [x] Delete/Backspace — delete selection; Escape — deselect
+- [x] Hover cursors (resize over a handle, move over a shape)
+- [x] Ellipse tool (ellipse/circle, by drag)
+- [x] Line tool (line, by drag)
 
-Заметки / решения сессии 2:
-- Оверлей выделения (рамка + 8 ручек) живёт в `src/canvas/operations/selection.js`,
-  помечен `data.isSelectionOverlay` и `locked` → исключён из hit-теста и (в будущем) экспорта.
-  Ручки имеют постоянный экранный размер (`8px / zoom`), перерисовываются при зуме.
-- **Фикс размера холста**: Paper пишет inline `width/height` на `<canvas>`, поэтому
-  раннее измерение (до применения CSS-модулей) замораживало высоту на 150px.
-  Решение — обёртка `.stage` + `ResizeObserver` по ней (не по самому canvas,
-  иначе обратная связь). См. `Canvas.jsx`.
-- Ресайз через `item.bounds`; осезависимые фигуры (горизонт/вертикаль линии)
-  с нулевой стороной не ресайзятся (защита от деления на ноль), но двигаются.
+Session 2 notes / decisions:
+- The selection overlay (frame + 8 handles) lives in `src/canvas/operations/selection.js`,
+  tagged `data.isSelectionOverlay` and `locked` → excluded from hit-testing and (later) export.
+  Handles keep a constant screen size (`8px / zoom`), redrawn on zoom.
+- **Canvas size fix**: Paper writes inline `width/height` onto `<canvas>`, so an early
+  measurement (before CSS modules applied) froze the height at 150px.
+  Solution — a `.stage` wrapper + `ResizeObserver` on it (not on the canvas itself,
+  otherwise feedback loop). See `Canvas.jsx`.
+- Resize goes through `item.bounds`; axis-degenerate shapes (horizontal/vertical lines)
+  with a zero side don't resize (division-by-zero guard) but do move.
 
-### Сессия 3 — прогресс (✅ завершена)
+### Session 3 — progress (✅ done)
 
-Объём согласован с пользователем: панель свойств справа.
+Scope agreed with the user: right-hand properties panel.
 
-- [x] Компонент `components/Properties/` — панель справа, всегда видна
-- [x] Для выделенной фигуры: заливка (цвет + вкл/выкл), обводка (цвет + вкл/выкл),
-      толщина обводки, прозрачность (слайдер 0–100%)
-- [x] Двусторонняя связь: выделение → панель читает стиль; правка в панели → фигура меняется
-- [x] Пустое состояние «Nothing selected», когда ничего не выбрано
+- [x] `components/Properties/` component — right panel, always visible
+- [x] For the selected shape: fill (color + on/off), stroke (color + on/off),
+      stroke width, opacity (0–100% slider)
+- [x] Two-way binding: selection → panel reads style; panel edit → shape updates
+- [x] "Nothing selected" empty state when nothing is selected
 
-Заметки / решения сессии 3:
-- Мост между Paper-выделением и React: `selection.js` принимает `onChange` →
-  `selectTool(ctx)` → `Canvas` прокидывает `onSelectionChange` в App. App хранит
-  ref на paper-item и снапшот стиля в state. Уведомление шлётся только при смене
-  выделения (не при move/resize).
-- Чтение/запись стиля — `src/canvas/operations/itemStyle.js` (`readStyle`/`applyStyle`),
-  чтобы App не лез в paper напрямую. Цвета через `color.toCSS(true)` → hex для `input[type=color]`.
-- При выключенном fill/stroke последний выбранный цвет сохраняется в state (свотч не
-  сбрасывается в дефолт).
-- В `Canvas.onKeyDown` добавлен гард: если фокус в `<input>`/`<textarea>`, шорткаты
-  (Space/Delete/Backspace) игнорируются — иначе ломался ввод в полях панели.
+Session 3 notes / decisions:
+- Bridge between Paper selection and React: `selection.js` takes `onChange` →
+  `selectTool(ctx)` → `Canvas` forwards `onSelectionChange` to App. App keeps a ref
+  to the paper item and a style snapshot in state. Notifications fire only on selection
+  change (not on move/resize).
+- Style read/write — `src/canvas/operations/itemStyle.js` (`readStyle`/`applyStyle`),
+  so App doesn't touch paper directly. Colors via `color.toCSS(true)` → hex for `input[type=color]`.
+- With fill/stroke toggled off, the last picked color is kept in state (the swatch
+  doesn't reset to default).
+- `Canvas.onKeyDown` got a guard: if focus is in an `<input>`/`<textarea>`, shortcuts
+  (Space/Delete/Backspace) are ignored — otherwise typing in panel fields broke.
 
-### Сессия 4 — прогресс (✅ завершена)
+### Session 4 — progress (✅ done)
 
-Объём согласован с пользователем: Pen Tool (кривые Безье).
+Scope agreed with the user: Pen Tool (Bézier curves).
 
-- [x] Инструмент Pen: клик — угловая точка, клик+drag — гладкая точка (зеркальные ручки)
-- [x] Закрытие пути кликом по первой точке; Enter/Escape — завершить открытый путь
-- [x] Живой предпросмотр (rubber-band кривая к курсору) + маркеры точек
-- [x] Закрытый путь → заливка+обводка; открытый → только обводка
-- [x] Pen-пути полноценно работают с Select (move/resize) и панелью свойств
+- [x] Pen tool: click — corner point, click+drag — smooth point (mirrored handles)
+- [x] Close the path by clicking the first point; Enter/Escape — finish an open path
+- [x] Live preview (rubber-band curve to the cursor) + point markers
+- [x] Closed path → fill+stroke; open → stroke only
+- [x] Pen paths fully work with Select (move/resize) and the properties panel
 
-Заметки / решения сессии 4:
-- **Важный баг Paper.js**: присвоение цвета *строкой* (`item.fillColor = '#...'`)
-  хранит её лениво; второе присвоение цвета до рендера кидает
-  `Cannot create property '_canvasStyle' on string`. В headless-превью RAF задушен,
-  поэтому путь не рендерится между операциями и баг проявляется. Решение — везде в
-  penTool оборачиваем цвета в `new paper.Color(css)` (хелпер `color()`).
-  (Другие инструменты не падали, т.к. их фигуры рендерятся до повторной правки цвета.)
-- Pen — stateful-инструмент (мультиклик), в отличие от drag-once. Состояние пути живёт
-  в замыкании `createPenTool`; `finish()` обнуляет `path` (по close/Enter/Escape/deactivate).
-- Оверлеи пера (точки, rubber-band) помечены `data.isPenOverlay` + `locked`, удаляются в finish.
+Session 4 notes / decisions:
+- **Important Paper.js bug**: assigning a color as a *string* (`item.fillColor = '#...'`)
+  stores it lazily; a second color assignment before a render throws
+  `Cannot create property '_canvasStyle' on string`. In headless preview RAF is throttled,
+  so the path doesn't render between operations and the bug fires. Solution — everywhere in
+  penTool wrap colors in `new paper.Color(css)` (the `color()` helper).
+  (Other tools didn't crash because their shapes render before the color is edited again.)
+- Pen is a stateful tool (multi-click), unlike drag-once tools. Path state lives in the
+  `createPenTool` closure; `finish()` nulls `path` (on close/Enter/Escape/deactivate).
+- Pen overlays (points, rubber-band) are tagged `data.isPenOverlay` + `locked`, removed in finish.
 
-### Сессия 5 — прогресс (частично завершена)
+### Session 5 — progress (partially done)
 
-Объём: итерация 5 «Текст». Сделана основа, две сложные подфичи отложены.
+Scope: iteration 5 "Text". The core is done, two complex sub-features deferred.
 
-- [x] Инструмент Text: point text (клик) и area type (drag-рамка), редактирование на холсте
-- [x] Каретка, ввод символов/пробела/Enter/Backspace, Escape/смена инструмента = commit, пустой текст отбрасывается
-- [x] Перенос по словам внутри area-рамки
-- [x] Панель: выравнивание (L/C/R), размер шрифта, межстрочный интервал
-- [x] Текст работает с Select (move) и панелью (цвет = заливка)
-- [x] Селект-оверлей перерисовывается после правок в панели (refreshSelection)
-- [x] Редактирование текста после размещения: двойной клик по тексту (из любого инструмента) → правка
-- [x] Левый рейл в стиле Illustrator: похожие инструменты сгруппированы в один слот с flyout
-      (Rectangle/Ellipse/Line); слот помнит последний выбранный. Верхний бар — только бренд,
-      инструменты НЕ дублируются сверху и сбоку
-- [ ] Type on a Path — отложено (итерация 5b)
-- [ ] Межбуквенный интервал — отложено (итерация 5b)
+- [x] Text tool: point text (click) and area type (drag frame), on-canvas editing
+- [x] Caret, typing chars/space/Enter/Backspace, Escape/tool switch = commit, empty text is discarded
+- [x] Word wrap inside the area frame
+- [x] Panel: alignment (L/C/R), font size, line spacing
+- [x] Text works with Select (move) and the panel (color = fill)
+- [x] Selection overlay redraws after panel edits (refreshSelection)
+- [x] Editing text after placement: double-click on text (from any tool) → edit
+- [x] Illustrator-style left rail: similar tools grouped into one slot with a flyout
+      (Rectangle/Ellipse/Line); the slot remembers the last pick. Top bar — brand only,
+      tools are NOT duplicated top and side
+- [ ] Type on a Path — deferred (iteration 5b)
+- [ ] Letter spacing — deferred (iteration 5b)
 
-Заметки / решения сессии 5:
-- Paper.js НЕ умеет area-wrapping/type-on-path/letter-spacing. Перенос делаем сами:
-  raw-текст в `item.data.rawText`, отображаемый (с переносами) считаем в
-  `src/canvas/operations/textLayout.js` (`wrap`/`relayout`/`caretSegment`). Замер ширины —
-  временный PointText.
-- Редактирование — захват клавиш (без overlay-textarea): зум/пан-безопасно, интегрировано с Paper.
-  Canvas видит `tool.wantsKeyboard()` → при true все клавиши (вкл. Space) идут в инструмент, не в pan.
-- Каретка/рамка пера-текста помечены `data.isTextOverlay` + locked, чистятся на commit.
-- Цвета в text/caret — через `new paper.Color(...)` (см. грабли из сессии 4).
-- **Сессия 5b — посимвольный движок текста**: текст теперь = `paper.Group` глифов-`PointText`
-  (`data.glyph`), всё состояние в `group.data` (rawText, mode point/area/path, fontSize, leading,
+Session 5 notes / decisions:
+- Paper.js can NOT do area-wrapping/type-on-path/letter-spacing. We wrap ourselves:
+  raw text in `item.data.rawText`, displayed text (with breaks) computed in
+  `src/canvas/operations/textLayout.js` (`wrap`/`relayout`/`caretSegment`). Width measured
+  with a temporary PointText.
+- Editing — key capture (no overlay-textarea): zoom/pan-safe, integrated with Paper.
+  Canvas checks `tool.wantsKeyboard()` → when true all keys (incl. Space) go to the tool, not pan.
+- Text caret/frame overlays are tagged `data.isTextOverlay` + locked, cleaned on commit.
+- Colors in text/caret — via `new paper.Color(...)` (see session 4 gotcha).
+- **Session 5b — per-glyph text engine**: text is now a `paper.Group` of glyph `PointText`s
+  (`data.glyph`), all state in `group.data` (rawText, mode point/area/path, fontSize, leading,
   tracking, justification, fillColor/strokeColor, origin, areaWidth/Height). `textLayout.js`:
-  `relayout` раскладывает глифы (ширины символов меряем offscreen-canvas `measureText`), `layoutPath`
-  ставит глифы вдоль клона пути (`getPointAt`/`getTangentAt` + поворот). Это дало tracking и
-  type-on-path. Глифы — в ЛОКАЛЬНЫХ координатах группы (origin), поэтому move через матрицу +
-  повторный relayout не «уезжают». `isTextItem` теперь = `data.isText`; `textEntity` поднимает
-  клик по глифу к группе. Type on path: клик инструментом Text по обычному пути → клонируем путь
-  в скрытый guide-child, оригинал не трогаем (безопасно при пустом commit).
-- **Хит-тест текста**: `paper.hitTest` по `PointText` ненадёжен (ловит только по глифам).
-  Общий `pickItem(point)` в `selection.js`: сперва `hitTest` (фигуры), затем фолбэк по
-  области текста `hitRegion(item)` (bounds ∪ рамка area-текста) — клик в любом месте текста/рамки.
-  Используется в Select, Text и dblclick. Поэтому текст выделяется/двигается/правится кликом.
-  Для area-текста в `data.areaHeight` хранится высота рамки (для кликабельной пустой части).
-- Добавлен мост `refreshRef`: App после правки стиля зовёт `tool.refreshSelection()` →
-  ручки выделения отслеживают изменение размера текста/толщины обводки.
-- Двойной клик по тексту: Canvas ловит `dblclick` → `onEditText(item)` → App ставит
-  `pendingEditRef` + переключает на Text → textTool в `consumePendingEdit()` начинает правку.
-  Клик по уже редактируемому тексту = no-op (не коммитит/не создаёт новый).
-- Иконки+список инструментов вынесены в `src/components/toolItems.jsx` (общий источник).
-- Лейаут App колоночный: `TopBar` (только бренд) сверху, ниже строка `.app-body` (рейл/холст/панель).
-- `Toolbar` группирует инструменты (`GROUPS`): мультислот показывает представителя
-  (последний выбранный), треугольник в углу открывает flyout-поповер со всеми вариантами.
-  Закрытие — клик вне рейла или Escape. Дублирования инструментов сверху больше нет.
+  `relayout` lays out glyphs (char widths measured with an offscreen-canvas `measureText`),
+  `layoutPath` places glyphs along a clone of the path (`getPointAt`/`getTangentAt` + rotation).
+  This delivered tracking and type-on-path. Glyphs are in the group's LOCAL coordinates (origin),
+  so moving via the matrix + re-relayout doesn't drift. `isTextItem` is now `data.isText`;
+  `textEntity` lifts a glyph click to the group. Type on path: clicking a regular path with the
+  Text tool → we clone the path into a hidden guide child, the original is untouched (safe on
+  an empty commit).
+- **Text hit-testing**: `paper.hitTest` on `PointText` is unreliable (only hits glyphs).
+  Shared `pickItem(point)` in `selection.js`: first `hitTest` (shapes), then a text-region
+  fallback `hitRegion(item)` (bounds ∪ area-text frame) — click anywhere on the text/frame.
+  Used by Select, Text and dblclick. That's why text selects/moves/edits by click.
+  For area text, `data.areaHeight` stores frame height (for the clickable empty part).
+- Added a `refreshRef` bridge: after a style edit App calls `tool.refreshSelection()` →
+  selection handles track text size / stroke width changes.
+- Double-click on text: Canvas catches `dblclick` → `onEditText(item)` → App sets
+  `pendingEditRef` + switches to Text → textTool starts editing in `consumePendingEdit()`.
+  Clicking already-edited text is a no-op (doesn't commit/create new).
+- Icons + tool list extracted to `src/components/toolItems.jsx` (single source).
+- App layout is columnar: `TopBar` (brand only) on top, below it the `.app-body` row
+  (rail/canvas/panel).
+- `Toolbar` groups tools (`GROUPS`): a multi-slot shows a representative (last picked),
+  the corner triangle opens a flyout popover with all variants. Closes on click outside
+  the rail or Escape. No more tool duplication up top.
 
-### Сессия 6 — прогресс (✅ завершена)
+### Session 6 — progress (✅ done)
 
-Объём: итерация 6 — группировка + булевы операции.
+Scope: iteration 6 — grouping + boolean operations.
 
-- [x] Мульти-выделение в `selection.js` (массив `targets`): Shift+клик toggle, рамка-объединение
-      + тонкая рамка по каждому объекту; ручки ресайза только при одном выделенном.
-- [x] Marquee (рамка протягиванием по пустому месту) → выделяет пересечённые объекты; Shift добавляет.
-      Реализовано в `selectTool` (mode 'marquee', оверлей-прямоугольник). Главный способ выбрать несколько.
-- [x] `pickItem` маппит клик в верхнеуровневый объект (`topLevel`) → клик по части группы берёт группу.
-- [x] `src/canvas/operations/booleans.js`: `groupItems`/`ungroupItems`/`booleanOp` (Paper нативно).
-- [x] `selectTool.runAction(name)` (group/ungroup/unite/subtract/intersect/exclude); мост `actionRef` App→Canvas→tool.
-- [x] Панель Properties контекстная: 0 — пусто; 1 — стиль; 1 группа — Ungroup; 2+ — «N selected» + Group + 4 булевы.
-- [x] Шорткаты Cmd/Ctrl+G и Cmd/Ctrl+Shift+G в `Canvas.onKeyDown`.
+- [x] Multi-selection in `selection.js` (a `targets` array): Shift+click toggles, union frame
+      + a thin frame per object; resize handles only with a single selection.
+- [x] Marquee (drag a frame over empty space) → selects intersected objects; Shift adds.
+      Implemented in `selectTool` (mode 'marquee', overlay rectangle). The main multi-select method.
+- [x] `pickItem` maps a click to the top-level object (`topLevel`) → clicking part of a group picks the group.
+- [x] `src/canvas/operations/booleans.js`: `groupItems`/`ungroupItems`/`booleanOp` (Paper native).
+- [x] `selectTool.runAction(name)` (group/ungroup/unite/subtract/intersect/exclude); `actionRef` bridge App→Canvas→tool.
+- [x] Contextual Properties panel: 0 — empty; 1 — style; 1 group — Ungroup; 2+ — "N selected" + Group + 4 booleans.
+- [x] Shortcuts Cmd/Ctrl+G and Cmd/Ctrl+Shift+G in `Canvas.onKeyDown`.
 
-Заметки / решения сессии 6:
-- `onSelectionChange` теперь передаёт МАССИВ targets; App нормализует (item|null|array) и держит `sel {count,isGroup,style}`.
-- subtract = нижний минус верхние (сортировка по `item.index`). Булевы только на Path/CompoundPath (текст/группы пропускаем).
-- Разгруппировка только для обычных групп (не `data.isText`).
-- **Латентный фикс текста**: текст-группе ставим `applyMatrix = false`, иначе перемещение «запекалось» бы в
-  глифы и relayout после move сбрасывал бы позицию. Проверено: move+правка сохраняют позицию.
+Session 6 notes / decisions:
+- `onSelectionChange` now passes an ARRAY of targets; App normalizes (item|null|array) and keeps `sel {count,isGroup,style}`.
+- subtract = bottom minus the ones above (sorted by `item.index`). Booleans only on Path/CompoundPath (text/groups skipped).
+- Ungroup only for plain groups (not `data.isText`).
+- **Latent text fix**: text groups get `applyMatrix = false`, otherwise moves would "bake" into
+  glyphs and relayout after move would reset position. Verified: move+edit keep position.
 
-### Сессия 7 — прогресс (✅ завершена)
+### Session 7 — progress (✅ done)
 
-Объём: новая итерация np-5 (по плану «61») = свободное рисование. По новому плану это **фаза 4.2** (частично).
+Scope: new iteration np-5 (per the "61" plan) = freehand drawing. In the new plan this is **phase 4.2** (partial).
 
-- [x] Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush — 6 инструментов.
-- [x] Общий хелпер `src/canvas/operations/freehand.js` (`col`, `overlayed`, `pathAt`, `createBrush`).
-- [x] Pencil/Paintbrush — `createBrush` + `path.simplify`. Blob Brush — круги-штампы → unite в заливку, merge перекрытий.
-- [x] Smooth — `path.simplify` (скругляет/убирает шум). Path Eraser — `splitAt` диапазона → разрыв. Join — reverse+addSegments / замыкание.
-- [x] Залито, тег `np-5`.
+- [x] Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush — 6 tools.
+- [x] Shared helper `src/canvas/operations/freehand.js` (`col`, `overlayed`, `pathAt`, `createBrush`).
+- [x] Pencil/Paintbrush — `createBrush` + `path.simplify`. Blob Brush — circle stamps → unite into a fill, merge overlaps.
+- [x] Smooth — `path.simplify` (rounds/removes noise). Path Eraser — `splitAt` a range → gap. Join — reverse+addSegments / close.
+- [x] Pushed, tag `np-5`.
 
-Заметки / решения сессии 7:
-- Blob Brush: штампы держим МАССИВОМ кругов прямо в слое, не в Group — иначе `clone({insert:true})`
-  кладёт клон внутрь группы, и результат boolean-операции тоже попадает в группу → `stamps.remove()`
-  сносит готовую заливку.
-- Headless-превью: `paper.view.update()` рисует ТОЛЬКО если view «грязный» (`_needsUpdate`). После правок
-  через хендлеры флаг бывает уже сброшен → update() = no-op, экран и `getImageData` пустые. Форс-редрав:
-  `layer.opacity=0.999; view.update(); layer.opacity=1; view.update();`. `requestAnimationFrame` в headless
-  НЕ срабатывает (eval с RAF виснет на 30с) — не использовать для форс-редрава.
+Session 7 notes / decisions:
+- Blob Brush: keep stamps as an ARRAY of circles directly in the layer, not in a Group — otherwise
+  `clone({insert:true})` puts the clone inside the group, the boolean result lands in the group too,
+  and `stamps.remove()` wipes the finished fill.
+- Headless preview: `paper.view.update()` draws ONLY if the view is "dirty" (`_needsUpdate`). After
+  edits via handlers the flag may already be cleared → update() is a no-op, screen and `getImageData`
+  are empty. Force redraw: `layer.opacity=0.999; view.update(); layer.opacity=1; view.update();`.
+  `requestAnimationFrame` does NOT fire in headless (an eval with RAF hangs 30s) — don't use it
+  for force-redraw.
 
-### Сессия 8 — прогресс (✅ завершена)
+### Session 8 — progress (✅ done)
 
-Объём: завершение **фазы 4.2** (план 20 фаз). Также: переписан CLAUDE.md под план «20 фаз».
+Scope: finish **phase 4.2** (20-phase plan). Also: CLAUDE.md rewritten for the 20-phase plan.
 
-- [x] Eraser (`eraserTool.js`) — круги-штампы → unite → subtract из перекрытых закрытых путей.
-- [x] Scissors (`scissorsTool.js`) — `pathAt` + `getNearestLocation` + `splitAt`. Открытый → 2 пути; закрытый → открывается.
-- [x] Knife (`knifeTool.js`) — freehand-линия; для каждой закрытой фигуры: chord ножа между крайними
-      пересечениями + две дуги границы → 2 закрытых куска. Площадь сохраняется, без остатков.
-- [x] Shaper (`shaperTool.js`) — распознавание по доле площади (area/bbox): >0.82 прямоугольник,
-      >0.62 эллипс, >0.38 треугольник, тонкий жест → линия, иначе сглаженный путь.
-- [x] Rectangular Grid (`rectangularGridTool.js`) — drag-бокс → Group (рамка + 4+4 делителя), Shift=квадрат.
-- [x] Polar Grid (`polarGridTool.js`) — drag-бокс → Group (4 кольца + 8 спиц), Shift=круг.
-- [x] Toolbar: Shaper в группу карандаша; Grid-инструменты в группу линии; новая группа Eraser/Scissors/Knife.
+- [x] Eraser (`eraserTool.js`) — circle stamps → unite → subtract from overlapped closed paths.
+- [x] Scissors (`scissorsTool.js`) — `pathAt` + `getNearestLocation` + `splitAt`. Open → 2 paths; closed → opens.
+- [x] Knife (`knifeTool.js`) — freehand line; for each closed shape: knife chord between the outermost
+      intersections + two boundary arcs → 2 closed pieces. Area is preserved, no leftovers.
+- [x] Shaper (`shaperTool.js`) — recognition by area ratio (area/bbox): >0.82 rectangle,
+      >0.62 ellipse, >0.38 triangle, thin gesture → line, otherwise a smoothed path.
+- [x] Rectangular Grid (`rectangularGridTool.js`) — drag box → Group (frame + 4+4 dividers), Shift=square.
+- [x] Polar Grid (`polarGridTool.js`) — drag box → Group (4 rings + 8 spokes), Shift=circle.
+- [x] Toolbar: Shaper into the pencil group; Grid tools into the line group; new group Eraser/Scissors/Knife.
 
-Заметки / решения сессии 8:
-- Knife: `getIntersections(target, knife)` даёт CurveLocation с `.intersection` (точка на ноже).
-  `arcOf` извлекает дугу границы через clone+`splitAt` (как в Path Eraser), `trimOpen` — chord ножа.
-  `path.join(other, tol)` соединяет дугу с chord и УДАЛЯЕТ other. Куски валидируем по `area>0.5`.
-- Knife/Eraser режут только ЗАКРЫТЫЕ пути (Path с `closed` / CompoundPath). Открытые штрихи пропускаем.
-- Грабли теста (не кода): `onMouseUp` НЕ добавляет финальную точку (как у всех инструментов) —
-  в синтетических тестах ножа надо тянуть `onMouseDrag` за пределы фигуры, иначе один пересек → нет реза.
+Session 8 notes / decisions:
+- Knife: `getIntersections(target, knife)` gives CurveLocation with `.intersection` (point on the knife).
+  `arcOf` extracts a boundary arc via clone+`splitAt` (like Path Eraser), `trimOpen` — the knife chord.
+  `path.join(other, tol)` joins the arc with the chord and DELETES other. Pieces validated by `area>0.5`.
+- Knife/Eraser cut only CLOSED paths (Path with `closed` / CompoundPath). Open strokes are skipped.
+- Test gotcha (not code): `onMouseUp` does NOT add a final point (like all tools) —
+  in synthetic knife tests drag `onMouseDrag` beyond the shape, otherwise one intersection → no cut.
 
-### Сессия 9 — прогресс (✅ завершена)
+### Session 9 — progress (✅ done)
 
-Объём: **фаза 5.1** добита — вертикальный текст (все 3 варианта) + Touch Type.
+Scope: **phase 5.1** finished — vertical text (all 3 variants) + Touch Type.
 
-- [x] Вертикальная ориентация в движке (`textLayout.js`): `d.orientation`, `layoutVertical`
-      (глифы вниз по колонке, колонки влево — tategaki), `verticalColumns` (перенос по высоте для area),
-      vertical-on-path (поворот глифа на `tan.angle − 90`), вертикальная каретка, hitRegion для vertical area.
-- [x] `textTool.js` рефакторнут в общий `makeTextTool(ctx,{orientation})`; экспортит `createTextTool`
-      (горизонт.) и `createVerticalTextTool` (верт.). Один верт-инструмент покрывает point/area/on-path
-      по жесту — как и горизонтальный Type. Для verical area origin = правый-верх рамки (колонки влево).
-- [x] Touch Type (`touchTypeTool.js`): клик по глифу → его трансформ (drag=сдвиг, Shift=масштаб,
-      Alt=поворот) хранится в `group.data.glyphFx[index]` и переживает relayout.
-- [x] Движок: relayout-постпроход проставляет `glyph.data.glyphIndex` и применяет `glyphFx` (`applyGlyphFx`).
-- [x] Toolbar: группа Type = [Type, Vertical Type, Touch Type]. Иконки добавлены.
+- [x] Vertical orientation in the engine (`textLayout.js`): `d.orientation`, `layoutVertical`
+      (glyphs down a column, columns leftward — tategaki), `verticalColumns` (height-based wrap for area),
+      vertical-on-path (glyph rotated by `tan.angle − 90`), vertical caret, hitRegion for vertical area.
+- [x] `textTool.js` refactored into a shared `makeTextTool(ctx,{orientation})`; exports `createTextTool`
+      (horizontal) and `createVerticalTextTool` (vertical). One vertical tool covers point/area/on-path
+      by gesture — same as the horizontal Type. For vertical area, origin = top-right of the frame
+      (columns go left).
+- [x] Touch Type (`touchTypeTool.js`): click a glyph → its transform (drag=move, Shift=scale,
+      Alt=rotate) is stored in `group.data.glyphFx[index]` and survives relayout.
+- [x] Engine: a relayout post-pass sets `glyph.data.glyphIndex` and applies `glyphFx` (`applyGlyphFx`).
+- [x] Toolbar: Type group = [Type, Vertical Type, Touch Type]. Icons added.
 
-Заметки / решения сессии 9:
-- Per-glyph Touch Type: фокус не на overlay-виджете с ручками (отложено), а на сдвиг/масштаб/поворот
-  через модификаторы. fx применяется в relayout-постпроходе по `glyphIndex` (порядок чтения, без пробелов),
-  поэтому идемпотентно и не «уезжает» при повторной раскладке/move.
-- Вертикальные 3 варианта НЕ три отдельных инструмента, а один Vertical Type (как горизонтальный Type
-  объединяет point/area/on-path по жесту). В тулбаре одна кнопка Vertical Type.
-- Грабли headless: после `location.reload()` окно схлопывается — нужно заново `preview_resize` +
-  `dispatchEvent('resize')`, иначе скриншот мелкий (view при этом уже корректный).
+Session 9 notes / decisions:
+- Per-glyph Touch Type: focus is not an overlay widget with handles (deferred) but move/scale/rotate
+  via modifiers. fx applies in the relayout post-pass by `glyphIndex` (reading order, no spaces),
+  so it's idempotent and doesn't drift on re-layout/move.
+- The 3 vertical variants are NOT three separate tools but one Vertical Type (just as horizontal Type
+  combines point/area/on-path by gesture). One Vertical Type button in the toolbar.
+- Headless gotcha: after `location.reload()` the window collapses — re-run `preview_resize` +
+  `dispatchEvent('resize')`, otherwise the screenshot is tiny (the view itself is already correct).
 
-### Сессия 10 — прогресс (✅ завершена)
+### Session 10 — progress (✅ done)
 
-Объём: добиваем ранний пробел **фазы 1.1** — Menu Bar + Control Bar (был только временный TopBar).
+Scope: close the early gap in **phase 1.1** — Menu Bar + Control Bar (only a temporary TopBar existed).
 
-- [x] `components/MenuBar/` — 8 меню (File/Edit/Object/Type/Select/Effect/View/Window), дропдауны,
-      акселераторы, сепараторы, disabled-пункты для будущих фаз, чек-пункты (Snap, 2 колонки).
-      Закрытие по клику вне/Escape, переключение по наведению между открытыми.
-- [x] `components/ControlBar/` — контекстная строка под меню: имя инструмента + для 1 объекта
-      инлайн Fill/Stroke/W/Opacity, для группы Ungroup, для 2+ align/Group/булевы.
-- [x] `selectTool.runAction` расширен: selectAll, deselect, duplicate, arrangeFront/Back/Forward/Backward.
-      (Arrange — формально фаза 6.1, но нужен для осмысленного меню Object; мелочь.)
-- [x] Canvas: `viewRef` для view-команд (zoomIn/Out/Fit/Actual, clear=New). Шорткаты Cmd/Ctrl+A
-      (Select All, +Shift = Deselect) и Cmd/Ctrl+D (Duplicate).
-- [x] App: `handleCommand` маршрутизирует — view/документ-команды в Canvas через viewRef,
-      команды выделения в активный инструмент через actionRef. TopBar удалён.
+- [x] `components/MenuBar/` — 8 menus (File/Edit/Object/Type/Select/Effect/View/Window), dropdowns,
+      accelerators, separators, disabled items for future phases, check items (Snap, 2 columns).
+      Closes on outside click/Escape, hover-switches between open menus.
+- [x] `components/ControlBar/` — contextual strip under the menu: tool name + for 1 object
+      inline Fill/Stroke/W/Opacity, for a group Ungroup, for 2+ align/Group/booleans.
+- [x] `selectTool.runAction` extended: selectAll, deselect, duplicate, arrangeFront/Back/Forward/Backward.
+      (Arrange is formally phase 6.1, but needed for a meaningful Object menu; trivial.)
+- [x] Canvas: `viewRef` for view commands (zoomIn/Out/Fit/Actual, clear=New). Shortcuts Cmd/Ctrl+A
+      (Select All, +Shift = Deselect) and Cmd/Ctrl+D (Duplicate).
+- [x] App: `handleCommand` routes — view/document commands to Canvas via viewRef,
+      selection commands to the active tool via actionRef. TopBar removed.
 
-Заметки / решения сессии 10:
-- Команды выделения (group/booleans/align/arrange/delete/selectAll/deselect) идут через
-  `actionRef → tool.runAction`, т.е. работают когда активен Select (он держит выделение). На других
-  инструментах выделение очищается при переключении — пункты меню тогда disabled (по `sel`). Это
-  честно и согласуется с архитектурой; общий командный шин — позже (фаза 15.1).
-- View-команды (zoom/fit/clear) — в Canvas через `viewRef`, не через инструмент (они уровня вида/документа).
-- Zoom Fit считает union bounds всех не-overlay объектов, вписывает с полем 60px, центрирует.
+Session 10 notes / decisions:
+- Selection commands (group/booleans/align/arrange/delete/selectAll/deselect) go through
+  `actionRef → tool.runAction`, i.e. they work when Select is active (it holds the selection). On
+  other tools the selection clears on switch — menu items are then disabled (by `sel`). This is
+  honest and consistent with the architecture; a shared command bus comes later (phase 15.1).
+- View commands (zoom/fit/clear) — in Canvas via `viewRef`, not through a tool (they're view/document level).
+- Zoom Fit computes union bounds of all non-overlay objects, fits with a 60px margin, centers.
 
-### Сессия 11 — прогресс (✅ завершена)
+### Session 11 — progress (✅ done)
 
-Объём: ранний пробел **фазы 1.2** — Rotate View (поворот холста-вида).
+Scope: early gap of **phase 1.2** — Rotate View (canvas-view rotation).
 
-- [x] `rotateViewTool.js` — drag вращает `paper.view.rotation` вокруг центра экрана; Shift = шаг 15°.
-      Угол меряем в ЭКРАННЫХ координатах (`projectToView`), они стабильны при вращении вида.
-- [x] View-меню: Rotate View 90° CW / 90° CCW / Reset Rotation → `viewRef` в Canvas.
-- [x] Status Bar показывает угол поворота (нормализован к (−180,180], скрыт при 0°).
-- [x] Toolbar: группа Hand = [Hand, Rotate View, Zoom]. Иконка добавлена.
+- [x] `rotateViewTool.js` — drag rotates `paper.view.rotation` around the screen center; Shift = 15° steps.
+      The angle is measured in SCREEN coordinates (`projectToView`), which are stable while the view rotates.
+- [x] View menu: Rotate View 90° CW / 90° CCW / Reset Rotation → `viewRef` in Canvas.
+- [x] Status Bar shows the rotation angle (normalized to (−180,180], hidden at 0°).
+- [x] Toolbar: Hand group = [Hand, Rotate View, Zoom]. Icon added.
 
-Заметки / решения сессии 11:
-- `paper.view.rotation` поддерживается; `viewToProject`/`projectToView` учитывают поворот, поэтому
-  ВСЕ инструменты продолжают работать при повёрнутом виде (round-trip точки проверен).
-- Поворот вращает ТОЛЬКО вид, артворк в проектных координатах не меняется.
-- App держит `rotation` в state (через `onRotationChange`); прямой `paper.view.rotation=…` в тестах
-  не обновляет статус-бар (артефакт теста, не баг).
+Session 11 notes / decisions:
+- `paper.view.rotation` is supported; `viewToProject`/`projectToView` account for rotation, so
+  ALL tools keep working with a rotated view (point round-trip verified).
+- Rotation rotates ONLY the view; artwork in project coordinates is unchanged.
+- App keeps `rotation` in state (via `onRotationChange`); a direct `paper.view.rotation=…` in tests
+  doesn't update the status bar (test artifact, not a bug).
 
-### Сессия 12 — прогресс (✅ завершена)
+### Session 12 — progress (✅ done)
 
-Объём: ранний пробел **фазы 2.1** — Magic Wand, Lasso, drawer.
+Scope: early gap of **phase 2.1** — Magic Wand, Lasso, drawer.
 
-- [x] `magicWandTool.js` — клик по объекту выделяет все с совпадающим ВНЕШНИМ ВИДОМ: заливка (цвет)
-      И обводка (цвет) И толщина обводки (TOL=0.16 по сумме RGB; WEIGHT_TOL=1px). Обводка НЕ игнорируется.
-      Shift = добавить. Объектное выделение через общий `createSelection`.
-- [x] `lassoTool.js` — freehand-петля выделяет ОПОРНЫЕ ТОЧКИ внутри (как Direct Selection, не всю
-      фигуру). Drag выбранной точки двигает все выбранные; Backspace/Delete удаляет; Shift добавляет.
-      Свой overlay (заполненный квадрат = выбрана, пустой = нет).
-- [x] Drawer в `Toolbar` — кнопка «⋯» в футере открывает панель со ВСЕМИ инструментами (грид 2 кол.,
-      иконка+подпись); клик выбирает инструмент и закрывает. Закрытие по клику вне рейла / Escape.
-- [x] Toolbar: Magic Wand и Lasso — отдельные слоты после группы выделения. Иконки добавлены.
+- [x] `magicWandTool.js` — clicking an object selects all with matching APPEARANCE: fill (color)
+      AND stroke (color) AND stroke width (TOL=0.16 by RGB sum; WEIGHT_TOL=1px). Stroke is NOT ignored.
+      Shift = add. Object selection via the shared `createSelection`.
+- [x] `lassoTool.js` — a freehand loop selects ANCHOR POINTS inside (like Direct Selection, not the
+      whole shape). Dragging a selected point moves all selected; Backspace/Delete deletes; Shift adds.
+      Its own overlay (filled square = selected, hollow = not).
+- [x] Drawer in `Toolbar` — the "⋯" button in the footer opens a panel with ALL tools (2-col grid,
+      icon+label); clicking picks the tool and closes. Closes on click outside the rail / Escape.
+- [x] Toolbar: Magic Wand and Lasso are separate slots after the selection group. Icons added.
 
-Заметки / решения сессии 12:
-- **Правка по фидбеку**: Lasso раньше брал всю фигуру (центр внутри/пересечение) — это неверно.
-  Теперь Lasso выделяет ОПОРНЫЕ ТОЧКИ петлёй (freehand Direct Selection): `loop.contains(seg.point)`
-  по всем редактируемым путям; выбранные точки двигаются/удаляются прямо в инструменте. Это
-  ТОЧЕЧНОЕ выделение — App.sel (объектный) не трогаем, Properties показывает «Nothing selected».
-- **Правка по фидбеку**: Magic Wand игнорировал обводку (матч только по заливке при наличии fill).
-  Теперь матч = заливка И обводка (цвет) И толщина. weightOf=0 если нет обводки.
-- Magic Wand держит ОБЪЕКТНОЕ выделение (свой `createSelection`), репортит в App; move не делает.
-  Lasso — ТОЧЕЧНОЕ, со своим overlay и своим drag точек.
-- `.toolbar` получил `position: relative`, чтобы drawer позиционировался относительно рейла.
+Session 12 notes / decisions:
+- **Feedback fix**: Lasso used to take the whole shape (center inside/intersection) — wrong.
+  Now Lasso selects ANCHOR POINTS with the loop (freehand Direct Selection): `loop.contains(seg.point)`
+  across all editable paths; selected points move/delete right in the tool. This is
+  POINT selection — App.sel (object-level) is untouched, Properties shows "Nothing selected".
+- **Feedback fix**: Magic Wand ignored stroke (matched fill only when fill existed).
+  Now match = fill AND stroke (color) AND width. weightOf=0 when no stroke.
+- Magic Wand holds an OBJECT selection (its own `createSelection`), reports to App; no move.
+  Lasso is POINT-level, with its own overlay and its own point dragging.
+- `.toolbar` got `position: relative` so the drawer positions relative to the rail.
 
-### Сессия 13 — прогресс (✅ ядро 2.2)
+### Session 13 — progress (✅ core of 2.2)
 
-Объём: **фаза 2.2** — ядро трансформаций мышью (хвост отложен до 7.1).
+Scope: **phase 2.2** — core of mouse transforms (the tail deferred to 7.1).
 
-- [x] Поворот за угол: drag в зоне снаружи углового маркера вращает выделение вокруг центра рамки;
-      Shift = шаг 15°. `rotateZone(point)` + накопленный угол (`rotateApplied`) без дрейфа.
-- [x] Alt+drag = копия: при старте move с Alt клонируем targets и двигаем клоны (оригиналы на месте).
-- [x] Alt-resize = масштаб от центра (симметрично); `computeResizeBounds` получил параметр `alt`.
-- [x] Shift при перемещении = констрейн по H/V.
-- [x] Nudge стрелками (1px, Shift = 10px) — в `selectTool.onKeyDown` (стрелки доходят через Canvas).
+- [x] Rotate by corner: dragging in the zone outside a corner handle rotates the selection around
+      the frame center; Shift = 15° steps. `rotateZone(point)` + accumulated angle (`rotateApplied`)
+      with no drift.
+- [x] Alt+drag = copy: on move start with Alt we clone the targets and move the clones (originals stay).
+- [x] Alt-resize = scale from center (symmetric); `computeResizeBounds` got an `alt` parameter.
+- [x] Shift while moving = H/V constrain.
+- [x] Arrow-key nudge (1px, Shift = 10px) — in `selectTool.onKeyDown` (arrows arrive via Canvas).
 
-Заметки / решения сессии 13:
-- Поворот вращает РЕАЛЬНУЮ геометрию (`item.rotate(step, center)`); рамка выделения остаётся
-  ОСЕ-выровненной (пересчитывается из bounds). Поворотный bounding-box (наклонная рамка) + Reset
-  Bounding Box + Reference Point отложены — это рефактор оверлея, логично делать с Transform-панелью (7.1).
-- Зона поворота: точка снаружи рамки в кольце 8..26px от угла; приоритет у resize-маркеров.
-- Проверено: rotate 40° → bounds 115×110 (как расчёт); Alt-drag → 2 объекта; Alt-resize → 140×100 центр
-  на месте; Shift-move (50,20) → только X; nudge +1 затем +10 = 11.
+Session 13 notes / decisions:
+- Rotation rotates the REAL geometry (`item.rotate(step, center)`); the selection frame stays
+  AXIS-aligned (recomputed from bounds). Rotated bounding box (tilted frame) + Reset
+  Bounding Box + Reference Point deferred — that's an overlay refactor, logical to do with the
+  Transform panel (7.1).
+- Rotate zone: a point outside the frame within an 8..26px ring from a corner; resize handles
+  take priority.
+- Verified: rotate 40° → bounds 115×110 (as computed); Alt-drag → 2 objects; Alt-resize → 140×100,
+  center in place; Shift-move (50,20) → X only; nudge +1 then +10 = 11.
 
-### Сессия 14 — фиксы по фидбеку (✅)
+### Session 14 — feedback fixes (✅)
 
-- [x] **Кнопки действий не работали с Knife/Magic Wand.** Причина: команды (Group/Unite/Align/…)
-      идут в `runAction` АКТИВНОГО инструмента, а его реализовал только Select. Вынес логику в
-      `src/canvas/operations/selectionActions.js` (`runSelectionAction(selection, name)`) и подключил
-      к Select, Magic Wand, Knife. Теперь кнопки Properties/Control Bar/контекст-бара и пункты меню
-      работают на любом инструменте, который держит объектное выделение.
-- [x] **«Нож только царапает».** На деле нож режет корректно (2 закрытых куска, площади точно по
-      половине); казалось царапиной, т.к. половинки лежат впритык. Knife теперь выделяет куски после
-      реза (видно сразу), и их можно растащить/сгруппировать/булевить.
+- [x] **Action buttons didn't work with Knife/Magic Wand.** Cause: commands (Group/Unite/Align/…)
+      go to the ACTIVE tool's `runAction`, which only Select implemented. Logic extracted into
+      `src/canvas/operations/selectionActions.js` (`runSelectionAction(selection, name)`) and wired
+      to Select, Magic Wand, Knife. Now Properties/Control Bar/task-bar buttons and menu items
+      work on any tool that holds an object selection.
+- [x] **"The knife only scratches."** In fact the knife cuts correctly (2 closed pieces, areas
+      exactly halves); it looked like a scratch because the halves sit flush. Knife now selects the
+      pieces after the cut (immediately visible), and they can be pulled apart/grouped/booleaned.
 
-> Архитектурная заметка: общий `runSelectionAction` — шаг к единому стору выделения, но выделение
-> по-прежнему НЕ переживает смену инструмента (это всё ещё в 6.1 со слоями). Лассо — точечное,
-> в `runSelectionAction` не участвует (там сегменты, не объекты).
+> Architecture note: the shared `runSelectionAction` is a step toward a unified selection store,
+> but selection still does NOT survive tool switching (that's still in 6.1 with layers). Lasso is
+> point-level and doesn't participate in `runSelectionAction` (segments there, not objects).
 
-### Сессия 15 — фиксы по фидбеку (✅)
+### Session 15 — feedback fixes (✅)
 
-- [x] **Boolean с пустым результатом уничтожал фигуры.** `booleanOp` при пустом/субпиксельном итоге
-      (Intersect непересекающихся, полное взаимоуничтожение) удалял оригиналы и оставлял вырожденный
-      путь («пиксель»). Добавлен `isDegenerate` → при пустом результате оригиналы НЕ трогаем, возвращаем
-      null (выделение остаётся как было). Проверено: intersect непересекающихся → null, 2 объекта целы;
-      intersect перекрытых → зона пересечения (area 2500).
-- [x] **Нож игнорировал открытые пути** (после ножниц `closed=false`). Добавлен `sliceOpenPath` —
-      режет открытый путь во всех точках пересечения с ножом; матч ножа больше не требует `it.closed`
-      (берёт любой не-locked Path, кроме оверлеев). Проверено: ножницы открыли прямоугольник → нож режет
-      его на 3 куска.
+- [x] **A boolean with an empty result destroyed shapes.** `booleanOp` with an empty/subpixel
+      result (Intersect of non-overlapping, full mutual annihilation) deleted the originals and
+      left a degenerate path (a "pixel"). Added `isDegenerate` → on an empty result the originals
+      are NOT touched, return null (selection stays as it was). Verified: intersect of
+      non-overlapping → null, 2 objects intact; intersect of overlapping → the intersection zone
+      (area 2500).
+- [x] **The knife ignored open paths** (after scissors `closed=false`). Added `sliceOpenPath` —
+      cuts an open path at every intersection with the knife; the knife match no longer requires
+      `it.closed` (takes any non-locked Path except overlays). Verified: scissors opened a
+      rectangle → the knife cuts it into 3 pieces.
 
-### Сессия 16 — прогресс (✅ ядро 3.1 + поворот-курсор)
+### Session 16 — progress (✅ core of 3.1 + rotate cursor)
 
-Объём: **фаза 3.1** — live rectangle (скругление углов виджетом); + дискаверабельный поворот за угол.
+Scope: **phase 3.1** — live rectangle (corner rounding via a widget); + discoverable rotate-by-corner.
 
 - [x] `operations/liveShape.js` — `tagLiveRect`/`isLiveRect`/`rectAxisAligned`/`maxRadius`/`setRadius`/
-      `radiusWidgetPoint`. Радиус живёт в `data.live={kind:'rect',radius}`; `setRadius` перестраивает
-      сегменты из bounds+radius (`Path.Rectangle({rectangle,radius})`), bounds не меняется.
-- [x] Rectangle и Rounded Rectangle помечаются `tagLiveRect` (radius 0 / вычисленный).
-- [x] selectTool: виджет-радиус (кружок у верхнего-левого угла, отступ по диагонали = radius, мин 14px);
-      хит виджета → mode 'radius', drag = `setRadius(min(dx,dy))`. Виджет рисуется/чистится в
-      draw/up/view/refresh/deactivate; во время трансформаций прячется.
-- [x] Поворот за угол (из 2.2) теперь с курсором-стрелкой (data-URI SVG, фолбэк grab) — стало заметно.
+      `radiusWidgetPoint`. The radius lives in `data.live={kind:'rect',radius}`; `setRadius` rebuilds
+      segments from bounds+radius (`Path.Rectangle({rectangle,radius})`), bounds unchanged.
+- [x] Rectangle and Rounded Rectangle are tagged `tagLiveRect` (radius 0 / computed).
+- [x] selectTool: radius widget (a circle near the top-left corner, diagonal offset = radius, min 14px);
+      widget hit → mode 'radius', drag = `setRadius(min(dx,dy))`. The widget draws/cleans in
+      draw/up/view/refresh/deactivate; hidden during transforms.
+- [x] Rotate-by-corner (from 2.2) now has an arrow cursor (data-URI SVG, grab fallback) — now noticeable.
 
-Заметки / решения сессии 16:
-- Виджет показывается только для ОДНОГО выделенного live-прямоугольника и пока он осе-выровнен
-  (`rectAxisAligned`: все точки сегментов на рёбрах bounds). После поворота виджет прячется (наклонный
-  live-frame — позже, с Transform-панелью 7.1). Resize масштабирует и скругление (radius приблизителен).
-- Проверено: rect 4→8 сегментов после скругления, radius 45, bounds стабильны 160×120; rotate-зона →
-  SVG-курсор; ховер виджета → pointer.
-- live-параметры polygon/star/ellipse (стороны/лучи/pie) НЕ сделаны — отложено.
+Session 16 notes / decisions:
+- The widget shows only for ONE selected live rectangle and while it's axis-aligned
+  (`rectAxisAligned`: all segment points on bounds edges). After rotation the widget hides (a tilted
+  live frame — later, with the Transform panel 7.1). Resize scales the rounding too (radius approximate).
+- Verified: rect 4→8 segments after rounding, radius 45, bounds stable 160×120; rotate zone →
+  SVG cursor; widget hover → pointer.
+- live parameters for polygon/star/ellipse (sides/points/pie) are NOT done — deferred.
 
-### Сессия 17 — фиксы по фидбеку (✅)
+### Session 17 — feedback fixes (✅)
 
-- [x] **Нож не делил пополам фигуру, открытую ножницами.** Нож выбирал стратегию по `closed`:
-      открытый (но залитый) путь после ножниц резался как линия (`sliceOpenPath`) — серединка
-      «удалялась». Теперь стратегия по СОДЕРЖИМОМУ: если путь `closed || fillColor` — это область,
-      зашиваем разрез (`closed=true`) и делим на две замкнутые половины (`sliceTarget`); только
-      настоящий незалитый открытый штрих идёт в `sliceOpenPath`. Проверено: ножницы→нож = 2 куска по
-      14000 (ровно половины), оба closed.
-- [x] **Убран отдельный инструмент Rounded Rectangle.** Скругление теперь у ЛЮБОГО прямоугольника
-      (live rect, виджет на холсте), поэтому дубль не нужен. Удалён `roundedRectangleTool.js`, ссылки
-      в toolIds/Canvas/toolItems/Toolbar. Прямоугольник рисуется обычным Rectangle и скругляется виджетом.
+- [x] **The knife didn't halve a shape opened by scissors.** The knife picked a strategy by `closed`:
+      an open (but filled) path after scissors was cut as a line (`sliceOpenPath`) — the middle
+      "vanished". Now the strategy is by CONTENT: if the path is `closed || fillColor` — it's a region,
+      we stitch the cut (`closed=true`) and split into two closed halves (`sliceTarget`); only a
+      genuinely unfilled open stroke goes to `sliceOpenPath`. Verified: scissors→knife = 2 pieces of
+      14000 each (exact halves), both closed.
+- [x] **Removed the separate Rounded Rectangle tool.** Rounding now belongs to ANY rectangle
+      (live rect, on-canvas widget), so the duplicate is unnecessary. Removed `roundedRectangleTool.js`
+      and references in toolIds/Canvas/toolItems/Toolbar. A rectangle is drawn with the regular
+      Rectangle and rounded with the widget.
 
-### Сессия 18 — прогресс (✅ итерация 3.2)
+### Session 18 — progress (✅ iteration 3.2)
 
-Объём: **фаза 3.2** добита — полная обводка + стрелки + Fill/Stroke индикатор.
+Scope: **phase 3.2** finished — full stroke + arrowheads + Fill/Stroke indicator.
 
-- [x] `itemStyle.js`: читает/пишет `strokeCap`, `strokeJoin`, `dashArray`, стрелки (`data.arrows`).
-      Тип линии (solid/dashed/dotted) выводится из dashArray+cap; пресет → конкретный паттерн
-      (`dashPatternFor`, масштаб по толщине). Dotted = `dashArray:[0, w*2]` + `strokeCap:'round'`.
-- [x] Properties: блок stroke-detail — Line (3 SVG-иконки), Cap (3), Join (3), Dash/Gap поля
-      (настраиваемый пунктир), Arrowheads (Start/End + размер). Стрелки показываются только для
-      открытых путей (`isOpenPath`). Все поля дизейблятся при выключенной обводке.
-- [x] `operations/arrowheads.js` — стрелки НЕ запекаются в путь: каждая = отдельный залитый
-      треугольник `data.isArrow`, привязан к пути через `data.ownerId` (id пути). `refreshArrowheads`
-      перестраивает (не двигает) их; вызывается из `selection.draw()` (на каждый redraw →
-      следуют за move/resize/rotate) и из `applyStyle` (цвет/толщина/тогглы меняют головку).
-      Поиск старых головок по ownerId (не по сохранённым ссылкам) → clone пути не трогает чужие.
-- [x] Fill/Stroke индикатор в Toolbar интерактивен: клик по свотчу = фокус, ⇄ = swap, клавиша
-      **X** = переключить фокус, **Shift+X** = поменять fill/stroke местами (`swapFillStroke` в App,
-      вызов из `Canvas.onKeyDown` через `paintRef`). X-хоткей гардит `!meta/!ctrl/!alt` (не ломает Cut).
+- [x] `itemStyle.js`: reads/writes `strokeCap`, `strokeJoin`, `dashArray`, arrowheads (`data.arrows`).
+      Line type (solid/dashed/dotted) is derived from dashArray+cap; a preset maps to a concrete
+      pattern (`dashPatternFor`, scaled by width). Dotted = `dashArray:[0, w*2]` + `strokeCap:'round'`.
+- [x] Properties: stroke-detail block — Line (3 SVG icons), Cap (3), Join (3), Dash/Gap fields
+      (custom dash), Arrowheads (Start/End + size). Arrowheads show only for open paths
+      (`isOpenPath`). All fields disabled when stroke is off.
+- [x] `operations/arrowheads.js` — arrowheads are NOT baked into the path: each is a separate filled
+      triangle `data.isArrow`, tied to its path via `data.ownerId` (path id). `refreshArrowheads`
+      rebuilds (not moves) them; called from `selection.draw()` (on every redraw →
+      they follow move/resize/rotate) and from `applyStyle` (color/width/toggles change the head).
+      Old heads found by ownerId (not stored references) → cloning a path doesn't touch others'.
+- [x] The Fill/Stroke indicator in the Toolbar is interactive: click a swatch = focus, ⇄ = swap,
+      key **X** = toggle focus, **Shift+X** = swap fill/stroke (`swapFillStroke` in App,
+      called from `Canvas.onKeyDown` via `paintRef`). The X hotkey guards `!meta/!ctrl/!alt`
+      (doesn't break Cut).
 
-Заметки / решения сессии 18:
-- Стрелки `locked=true` → Paper hitTest их игнорирует (не выделяются), `selectAll` фильтрует по
-      `!locked`. Удаление пути чистит головки (`clearArrowheads` в `selectionActions.delete`);
-      duplicate строит свои головки для клона (`refreshArrowheads(c)`).
-- `numberSm` нужен `box-sizing: border-box`, иначе padding+border раздували поля и панель
-      переполнялась на ~24px (горизонтальный скролл). Проверено: scrollWidth 219 ≤ 220.
-- Проверено в браузере: линия dotted + стрелки с обоих концов рендерятся и переживают
-      снятие выделения; Shift+X на rect меняет #b9bcc0↔#7d8186; X переключает фокус свотча.
+Session 18 notes / decisions:
+- Arrowheads are `locked=true` → Paper hitTest ignores them (not selectable), `selectAll` filters by
+      `!locked`. Deleting a path cleans its heads (`clearArrowheads` in `selectionActions.delete`);
+      duplicate builds its own heads for the clone (`refreshArrowheads(c)`).
+- `numberSm` needs `box-sizing: border-box`, otherwise padding+border inflated the fields and the
+      panel overflowed by ~24px (horizontal scroll). Verified: scrollWidth 219 ≤ 220.
+- Verified in the browser: a dotted line + arrowheads on both ends render and survive
+      deselection; Shift+X on a rect swaps #b9bcc0↔#7d8186; X toggles the swatch focus.
 
-### Сессия 19 — прогресс (✅ итерация 5.2)
+### Session 19 — progress (✅ iteration 5.2)
 
-Объём: **фаза 5.2** — шрифты (системные, файлы, Google Fonts, менеджер, превью).
+Scope: **phase 5.2** — fonts (system, files, Google Fonts, manager, previews).
 
-- [x] `src/state/fonts.js` — реестр шрифтов (первый модуль в `state/`): 3 группы (system/custom/google),
-      `subscribeFonts` для React и Canvas. Системные — курируемый список из 26 кандидатов,
-      детект через canvas-замер ширины против generic-фолбэков (на маке прошло 23 + 3 generic).
-- [x] Загрузка файлов .ttf/.otf/.woff/.woff2: `FontFace` + `document.fonts.add`; имя семейства из
-      имени файла, коллизии — суффикс «2». Файлы живут сессию (FontFace не сериализуется) — hint в UI.
-- [x] Google Fonts: инжект `<link>` css2 + верификация `document.fonts.load()`; неверное имя →
-      link.onerror → понятная ошибка, состояние не трогаем. Список персистится в localStorage
-      (`ov.fonts.google`) и восстанавливается на старте (по мере загрузки — notify → re-layout).
-- [x] `textLayout.js`: `fontFamily` в read/applyTextStyle (с re-layout), `relayoutAllText()`.
-- [x] `components/FontPicker/` — дропдаун в Properties (только для текста): кнопка и каждый пункт
-      рендерятся СВОИМ шрифтом, группы Loaded/Google/System, футер «Manage fonts…» → менеджер.
-- [x] `components/FontsDialog/` — менеджер (Type > Fonts…): редактируемая строка превью, превью
-      каждого семейства, загрузка файлов, Google (поле + Enter/Add + чипы-подсказки), удаление ✕.
-- [x] Canvas подписан на реестр: шрифт догрузился → `relayoutAllText` + refresh оверлея + update
-      (advance до загрузки мерялся фолбэком — метрики меняются).
-- [x] Retype (шрифт из картинки) — НЕ здесь: это AI, явно значится в 18.2 (AI Retype).
+- [x] `src/state/fonts.js` — font registry (first module in `state/`): 3 groups (system/custom/google),
+      `subscribeFonts` for React and Canvas. System fonts — a curated list of 26 candidates,
+      detected via canvas width measurement against generic fallbacks (23 + 3 generic passed on Mac).
+- [x] File upload .ttf/.otf/.woff/.woff2: `FontFace` + `document.fonts.add`; family name from the
+      file name, collisions get a "2" suffix. Files live for the session (FontFace doesn't
+      serialize) — hint in the UI.
+- [x] Google Fonts: inject a css2 `<link>` + verify with `document.fonts.load()`; a wrong name →
+      link.onerror → clear error, state untouched. The list persists in localStorage
+      (`ov.fonts.google`) and restores on start (as fonts load — notify → re-layout).
+- [x] `textLayout.js`: `fontFamily` in read/applyTextStyle (with re-layout), `relayoutAllText()`.
+- [x] `components/FontPicker/` — dropdown in Properties (text only): the button and every item
+      render in THEIR OWN font, groups Loaded/Google/System, footer "Manage fonts…" → the manager.
+- [x] `components/FontsDialog/` — manager (Type > Fonts…): editable preview line, per-family
+      preview, file upload, Google (field + Enter/Add + suggestion chips), ✕ removal.
+- [x] Canvas subscribes to the registry: a font finished loading → `relayoutAllText` + overlay
+      refresh + update (advance was measured with a fallback before load — metrics change).
+- [x] Retype (font from an image) — NOT here: that's AI, explicitly listed in 18.2 (AI Retype).
 
-Заметки / решения сессии 19:
-- **`document.fonts.check()` возвращает true для НЕзарегистрированного семейства** (vacuous truth) —
-  проверять загрузку через `document.fonts.load()` и длину результата. По той же причине детект
-  системных — canvas-замером (72px, строка m/l/W/@) против monospace И serif (отличие хотя бы
-  от одного = установлен), а не через check().
-- Грабли теста (не кода): синтетический keydown `code:'Space'` при НЕтекстовом инструменте включает
-  pan (`spaceDownRef`) и без keyup залипает — все последующие mousedown уходят в панораму.
-  Всегда слать keyup. Смена инструмента кликом по тулбару применяется в useEffect (асинхронно) —
-  клик по кнопке и события холста слать РАЗНЫМИ eval.
-- В headless-eval живой paper достаётся динамическим импортом точного URL из
+Session 19 notes / decisions:
+- **`document.fonts.check()` returns true for an UNregistered family** (vacuous truth) —
+  verify loading via `document.fonts.load()` and the result length. For the same reason system
+  detection uses canvas measurement (72px, string m/l/W/@) against monospace AND serif (differing
+  from at least one = installed), not check().
+- Test gotcha (not code): a synthetic keydown `code:'Space'` with a NON-text tool enables
+  pan (`spaceDownRef`) and without keyup it sticks — all subsequent mousedowns go to panning.
+  Always send keyup. Tool switching via a toolbar click applies in a useEffect (async) —
+  send the button click and canvas events in SEPARATE evals.
+- In headless eval the live paper instance is obtained by dynamically importing the exact URL from
   `performance.getEntriesByType('resource')` (`/node_modules/.vite/deps/paper.js?v=…`);
-  `/@id/paper` возвращает ДРУГОЙ инстанс (project=null). Модули `/src/*.js` по прямому пути
-  импортируются тем же инстансом, что у приложения (проверено по общему состоянию).
-- `.claude/launch.json`: добавлен конфиг `openvector-alt` (порт 5181) на случай, когда 5180
-  занят dev-сервером параллельной сессии.
+  `/@id/paper` returns a DIFFERENT instance (project=null). `/src/*.js` modules imported by direct
+  path share the app's instance (verified via shared state).
+- `.claude/launch.json`: added an `openvector-alt` config (port 5181) for when 5180
+  is taken by a parallel session's dev server.
 
-### Сессия 20 — прогресс (✅ ядро 5.3)
+### Session 20 — progress (✅ core of 5.3)
 
-Объём: **фаза 5.3** — типографика (ядро; сложные подсистемы отложены).
+Scope: **phase 5.3** — typography (core; complex subsystems deferred).
 
-- [x] Character: **baseline shift** (весь текст-объект; в block-тексте = сдвиг базовой линии,
-      на пути = смещение вдоль нормали). Поле Baseline в Properties.
-- [x] Paragraph: **отступы** (левый / первой строки / правый — только area-текст) и
-      **интервалы до/после параграфа** (point и area). Поля Indent (3) и Space (2) в Properties.
-- [x] `textLayout.js` рефакторнут: общий `blockLines(d)` считает строки (перенос с учётом отступов,
-      startX по justification, y с интервалами) — им пользуются и `layoutBlock`, и `caretSegment`
-      (раньше математика дублировалась и могла разъехаться). Старый `wrap()` удалён.
-- [x] **Change Case** (UPPERCASE / lowercase / Title Case / Sentence case) — подменю в Type.
-- [x] **Smart Punctuation** — “ ” ‘ ’ … — (применяет всё сразу; диалог с чекбоксами — с 15.1).
-- [x] **Fit Headline** — area-текст: склеивает в одну строку и подбирает tracking под ширину рамки
-      (минус отступы). Пункт активен только для горизонтального area-текста.
-- [x] **Show Hidden Characters** — глобальный тумблер (`setShowHiddenChars`): точки-пробелы `·`,
-      `¶` на концах параграфов, `#` в конце текста. Метки `data.hiddenMark` + `locked` (не хитятся,
-      не индексируются как глифы — Touch Type fx не съезжают), чистятся в relayout.
-- [x] MenuBar: **поддержка подменю** (`item.items` → флайаут по ховеру, `.subMenu` в CSS) — общая,
-      пригодится для Arrange/Effect. Type-меню: Change Case ▸, Smart Punctuation, Fit Headline,
-      Show Hidden Characters (с ✓); Create Outlines/Find Font — disabled (отложены).
-- [x] Новый модуль `src/canvas/operations/typography.js` (changeCase/smartPunctuation/fitHeadline);
-      команды идут App.applyTextCommand → по выделенным text-группам (selItemsRef), не через инструмент.
-- [ ] Отложено: Create Outlines (нужен opentype.js + бинарники шрифтов — FontFace их не отдаёт;
-      fonts.js буферы не хранит), Find Font, Threaded Text, Text Wrap, панели Character/Paragraph
-      как отдельные плавающие (сейчас всё в Properties), Tabs, Glyphs, кернинг пар (нужно
-      посимвольное выделение в текст-редакторе).
+- [x] Character: **baseline shift** (whole text object; in block text = baseline offset,
+      on a path = offset along the normal). Baseline field in Properties.
+- [x] Paragraph: **indents** (left / first-line / right — area text only) and
+      **space before/after paragraph** (point and area). Indent (3) and Space (2) fields in Properties.
+- [x] `textLayout.js` refactored: a shared `blockLines(d)` computes lines (wrapping with indents,
+      startX by justification, y with spacing) — used by both `layoutBlock` and `caretSegment`
+      (the math used to be duplicated and could diverge). The old `wrap()` removed.
+- [x] **Change Case** (UPPERCASE / lowercase / Title Case / Sentence case) — Type submenu.
+- [x] **Smart Punctuation** — “ ” ‘ ’ … — (applies everything at once; checkbox dialog — from 15.1).
+- [x] **Fit Headline** — area text: joins into one line and fits tracking to the frame width
+      (minus indents). Enabled only for horizontal area text.
+- [x] **Show Hidden Characters** — global toggle (`setShowHiddenChars`): space dots `·`,
+      `¶` at paragraph ends, `#` at text end. Marks are `data.hiddenMark` + `locked` (not hit,
+      not indexed as glyphs — Touch Type fx don't shift), cleaned in relayout.
+- [x] MenuBar: **submenu support** (`item.items` → hover flyout, `.subMenu` in CSS) — generic,
+      will serve Arrange/Effect. Type menu: Change Case ▸, Smart Punctuation, Fit Headline,
+      Show Hidden Characters (with ✓); Create Outlines/Find Font — disabled (deferred).
+- [x] New module `src/canvas/operations/typography.js` (changeCase/smartPunctuation/fitHeadline);
+      commands go App.applyTextCommand → over the selected text groups (selItemsRef), not via the tool.
+- [ ] Deferred: Create Outlines (needs opentype.js + font binaries — FontFace won't give them;
+      fonts.js doesn't keep buffers), Find Font, Threaded Text, Text Wrap, Character/Paragraph
+      as separate floating panels (all in Properties for now), Tabs, Glyphs, pair kerning (needs
+      per-character selection in the text editor).
 
-Заметки / решения сессии 20:
-- Отступы параграфа действуют ТОЛЬКО в area-тексте (у point-текста нет рамки — ширина не
-  определена); интервалы до/после — в обоих. Вертикальный и on-path текст параграф-настройки
-  игнорируют (v1). Baseline shift работает в block- и path-режимах, в вертикальном — нет (v1).
-- Fit Headline оставляет крошечный запас (−0.01 к трекингу), иначе строка ровно по ширине
-  переносится из-за float-округления.
-- **Фикс вёрстки панели**: `input[type=range]` во flex-строке не ужимается (min-width:auto,
-  дефолтная ширина ~129px) — панель скроллилась по X. Лечится `min-width: 0` у `.range`.
-  Строка Indent из трёх полей — свой класс `.tightRow` (gap 4) + `.numberXs` (42px).
-- Грабли теста (не кода): после синтетического `button.click()` в eval React флашит стейт ПОСЛЕ
-  return — DOM проверять СЛЕДУЮЩИМ eval. React onMouseEnter триггерится через `mouseover`
-  (bubbles: true), голый `mouseenter` не ловится.
+Session 20 notes / decisions:
+- Paragraph indents apply ONLY in area text (point text has no frame — width undefined);
+  space before/after — in both. Vertical and on-path text ignore paragraph settings (v1).
+  Baseline shift works in block and path modes, not in vertical (v1).
+- Fit Headline leaves a tiny margin (−0.01 tracking), otherwise a line exactly at frame width
+  wraps due to float rounding.
+- **Panel layout fix**: `input[type=range]` in a flex row doesn't shrink (min-width:auto,
+  default width ~129px) — the panel scrolled in X. Fixed with `min-width: 0` on `.range`.
+  The 3-field Indent row has its own class `.tightRow` (gap 4) + `.numberXs` (42px).
+- Test gotcha (not code): after a synthetic `button.click()` in eval React flushes state AFTER
+  return — check the DOM in the NEXT eval. React onMouseEnter triggers via `mouseover`
+  (bubbles: true); a bare `mouseenter` isn't caught.
 
-### Сессия 21 — прогресс (✅ 5.3: Create Outlines + Find Font; bold/italic)
+### Session 21 — progress (✅ 5.3: Create Outlines + Find Font; bold/italic)
 
-Объём: добивка **фазы 5.3** — Create Outlines, Find Font; + закоммичен движок bold/italic
-(fontWeight/fontStyle, `variantOf` через весь layout) с UI-переключателями.
+Scope: finishing **phase 5.3** — Create Outlines, Find Font; + the bold/italic engine committed
+(fontWeight/fontStyle, `variantOf` through the whole layout) with UI toggles.
 
-- [x] **Create Outlines** (Type-меню, активен при выделенном тексте): текст-группа → группа
-      `CompoundPath`-контуров. Новый `operations/outlines.js` + зависимость **opentype.js@2**.
-      Каждый глиф-`PointText` рисует символ в ЛОКАЛЬНОМ (0,0), а размещение/поворот/Touch Type
-      сидят в его матрице → контур генерим в (0,0) (`font.getPath`) и прогоняем через
-      `glyph.matrix`, затем `group.matrix` — все режимы (point/area/path/vertical/touch) выходят
-      ровно там, где рендерились. Центр-выравненные глифы (on-path) — сдвиг на −advance/2.
-- [x] **Бинарники шрифтов** (`resolveFontBinary` в `state/fonts.js`): файловые — буфер хранится
-      при загрузке; Google — WOFF v1 с Fontsource-зеркала на jsDelivr
-      (`cdn.jsdelivr.net/fontsource/fonts/<id>@latest/latin-<вес>-<стиль>.woff`, фолбэк к 400/normal);
-      системные — `queryLocalFonts` (Chromium, промпт) со скорингом стиля, generic-семейства
-      маппятся на реальные (sans-serif→Helvetica/Arial и т.д.). Парсинг+кеш по family|weight|italic.
-- [x] **Find Font** (Type > Find Font…): диалог `components/FindFontDialog/` — семейства документа
-      с числом объектов, выбор замены из всех зарегистрированных, Replace меняет все вхождения
-      (`listFontUsage`/`replaceFont` в typography.js). После замены — re-sync панели/оверлея.
-- [x] Bold/Italic: движок (параллельная правка) + коммит 068978e; Properties получил выбор веса
-      (100–900) и Italic-тумблер (доработано параллельной сессией).
+- [x] **Create Outlines** (Type menu, enabled with text selected): text group → a group of
+      `CompoundPath` outlines. New `operations/outlines.js` + dependency **opentype.js@2**.
+      Each glyph `PointText` draws its char at LOCAL (0,0), while placement/rotation/Touch Type
+      sit in its matrix → we generate the outline at (0,0) (`font.getPath`) and run it through
+      `glyph.matrix`, then `group.matrix` — all modes (point/area/path/vertical/touch) land
+      exactly where they rendered. Center-aligned glyphs (on-path) — shifted by −advance/2.
+- [x] **Font binaries** (`resolveFontBinary` in `state/fonts.js`): file fonts — the buffer is kept
+      at upload; Google — WOFF v1 from the Fontsource mirror on jsDelivr
+      (`cdn.jsdelivr.net/fontsource/fonts/<id>@latest/latin-<weight>-<style>.woff`, fallback to
+      400/normal); system — `queryLocalFonts` (Chromium, prompt) with style scoring, generic
+      families mapped to real ones (sans-serif→Helvetica/Arial etc.). Parse+cache by
+      family|weight|italic.
+- [x] **Find Font** (Type > Find Font…): dialog `components/FindFontDialog/` — document families
+      with object counts, replacement picked from all registered, Replace changes all occurrences
+      (`listFontUsage`/`replaceFont` in typography.js). After replacement — re-sync panel/overlay.
+- [x] Bold/Italic: engine (parallel edit) + commit 068978e; Properties got weight selection
+      (100–900) and an Italic toggle (finished by a parallel session).
 
-Заметки / решения сессии 21:
-- **Google не отдаёт TTF браузеру**: подмена User-Agent в fetch не влияет (client hints),
-  css2 всегда возвращает woff2, а opentype.js woff2 НЕ читает (нужен brotli). Решение — зеркало
-  Fontsource на jsDelivr, у которого лежит WOFF v1 (opentype.js его парсит через встроенный inflate).
-- Ошибка резолва бинарника (нет Local Font Access, семейство не найдено) — alert с понятным
-  текстом, текст НЕ трогается (замена группы происходит только после успешного парсинга).
-- Выделение сбрасывается ДО контуров (`deselect` через actionRef) — текст-группа удаляется,
-  оверлей не должен держать мёртвую ссылку. Illustrator сохраняет выделение — наше TODO к 6.1
-  (единый стор выделения).
-- Контур ≠ метрики канвы: advance от opentype может чуть отличаться от `measureText` (браузер
-  мог рендерить другой бинарник) — на глаз неотличимо, позиция каждого глифа своя, не суммируется.
+Session 21 notes / decisions:
+- **Google won't serve TTF to a browser**: spoofing User-Agent in fetch has no effect (client
+  hints), css2 always returns woff2, and opentype.js does NOT read woff2 (needs brotli). Solution —
+  the Fontsource mirror on jsDelivr, which has WOFF v1 (opentype.js parses it via built-in inflate).
+- A binary resolution error (no Local Font Access, family not found) — an alert with clear text,
+  the text is NOT touched (group replacement happens only after a successful parse).
+- The selection is cleared BEFORE outlining (`deselect` via actionRef) — the text group gets
+  deleted and the overlay must not hold a dead reference. Illustrator preserves selection — our
+  TODO for 6.1 (unified selection store).
+- Outline ≠ canvas metrics: opentype's advance can differ slightly from `measureText` (the browser
+  may have rendered a different binary) — indistinguishable by eye, each glyph has its own
+  position, no accumulation.
 
-### Сессия 22 — прогресс (✅ итерация 6.1)
+### Session 22 — progress (✅ iteration 6.1)
 
-Объём: **фаза 6.1** — организация объектов. Закрыт и отложенный рефактор «единый стор выделения».
+Scope: **phase 6.1** — object organization. Also closed the deferred "unified selection store" refactor.
 
-- [x] **Единый стор выделения** (`src/state/selection.js`): один источник правды, подписки для
-      React/Canvas; `alive`-проверка по цепочке до слоя в project.layers (переживает удаление слоя);
-      `pruneSelection` фильтрует hidden/locked по цепочке. **Выделение переживает смену инструмента**:
-      `createSelection` в `operations/selection.js` теперь — тонкая обёртка над стором; оверлей —
-      модульный синглтон; `dispose()` (в deactivate инструментов) снимает колбэки, НЕ сбрасывая стор.
-      Canvas держит постоянный экземпляр (`docSelRef`) → App/такс-бар питаются от стора при любом
-      инструменте; шорткаты и меню (⌘A/⌘G/⌘D/⌘2/⌘3, Group/булевы/…) работают с фолбэком
-      `runSelectionAction(docSelection)` когда активный инструмент без `runAction`.
-- [x] **Слой оверлеев** `__overlay` (`data.isOverlayLayer`, всегда сверху, getOverlayLayer):
-      рамка выделения, marquee, гайды, виджет радиуса — не зависят от пользовательских слоёв.
-      `addOverlay(item)` — общий хелпер.
-- [x] **Layers панель** (`components/Panels/LayersPanel.jsx`, первый модуль в Panels/): слои
-      (верхний в списке = верхний на холсте), создание/удаление (кнопки в шапке), активация кликом,
-      переименование dblclick (слоёв и объектов), глаз/замок у слоёв и объектов, вложенность групп
-      (disclosure ▸/▾, отступы), подписи объектов (Text “…”, Rectangle, Compound Path…), свотч
-      заливки/обводки, выделение кликом (Shift = добавить), подсветка выделенных, **drag&drop**:
-      на строку слоя = в этот слой наверх, на строку объекта = вставить над ним (с защитой от
-      дропа в своё поддерево). Обновление — по `state/document.js` (bumpDocument из Canvas после
-      каждого жеста: mouseup/keydown/экшены) + подписка на стор выделения.
-- [x] **Lock/Hide**: Object-меню Lock Selection (⌘2) / Unlock All (⌥⌘2) / Hide Selection (⌘3) /
-      Show All (⌥⌘3) + команды в `runSelectionAction`; `operations/visibility.js` — Unlock All
-      пропускает системные локи (оверлеи, стрелки, hiddenMark, isoDim). Заблокированное не хитится.
-- [x] **Isolation Mode** (`operations/isolation.js`): dblclick по группе (из любого инструмента) →
-      изоляция; вложенный dblclick — глубже (chain). Всё вне изолируемой группы затемняется
-      (opacity ×0.25) и локается; выход восстанавливает точно. **Хлебные крошки** на холсте
-      (Document › Group › …, клик по крошке = выход на уровень), Escape = уровень вверх, dblclick
-      по пустому = уровень вверх; после полного выхода группа выделена. Object-меню: Isolate
-      Selected Group / Exit Isolation Mode. **Новые объекты, нарисованные в изоляции, усыновляются
-      группой** (`adoptNewItems` в Canvas.afterMutation: всё незалоченное на уровне слоя → в группу).
-      `pickItem.topLevel` останавливается на изоляционном корне → клик выбирает ДЕТЕЙ группы.
-- [x] **Мультислойность везде**: selectAll/marquee/wand — `editableItems()` (видимые незалоченные
-      слои, в изоляции — дети корня); snapping/zoomFit — по всем видимым слоям; `groupItems`
-      кладёт группу в контейнер переднего элемента (не в activeLayer); нож режет только
-      видимое/незалоченное по цепочке; File > New чистит все слои и создаёт «Layer 1».
-- [x] Текст: `data.editing` на время правки (оверлей скрыт — визуал у каретки), стор держит
-      текст (Properties работает); после коммита текст остаётся выделенным.
-- [x] Window > Layers (тоггл панели); правая колонка `.side-col` = Properties (растёт, скролл) +
-      Layers (240px). Arrange из 6.1 был готов ранее (сессия 10).
+- [x] **Unified selection store** (`src/state/selection.js`): one source of truth, subscriptions for
+      React/Canvas; `alive` check walks the chain up to a layer in project.layers (survives layer
+      deletion); `pruneSelection` filters hidden/locked along the chain. **Selection survives tool
+      switching**: `createSelection` in `operations/selection.js` is now a thin wrapper over the
+      store; the overlay is a module singleton; `dispose()` (in tools' deactivate) removes
+      callbacks WITHOUT resetting the store. Canvas keeps a permanent instance (`docSelRef`) →
+      App/task-bar feed off the store under any tool; shortcuts and menus (⌘A/⌘G/⌘D/⌘2/⌘3,
+      Group/booleans/…) work with the `runSelectionAction(docSelection)` fallback when the active
+      tool has no `runAction`.
+- [x] **Overlay layer** `__overlay` (`data.isOverlayLayer`, always on top, getOverlayLayer):
+      selection frame, marquee, guides, radius widget — independent of user layers.
+      `addOverlay(item)` — shared helper.
+- [x] **Layers panel** (`components/Panels/LayersPanel.jsx`, first module in Panels/): layers
+      (top of the list = top of the canvas), create/delete (header buttons), activate by click,
+      rename by dblclick (layers and objects), eye/lock on layers and objects, group nesting
+      (disclosure ▸/▾, indents), object labels (Text “…”, Rectangle, Compound Path…), fill/stroke
+      swatch, select by click (Shift = add), highlight of selected, **drag&drop**:
+      onto a layer row = into that layer on top, onto an object row = insert above it (guarded
+      against dropping into one's own subtree). Refresh — via `state/document.js` (bumpDocument
+      from Canvas after every gesture: mouseup/keydown/actions) + selection store subscription.
+- [x] **Lock/Hide**: Object menu Lock Selection (⌘2) / Unlock All (⌥⌘2) / Hide Selection (⌘3) /
+      Show All (⌥⌘3) + commands in `runSelectionAction`; `operations/visibility.js` — Unlock All
+      skips system locks (overlays, arrowheads, hiddenMark, isoDim). Locked items don't hit-test.
+- [x] **Isolation Mode** (`operations/isolation.js`): dblclick on a group (from any tool) →
+      isolation; nested dblclick goes deeper (chain). Everything outside the isolated group dims
+      (opacity ×0.25) and locks; exit restores exactly. **Breadcrumbs** on the canvas
+      (Document › Group › …, click a crumb = exit to that level), Escape = one level up, dblclick
+      on empty = one level up; after full exit the group is selected. Object menu: Isolate
+      Selected Group / Exit Isolation Mode. **New objects drawn in isolation are adopted
+      by the group** (`adoptNewItems` in Canvas.afterMutation: everything unlocked at layer level →
+      into the group). `pickItem.topLevel` stops at the isolation root → clicks select the group's
+      CHILDREN.
+- [x] **Multi-layer everywhere**: selectAll/marquee/wand — `editableItems()` (visible unlocked
+      layers; in isolation — the root's children); snapping/zoomFit — across all visible layers;
+      `groupItems` puts the group into the front element's container (not activeLayer); the knife
+      cuts only visible/unlocked along the chain; File > New clears all layers and creates "Layer 1".
+- [x] Text: `data.editing` while editing (overlay hidden — the caret is the visual), the store
+      holds the text (Properties works); after commit the text stays selected.
+- [x] Window > Layers (panel toggle); the right column `.side-col` = Properties (grows, scrolls) +
+      Layers (240px). Arrange from 6.1 was done earlier (session 10).
 
-Заметки / решения сессии 22:
-- `new paper.Layer()` АВТО-активируется и встаёт поверх — после создания оверлей-слой
-  возвращаем наверх (`project.insertLayer(layers.length, ol)`), прежний active восстанавливаем
-  вручную (в getOverlayLayer).
-- Illustrator-паттерн «рисование в изоляции добавляет в группу» реализован БЕЗ правки инструментов:
-  apply() изоляции локает всё преж-существующее на уровне слоёв → после mouseup всё незалоченное
-  новое на уровне слоя = свежесозданное → `root.addChild` (координаты сохраняются, матрица группы
-  единичная). Перо в процессе рисования усыновляется тоже — безвредно (координаты не меняются).
-- Грабли теста (не кода): клик по кнопке меню и чтение дропдауна — РАЗНЫЕ eval (React флашит после
-  return); повторный клик по заголовку меню ТОГГЛИТ (закрывает). Синтетический DnD работает через
-  `new DataTransfer()` + DragEvent(dragstart/dragover/drop) с одним dt.
-- Отложено: Delete-клавиша при не-selection инструментах (сейчас Delete работает только в
-  инструментах выделения); автовыделение новонарисованной фигуры (AI-поведение) — к 6.2/7.1.
+Session 22 notes / decisions:
+- `new paper.Layer()` AUTO-activates and goes on top — after creation we push the overlay layer
+  back up (`project.insertLayer(layers.length, ol)`), restore the previous active manually
+  (in getOverlayLayer).
+- The Illustrator pattern "drawing in isolation adds to the group" is implemented WITHOUT touching
+  tools: isolation's apply() locks everything pre-existing at layer level → after mouseup anything
+  unlocked and new at layer level = freshly created → `root.addChild` (coordinates preserved, the
+  group matrix is identity). A pen mid-drawing gets adopted too — harmless (coordinates unchanged).
+- Test gotcha (not code): clicking a menu button and reading the dropdown are SEPARATE evals (React
+  flushes after return); a second click on the menu title TOGGLES (closes). Synthetic DnD works via
+  `new DataTransfer()` + DragEvent(dragstart/dragover/drop) with one dt.
+- Deferred: the Delete key under non-selection tools (Delete currently works only in selection
+  tools); auto-selecting a freshly drawn shape (AI behavior) — for 6.2/7.1.
 
-### Сессия 23 — прогресс (✅ итерация 6.2)
+### Session 23 — progress (✅ iteration 6.2)
 
-Объём: **фаза 6.2** — Pathfinder и path-операции. Все пункты чеклиста закрыты.
+Scope: **phase 6.2** — Pathfinder and path operations. All checklist items closed.
 
-- [x] **`operations/pathfinder.js`** — Divide, Trim, Merge, Crop, Outline. Ядро — `atomicRegions(paths)`:
-      декомпозиция фигур (bottom→top) на непересекающиеся атомарные регионы (итеративно: новая фигура P
-      против каждого куска Q → Q∩P / Q−P / остаток P; стиль региона — от верхней накрывающей фигуры).
-      Результат — Group на месте переднего оригинала; заливки сохраняются, обводки сбрасываются (как в
-      Illustrator); пустой результат → null, оригиналы не трогаем (паттерн booleanOp). Merge = Trim +
-      unite кусков с одинаковой заливкой; Outline = открытые куски контуров, разрезанные во всех
-      пересечениях, stroke = fill исходной фигуры.
-- [x] **Shape Builder Tool** (`shapeBuilderTool.js`, свой слот в Toolbar): работает по выделению (клик
-      мимо регионов выделяет фигуру, Shift добавляет). Ховер подсвечивает атомарный регион, клик отделяет
-      его, drag через несколько регионов объединяет, **Alt = удалить**. Регионы-превью — невидимые пути
-      на оверлей-слое (addOverlay, хит вручную через contains). Жест пересобирает ТОЛЬКО затронутые
-      фигуры (каждая → она минус объединение выбранных регионов); результат остаётся выделенным →
-      rebuild регионов по подписке на стор.
-- [x] **Compound Path** (`operations/compound.js`): Make (⌘8, 2+ путей; стиль от нижнего, fillRule
-      evenodd → дырки) и Release (⌥⌘8; дети получают стиль компаунда). Properties: Make у 2+, Release у
-      выделенного CompoundPath (`sel.isCompound` из App).
-- [x] **Path-операции** (`operations/pathOps.js`): **Join** (⌘J; 1 открытый путь → закрыть, 2 → соединить
-      ближайшие концы с автопереворотом), **Average** (Both/Horizontal/Vertical — все опорные точки),
-      **Outline Stroke** (через **paperjs-offset** offsetStroke; путь с заливкой → Group [заливка,
-      контур обводки]), **Offset Path** (PaperOffset.offset; оригинал остаётся, копия выделяется),
-      **Simplify** (path.simplify 2.5), **Split Into Grid** (rows×cols+gutter по bounds), **Clean Up**
-      (stray points, неокрашенные пути, пустые группы; системное/локнутое пропускает).
-- [x] **UI**: Object-меню — подменю Pathfinder (9 операций), Compound Path (Make/Release), Path
-      (7 команд); в подменю MenuBar добавлена поддержка сепараторов. Properties (2+): грид из 9
-      pathfinder-кнопок + Make Compound Path. Шорткаты в Canvas: ⌘J, ⌘8, ⌥⌘8.
-- [x] Новая зависимость: **paperjs-offset@2** (оффсет-геометрия, Paper.js сам не умеет).
+- [x] **`operations/pathfinder.js`** — Divide, Trim, Merge, Crop, Outline. The core is
+      `atomicRegions(paths)`: decomposition of shapes (bottom→top) into non-overlapping atomic
+      regions (iteratively: new shape P against each piece Q → Q∩P / Q−P / remainder of P; a
+      region's style comes from the topmost covering shape). The result is a Group in place of the
+      front original; fills preserved, strokes reset (as in Illustrator); empty result → null,
+      originals untouched (the booleanOp pattern). Merge = Trim + unite pieces with equal fill;
+      Outline = open contour pieces cut at all intersections, stroke = the source shape's fill.
+- [x] **Shape Builder Tool** (`shapeBuilderTool.js`, its own Toolbar slot): works off the selection
+      (a click outside regions selects a shape, Shift adds). Hover highlights an atomic region,
+      click extracts it, drag across several regions merges, **Alt = delete**. Region previews are
+      invisible paths on the overlay layer (addOverlay, manual hit via contains). A gesture
+      rebuilds ONLY the affected shapes (each → itself minus the union of chosen regions); the
+      result stays selected → regions rebuild via the store subscription.
+- [x] **Compound Path** (`operations/compound.js`): Make (⌘8, 2+ paths; style from the bottom one,
+      fillRule evenodd → holes) and Release (⌥⌘8; children get the compound's style). Properties:
+      Make at 2+, Release for a selected CompoundPath (`sel.isCompound` from App).
+- [x] **Path ops** (`operations/pathOps.js`): **Join** (⌘J; 1 open path → close, 2 → join nearest
+      ends with auto-reverse), **Average** (Both/Horizontal/Vertical — all anchor points),
+      **Outline Stroke** (via **paperjs-offset** offsetStroke; a filled path → Group [fill,
+      stroke outline]), **Offset Path** (PaperOffset.offset; the original stays, the copy is
+      selected), **Simplify** (path.simplify 2.5), **Split Into Grid** (rows×cols+gutter by
+      bounds), **Clean Up** (stray points, unpainted paths, empty groups; skips system/locked).
+- [x] **UI**: Object menu — Pathfinder submenu (9 ops), Compound Path (Make/Release), Path
+      (7 commands); MenuBar submenus got separator support. Properties (2+): a grid of 9
+      pathfinder buttons + Make Compound Path. Canvas shortcuts: ⌘J, ⌘8, ⌥⌘8.
+- [x] New dependency: **paperjs-offset@2** (offset geometry, Paper.js can't do it itself).
 
-Заметки / решения сессии 23:
-- **Параметризованные команды**: `runSelectionAction` принимает `"offsetPath:10"` / `"splitGrid:3,3,10"`
-  — App показывает `window.prompt` и передаёт аргумент после двоеточия. Нормальные диалоги — к 15.x.
-- Average при объектном выделении усредняет ВСЕ точки путей (это же делает Illustrator при выделении
-  целых объектов); Average по выбранным точкам — когда посегментное выделение дойдёт до UI-команд.
-- Divide непересекающихся фигур честно даёт Group из целых кусков — атомарные регионы без
-  перекрытий = сами фигуры.
-- Shape Builder: стиль объединённого куска — от источника ПЕРВОГО выбранного региона (Illustrator берёт
-  объект под стартом жеста). Донор читается после удаления оригиналов — безопасно (remove() только
-  отцепляет item, свойства читаются).
-- `cp.area` у CompoundPath с детьми одного winding СУММИРУЕТ их (дырка не вычитается) — визуально
-  дырка есть (evenodd, contains() подтверждает); числу не верить.
-- Плавающей Pathfinder-панели нет — всё в Properties (как Character/Paragraph); панели — 15.3.
+Session 23 notes / decisions:
+- **Parameterized commands**: `runSelectionAction` accepts `"offsetPath:10"` / `"splitGrid:3,3,10"`
+  — App shows `window.prompt` and passes the argument after the colon. Proper dialogs — 15.x.
+- Average with an object selection averages ALL path points (Illustrator does the same when whole
+  objects are selected); Average over selected points — when per-segment selection reaches UI
+  commands.
+- Divide of non-overlapping shapes honestly yields a Group of whole pieces — atomic regions with
+  no overlaps = the shapes themselves.
+- Shape Builder: the merged piece's style comes from the FIRST selected region's source
+  (Illustrator takes the object under the gesture start). The donor is read after removing the
+  originals — safe (remove() only detaches the item; properties remain readable).
+- `cp.area` of a CompoundPath whose children share a winding direction SUMS them (the hole isn't
+  subtracted) — visually the hole is there (evenodd, contains() confirms); don't trust the number.
+- No floating Pathfinder panel — everything in Properties (like Character/Paragraph); panels — 15.3.
 
-### Сессия 24 — прогресс (✅ итерация 7.1)
+### Session 24 — progress (✅ iteration 7.1)
 
-Объём: **фаза 7.1** — базовые трансформации + Transform Again и Reference Point из хвоста 2.2.
+Scope: **phase 7.1** — basic transforms + Transform Again and Reference Point from the 2.2 tail.
 
-- [x] **`operations/transform.js`** — ядро: refPoint (9 позиций), unionBounds, move/rotate/scale/
-      shear/reflect/flipItems, transformEach (вокруг СВОЕГО центра каждого объекта), пресет
-      **Scale Strokes & Effects** (get/setScaleStrokes; при масштабе strokeWidth × средний фактор),
-      **Transform Again** (recordTransform/transformAgain: move/rotate/scale/shear/reflect/each,
-      `copy:true` = сначала клонировать — даёт классику «поворот копии → ⌘D по кругу»),
-      **free distort** (collectPaths/snapshotPaths/distortPaths — билинейный ремап сегментов и
-      ручек из исходного rect в произвольный квад; каждый кадр от СНАПШОТА, не инкрементально).
-- [x] **Transform-секция в Properties** (`TransformSection.jsx`, при любом выделении ≥1):
-      селектор Reference Point 3×3, X/Y/W/H относительно выбранной опорной точки, Rotate/Shear
-      (Δ°-поля: коммит по Enter/blur, сброс в 0 — DeltaInput), Flip H/V, чекбокс Scale strokes.
-      Панель читает стор выделения напрямую (subscribeSelection+subscribeDocument), мутации —
-      прямые вызовы ops + свой `createSelection().draw()` + bumpDocument.
-- [x] **4 инструмента** (`transformTools.js`, общая фабрика): Rotate, Reflect, Scale, Shear.
-      Перемещаемый пивот (клик = переставить, Escape = сброс в центр, маркер-перекрестье на
-      оверлее), drag = трансформация вокруг пивота, Shift = констрейн (45°/пропорции/15°),
-      **Alt-drag = трансформировать копию**. Жест записывается для Transform Again. Scale
-      масштабирует обводки ОДИН раз на mouseup (по накопленному фактору, не по кадрам).
-      Reflect: ось = направление drag от пивота; смена оси θ1→θ2 применяется как rotate 2Δθ.
-- [x] **Reshape** (`reshapeTool.js`): потянуть за любую точку пути — соседние опорные точки
-      следуют с гауссовым falloff по КРИВОЙ (σ = 15% длины, у замкнутых — расстояние по кольцу).
-- [x] **Free Transform** (`freeTransformTool.js`): квад-виджет по bounds выделения; угол = scale
-      (Shift = пропорции), **⌘+угол = free distort**, **⌘⇧+угол = perspective** (соседний угол
-      по оси drag движется навстречу), ребро = scale оси, **⌘+ребро = skew**. Каждый жест
-      стартует от свежих осевых bounds и запекается на mouseup. Дисторт — только Path-геометрия
-      (текст-группы не трогаются, v1).
-- [x] **⌘D = Transform Again** (Illustrator-совместимо): нет записанного трансформа → фолбэк на
-      duplicate. Записываются: move/Alt-копия/nudge/поворот за угол (selectTool), жесты 4
-      инструментов, duplicate (как move+copy 12,12), правки панели, меню-команды.
-      Edit > Duplicate остался в меню, но без акселератора.
-- [x] **Object > Transform** подменю: Transform Again ⌘D, Move…/Rotate…/Scale…/Shear… (prompt,
-      как Offset Path), Reflect Horizontal/Vertical, Transform Each… (prompt: sx%,sy%,dx,dy,angle).
-      Команды selectionActions: `moveBy:` `rotateBy:` `scaleBy:` `shearBy:` `transformEach:` +
+- [x] **`operations/transform.js`** — the core: refPoint (9 positions), unionBounds,
+      move/rotate/scale/shear/reflect/flipItems, transformEach (around EACH object's own center),
+      the **Scale Strokes & Effects** preset (get/setScaleStrokes; on scale strokeWidth × the mean
+      factor), **Transform Again** (recordTransform/transformAgain: move/rotate/scale/shear/
+      reflect/each, `copy:true` = clone first — gives the classic "rotate a copy → ⌘D around the
+      circle"), **free distort** (collectPaths/snapshotPaths/distortPaths — bilinear remap of
+      segments and handles from the source rect into an arbitrary quad; every frame from the
+      SNAPSHOT, not incremental).
+- [x] **Transform section in Properties** (`TransformSection.jsx`, for any selection ≥1):
+      3×3 Reference Point selector, X/Y/W/H relative to the chosen reference point, Rotate/Shear
+      (Δ° fields: commit on Enter/blur, reset to 0 — DeltaInput), Flip H/V, Scale strokes checkbox.
+      The panel reads the selection store directly (subscribeSelection+subscribeDocument);
+      mutations are direct ops calls + its own `createSelection().draw()` + bumpDocument.
+- [x] **4 tools** (`transformTools.js`, shared factory): Rotate, Reflect, Scale, Shear.
+      Movable pivot (click = reposition, Escape = reset to center, crosshair marker on the
+      overlay), drag = transform around the pivot, Shift = constrain (45°/proportions/15°),
+      **Alt-drag = transform a copy**. The gesture is recorded for Transform Again. Scale
+      scales strokes ONCE on mouseup (by the accumulated factor, not per frame).
+      Reflect: the axis = drag direction from the pivot; axis change θ1→θ2 applies as rotate 2Δθ.
+- [x] **Reshape** (`reshapeTool.js`): pull any point of a path — neighboring anchors follow with a
+      Gaussian falloff along the CURVE (σ = 15% of length; for closed paths, ring distance).
+- [x] **Free Transform** (`freeTransformTool.js`): a quad widget over the selection bounds;
+      corner = scale (Shift = proportions), **⌘+corner = free distort**, **⌘⇧+corner =
+      perspective** (the adjacent corner along the drag axis moves toward), edge = axis scale,
+      **⌘+edge = skew**. Every gesture starts from fresh axis-aligned bounds and bakes on mouseup.
+      Distort applies to Path geometry only (text groups untouched, v1).
+- [x] **⌘D = Transform Again** (Illustrator-compatible): no recorded transform → falls back to
+      duplicate. Recorded: move/Alt-copy/nudge/rotate-by-corner (selectTool), the 4 tools'
+      gestures, duplicate (as move+copy 12,12), panel edits, menu commands.
+      Edit > Duplicate stays in the menu but without the accelerator.
+- [x] **Object > Transform** submenu: Transform Again ⌘D, Move…/Rotate…/Scale…/Shear… (prompt,
+      like Offset Path), Reflect Horizontal/Vertical, Transform Each… (prompt: sx%,sy%,dx,dy,angle).
+      selectionActions commands: `moveBy:` `rotateBy:` `scaleBy:` `shearBy:` `transformEach:` +
       `flipH`/`flipV`/`transformAgain`.
-- [x] Toolbar: группы [Rotate, Reflect], [Scale, Shear, Reshape], [Free Transform] + 6 иконок.
-- [ ] Отложено: поворотный bounding box + Reset Bounding Box (рефактор оверлея), Drawing Modes,
-      Screen Modes (F), гомография для perspective (сейчас билинейный ремап), дисторт текста,
-      диалоги вместо prompt (15.x).
+- [x] Toolbar: groups [Rotate, Reflect], [Scale, Shear, Reshape], [Free Transform] + 6 icons.
+- [ ] Deferred: rotated bounding box + Reset Bounding Box (overlay refactor), Drawing Modes,
+      Screen Modes (F), homography for perspective (bilinear remap for now), text distortion,
+      dialogs instead of prompt (15.x).
 
-Заметки / решения сессии 24:
-- **Грабли нового кода**: стор выделения нотифицирует только на ИЗМЕНЕНИЯХ — инструмент,
-  рисующий свой оверлей (пивот-маркер, квад Free Transform), обязан отрисовать его сразу в
-  фабрике (drawMarker()/drawWidget()), иначе до первого изменения выделения виджета нет
-  и ручки не хитятся.
-- Free distort через снапшот геометрии: билинейный ремап неинвертируем, поэтому каждый кадр
-  сегменты восстанавливаются из снапшота mousedown и мапятся заново. Для прямоугольного/
-  параллелограммного квада ремап точен (= аффинный).
-- Инкрементальные жесты (rotate/scale/shear) применяют step = desired − applied (у scale —
-  ratio) — без дрейфа при любой длине drag.
-- paper: `strokeScaling` не влияет на Path с applyMatrix=true (матрица запекается в сегменты,
-  strokeWidth не меняется) — потому Scale Strokes реализован явным умножением strokeWidth.
-- Тест-грабли: «5000%» в статус-баре после серии синтетических жестов — артефакт тестовых
-  манипуляций (paper.view.zoom при этом был 1); после reload не воспроизводится.
+Session 24 notes / decisions:
+- **New-code gotcha**: the selection store notifies only on CHANGES — a tool drawing its own
+  overlay (pivot marker, Free Transform quad) must draw it immediately in the factory
+  (drawMarker()/drawWidget()), otherwise until the first selection change there's no widget
+  and the handles don't hit-test.
+- Free distort via a geometry snapshot: the bilinear remap is non-invertible, so every frame the
+  segments are restored from the mousedown snapshot and remapped. For a rectangular/parallelogram
+  quad the remap is exact (= affine).
+- Incremental gestures (rotate/scale/shear) apply step = desired − applied (for scale — the
+  ratio) — no drift for any drag length.
+- paper: `strokeScaling` has no effect on a Path with applyMatrix=true (the matrix bakes into
+  segments, strokeWidth unchanged) — hence Scale Strokes is implemented as explicit strokeWidth
+  multiplication.
+- Test gotcha: "5000%" in the status bar after a series of synthetic gestures is an artifact of
+  test manipulation (paper.view.zoom was 1 at the time); doesn't reproduce after reload.
 
-### Сессия 25 — фикс по фидбеку (✅ выделение по форме)
+### Session 25 — feedback fix (✅ shape-accurate selection)
 
-- [x] **Marquee выделял по bounding box.** Клик (`pickItem`) был точным всегда (paper hitTest
-      fill/stroke), а вот рамка-marquee брала `rect.intersects(it.bounds)` — протяжка в пустой
-      выемке L-фигуры или внутри «оболочки» зигзага выделяла объект. Новый `itemHitsRect(item,
-      rect)` в `operations/selection.js`: bbox — только префильтр; дальше честно — контур
-      пересекает рамку (`item.intersects(probe)`), объект целиком внутри (`rect.contains(bounds)`),
-      или рамка лежит на ЗАЛИТОЙ области (`fillColor && contains(rect.center)`). Группы —
-      рекурсивно по детям; листья без путей (текст-глифы, растр) остаются по bbox.
-- [x] **Оверлей рисовал прямоугольники вместо формы.** Теперь каждый выделенный объект
-      подсвечивается контуром своей реальной геометрии (`addShapeOutline`: клоны всех видимых
-      Path внутри таргета на оверлей-слое, цвет #7fb2d9, 1px/zoom; у клона сбрасываются data/
-      fill/dash/opacity). Без путей (текст) — фолбэк-прямоугольник. Общая пунктирная рамка
-      union-bounds и ручки одиночного выделения остаются (это transform-бокс, как в Illustrator).
+- [x] **Marquee selected by bounding box.** Click (`pickItem`) was always precise (paper hitTest
+      fill/stroke), but the marquee used `rect.intersects(it.bounds)` — dragging in the empty
+      notch of an L-shape or inside a zigzag's "shell" selected the object. New `itemHitsRect(item,
+      rect)` in `operations/selection.js`: bbox is only a prefilter; then honestly — the contour
+      crosses the frame (`item.intersects(probe)`), the object is fully inside
+      (`rect.contains(bounds)`), or the frame sits on a FILLED area
+      (`fillColor && contains(rect.center)`). Groups — recursively over children; path-less leaves
+      (text glyphs, raster) stay on bbox.
+- [x] **The overlay drew rectangles instead of shapes.** Now every selected object is highlighted
+      with the outline of its real geometry (`addShapeOutline`: clones of all visible Paths inside
+      the target on the overlay layer, color #7fb2d9, 1px/zoom; the clone's data/fill/dash/opacity
+      are reset). Without paths (text) — a fallback rectangle. The shared dashed union-bounds frame
+      and single-selection handles remain (that's the transform box, as in Illustrator).
 
-Заметки сессии 25:
-- Скрытые пути пропускаются в walk контура (иначе невидимый guide-путь текста-на-пути давал
-  `found=true`, и текст оставался вовсе без подсветки).
-- «Marquee внутри заливки» из UI не начать — mousedown по заливке стартует move, не marquee
-  (в тестах это выглядело как ложный провал).
-- Probe-прямоугольник — `new paper.Path.Rectangle({rectangle, insert: false})`; без
-  `insert: false` он вставился бы в активный слой.
+Session 25 notes:
+- Hidden paths are skipped in the outline walk (otherwise the invisible guide path of
+  text-on-path gave `found=true` and the text got no highlight at all).
+- "Marquee inside a fill" can't be started from the UI — mousedown on a fill starts a move, not a
+  marquee (in tests this looked like a false failure).
+- The probe rectangle is `new paper.Path.Rectangle({rectangle, insert: false})`; without
+  `insert: false` it would land in the active layer.
 
-### Сессия 26 — фиксы по фидбеку (✅ Shape Builder + перестановка слоёв)
+### Session 26 — feedback fixes (✅ Shape Builder + layer reordering)
 
-- [x] **Shape Builder не сливал НЕпересекающиеся фигуры** (у пользователя «не работает», Alt-удаление
-      работало). Корень: регионы-хитбоксы держались `visible=false`, а у paper булев fast-path для
-      ДИЗЪЮНКТНЫХ операндов КОПИРУЕТ их в результат — слитый CompoundPath получал невидимых детей:
-      врали bounds (пропускают invisible), intersect/subtract/isDegenerate давали чушь, drag через
-      две отдельные фигуры порождал два объекта вместо одного. Пересекающиеся фигуры строят новую
-      геометрию (не fast-path) — потому тот случай работал. Фикс: регионы теперь ВИДИМЫЕ, но
-      неокрашенные (`fillColor=null, strokeColor=null`) — на холсте не рендерятся, contains работает,
-      булевы результаты чистые. Плюс UX: пунктирные швы всех регионов, пока инструмент активен
-      (клоны на overlay, 1px/zoom; после merge шов между кусками исчезает — жест стало видно;
-      перерисовка швов в onViewChange). Проверено: дизъюнктный merge → 1 CompoundPath с верными
-      bounds и видимыми детьми; overlapping: extract 2→3, Alt 3→2, merge 2→1.
-- [x] **Перестановка слоёв drag-ом в Layers панели.** Строки слоёв стали draggable; payload
-      `kind:id` (item/layer) — общий onDrop: слой на слой (или на строку объекта) = встать НАД
-      целевым слоем (список topmost-first), объект — как раньше (в слой наверх / над объектом).
-      После переноса `getOverlayLayer()` пере-прижимает оверлей наверх. `draggable={!editing}` —
-      во время переименования drag выключен.
+- [x] **Shape Builder didn't merge NON-overlapping shapes** (the user saw "doesn't work";
+      Alt-delete worked). Root cause: region hitboxes were kept `visible=false`, and paper's
+      boolean fast-path for DISJOINT operands COPIES them into the result — the merged
+      CompoundPath got invisible children: bounds lied (invisible skipped),
+      intersect/subtract/isDegenerate returned garbage, dragging across two separate shapes
+      produced two objects instead of one. Overlapping shapes build new geometry (not the
+      fast-path) — which is why that case worked. Fix: regions are now VISIBLE but unpainted
+      (`fillColor=null, strokeColor=null`) — they don't render, contains works, boolean results
+      are clean. Plus UX: dashed seams of all regions while the tool is active (clones on the
+      overlay, 1px/zoom; after a merge the seam between pieces disappears — the gesture became
+      visible; seams redraw in onViewChange). Verified: disjoint merge → 1 CompoundPath with
+      correct bounds and visible children; overlapping: extract 2→3, Alt 3→2, merge 2→1.
+- [x] **Layer reordering by drag in the Layers panel.** Layer rows became draggable; payload
+      `kind:id` (item/layer) — shared onDrop: layer onto layer (or onto an object row) = go ABOVE
+      the target layer (topmost-first list), an object — as before (into a layer on top / above an
+      object). After the move `getOverlayLayer()` re-pins the overlay to the top.
+      `draggable={!editing}` — drag disabled during rename.
 
-Заметки сессии 26:
-- Кейс пользователя «эллипсы одинакового цвета» дополнительно маскировал работу инструмента:
-  extract/merge при совпадающих заливках визуально неотличимы — швы регионов теперь дают обратную
-  связь. Урок: результат жеста должен быть виден даже при идентичных стилях.
-- paper `layer.insertAbove(otherLayer)` честно переставляет слои в project.layers (слои — те же Item).
+Session 26 notes:
+- The user's "same-colored ellipses" case additionally masked the tool's work: extract/merge with
+  identical fills are visually indistinguishable — region seams now give feedback. Lesson: a
+  gesture's result must be visible even with identical styles.
+- paper `layer.insertAbove(otherLayer)` honestly reorders layers in project.layers (layers are
+  Items too).
 
-### Сессия 27 — прогресс (✅ итерация 7.2)
+### Session 27 — progress (✅ iteration 7.2)
 
-Объём: **фаза 7.2** — деформация и ширина. Все 4 пункта чеклиста закрыты (v1).
+Scope: **phase 7.2** — distortion and width. All 4 checklist items closed (v1).
 
-- [x] **`operations/widthProfile.js`** — переменная ширина обводки. Профиль в
-      `path.data.width = {base, preset, points:[{o: 0..1, w: px}]}`. Paper не умеет variable-width
-      stroke → рендер отдельным ЗАЛИТЫМ конвертом (`data.isWidthEnvelope` + `ownerId`, паттерн
-      arrowheads: перестраивается на каждом redraw оверлея и в applyStyle → следует за
-      move/transform/reshape). Пока профиль есть — у пути `strokeWidth = 0` (paper не рисует
-      нулевую обводку), номинал живёт в `base`, itemStyle маппит его в панель. Закрытый путь →
-      конверт = CompoundPath из двух колец (evenodd). Ширина на концах интерполируется к base
-      (одна точка = веретено, как в Illustrator). Панельная правка Width масштабирует профиль
-      пропорционально; scaleStrokeWidths (Scale Strokes & Effects) масштабирует base+точки.
-- [x] **Width Tool** (`widthTool.js`): клик по обводке — новая точка ширины, drag = ширина
-      (2×расстояние до оси); маркеры: перекладина + квадраты по краям (drag = ширина) + точка на
-      спайне (drag = сдвиг вдоль пути); Alt-клик по маркеру / Delete — удалить точку; последняя
-      точка удалена → профиль снят, нативная обводка восстановлена. Ховер подсвечивает путь.
-- [x] **Variable Width Profiles**: селект Profile в Properties (Uniform + 4 пресета + Custom),
-      `applyWidthPreset` строит точки от номинала; кастомные правки → preset='custom'.
-- [x] **Puppet Warp** (`puppetWarpTool.js` + `operations/puppetWarp.js`): пины + rigid MLS
-      (Schaefer 2006, без меша — поле деформации считается по вершинам: якоря + КОНЦЫ ручек,
-      кривые гнутся). Клик по объекту = таргет, клик по таргету = пин, drag выбранных пинов =
-      деформация ОТ СНАПШОТА; при изменении набора пинов снапшот перезапекается (re-base) —
-      жесты компонуются без дрейфа. Shift-клик = мультивыбор пинов, A = все пины, Delete =
-      удалить пины (деформация остаётся), Escape = снять выбор/пины. 1 пин = чистый перенос.
-- [x] **Measure Tool**: drag → оверлей-ридаут D/∠/W/H (Shift = 45°), висит до следующего замера.
-- [x] **Dimension Tool**: drag → размерная аннотация КАК АРТВОРК (линия, засечки, стрелки наружу,
-      подпись «N px» вдоль линии, переворот если вверх ногами; Shift = 45°); группа выделяется и
-      двигается как обычный объект, `data.isDimension`.
-- [x] Toolbar: группы [Width, Puppet Warp] и [Measure, Dimension] + 4 иконки.
-- [ ] Отложено: Show Mesh и поворот пина (Puppet Warp), несимметричные точки ширины
-      (Alt-полуширина в Illustrator), маркеры Width для путей внутри групп (сам конверт в
-      группах работает — маркеров/добавления точек нет).
+- [x] **`operations/widthProfile.js`** — variable stroke width. The profile lives in
+      `path.data.width = {base, preset, points:[{o: 0..1, w: px}]}`. Paper can't do variable-width
+      strokes → rendered as a separate FILLED envelope (`data.isWidthEnvelope` + `ownerId`, the
+      arrowheads pattern: rebuilt on every overlay redraw and in applyStyle → follows
+      move/transform/reshape). While a profile exists the path has `strokeWidth = 0` (paper won't
+      draw a zero stroke), the nominal lives in `base`, itemStyle maps it into the panel. Closed
+      path → the envelope is a CompoundPath of two rings (evenodd). End widths interpolate toward
+      base (a single point = a spindle, as in Illustrator). Editing Width in the panel scales the
+      profile proportionally; scaleStrokeWidths (Scale Strokes & Effects) scales base+points.
+- [x] **Width Tool** (`widthTool.js`): click on a stroke — new width point, drag = width
+      (2× distance to the axis); markers: a crossbar + squares at the ends (drag = width) + a dot
+      on the spine (drag = slide along the path); Alt-click a marker / Delete — remove the point;
+      last point removed → profile dropped, native stroke restored. Hover highlights the path.
+- [x] **Variable Width Profiles**: a Profile select in Properties (Uniform + 4 presets + Custom),
+      `applyWidthPreset` builds points from the nominal; custom edits → preset='custom'.
+- [x] **Puppet Warp** (`puppetWarpTool.js` + `operations/puppetWarp.js`): pins + rigid MLS
+      (Schaefer 2006, no mesh — the deformation field is computed per vertex: anchors + handle
+      ENDS, curves bend). Click an object = target, click the target = pin, drag selected pins =
+      deformation FROM A SNAPSHOT; when the pin set changes the snapshot re-bakes (re-base) —
+      gestures compose without drift. Shift-click = pin multi-select, A = all pins, Delete =
+      remove pins (deformation stays), Escape = clear selection/pins. 1 pin = pure translation.
+- [x] **Measure Tool**: drag → overlay readout D/∠/W/H (Shift = 45°), stays until the next measure.
+- [x] **Dimension Tool**: drag → a dimension annotation AS ARTWORK (line, ticks, outward arrows,
+      an "N px" label along the line, flipped if upside down; Shift = 45°); the group selects and
+      moves like a normal object, `data.isDimension`.
+- [x] Toolbar: groups [Width, Puppet Warp] and [Measure, Dimension] + 4 icons.
+- [ ] Deferred: Show Mesh and pin rotation (Puppet Warp), asymmetric width points
+      (Alt half-width in Illustrator), Width markers for paths inside groups (the envelope itself
+      works in groups — no markers/point-adding).
 
-Заметки / решения сессии 27:
-- **Путь с профилем не хитился**: strokeWidth=0 → stroke-hit paper не срабатывает, конверт
-  locked, а опция `{locked:true}` в project.hitTest в нашей сборке paper НЕ работает (проверено).
-  Фикс в `pickItem`: ручной проход конвертов (`getItems({match}) + contains`) → клик по ЛЮБОМУ
-  месту тела обводки отдаётся пути-владельцу.
-- Клон группы копирует детский конверт со СТАРЫМ ownerId → orphan-sweep в refreshWidthEnvelope
-  (конверты без owner среди siblings удаляются). Delete-команда чистит конверты как стрелки.
-- `isTransientItem` (isolation.js) — центральный фильтр системных айтемов (Layers, Unlock All,
-  adoption) — конверт добавлен туда одной строкой. Контур выделения (addShapeOutline) конверт
-  пропускает: выделение подсвечивает спайн.
-- Vite не читает PORT из env — в vite.config.js добавлен `server.port = process.env.PORT`
-  (нужно preview-харнессу с autoPort; конфиг `openvector-any` в .claude/launch.json).
-- Грабли теста: превью-вьюпорт после рестарта сервера бывает 0×0 → `preview_resize` с явными
-  width/height, затем руками `paper.view.viewSize = stage.clientSize` (ResizeObserver в headless
-  не добегает). Слот тулбара после выбора из drawer показывает выбранный инструмент — кнопки
-  `aria-label="Width"` в рейле может не быть, брать из drawer.
+Session 27 notes / decisions:
+- **A path with a profile didn't hit-test**: strokeWidth=0 → paper's stroke hit doesn't fire, the
+  envelope is locked, and the `{locked:true}` option of project.hitTest does NOT work in our paper
+  build (verified). Fix in `pickItem`: a manual envelope pass (`getItems({match}) + contains`) →
+  a click ANYWHERE on the stroke body resolves to the owning path.
+- A group clone copies the child envelope with the OLD ownerId → orphan sweep in
+  refreshWidthEnvelope (envelopes without an owner among siblings get removed). The Delete command
+  cleans envelopes like arrowheads.
+- `isTransientItem` (isolation.js) — the central filter for system items (Layers, Unlock All,
+  adoption) — the envelope was added there with one line. The selection outline (addShapeOutline)
+  skips the envelope: selection highlights the spine.
+- Vite doesn't read PORT from env — vite.config.js got `server.port = process.env.PORT`
+  (needed by the preview harness with autoPort; the `openvector-any` config in .claude/launch.json).
+- Test gotchas: the preview viewport after a server restart can be 0×0 → `preview_resize` with
+  explicit width/height, then manually `paper.view.viewSize = stage.clientSize` (the
+  ResizeObserver doesn't fire in headless). The toolbar slot after picking from the drawer shows
+  the picked tool — an `aria-label="Width"` button may be absent from the rail; take it from the
+  drawer.
 
-### Сессия 28 — прогресс (✅ итерация 7.3)
+### Session 28 — progress (✅ iteration 7.3)
 
-Объём: **фаза 7.3** — Liquify. Все 7 инструментов + общая кисть + опции (v1).
+Scope: **phase 7.3** — Liquify. All 7 tools + the shared brush + options (v1).
 
-- [x] **`src/state/liquify.js`** — стор опций кисти, ОДНА кисть на все 7 инструментов (как в
-      Illustrator): width/height/angle/intensity + simplify (warp-группа), twirlRate,
-      complexity/detail (texture-группа), wrinkleH/V, чекбоксы affectAnchors/In/Out.
-      subscribe() — тулзы и Properties синхронны (Alt-drag ресайз сразу виден в полях).
-- [x] **`operations/liquify.js`** — ядро: эллиптический вес кисти (cos²-falloff в brush-локальных
-      координатах — angle/width/height учитываются), `subdivideUnderBrush` (добавление опорных
-      точек под кистью, spacing от Detail, cap 40 вставок/событие), `liquifyStep` — 7 режимов:
-      warp (delta×вес), twirl (поворот точек+ручек вокруг центра кисти, rate со знаком),
-      pucker/bloat (к/от центра кисти, ручки сжимаются/растут), scallop/crystallize (к/от центра
-      с per-segment стабильным рандомом на весь жест — WeakMap в `newGesture`; Complexity = доля
-      затронутых точек, ручки втягиваются по чекбоксам), wrinkle (свежий рандом каждое событие —
-      «морщит» пока держишь; H%/V% по осям).
-- [x] **`tools/liquifyTools.js`** — общая фабрика 7 инструментов: оверлей-эллипс кисти следует за
-      мышью (hover и drag), drag = деформация (по выделению, если есть; иначе всё под кистью),
-      **Alt-drag = ресайз кисти на холсте** (Shift+Alt = круглая), Delete/Escape/runAction — как
-      у Reshape. Текст/dimension/системные айтемы пропускаются (v1).
-- [x] **LiquifySection в Properties** (`components/Properties/LiquifySection.jsx`): рендерится при
-      активном liquify-инструменте (Properties получил проп `activeTool`), поля по режиму:
-      Brush W/H/Angle/Intensity — всегда; Simplify — warp/twirl/pucker/bloat; Twirl Rate — twirl;
-      Complexity+Detail — scallop/crystallize/wrinkle; H/V — wrinkle; 3 чекбокса «Brush affects» —
-      texture-группа. Заменяет Illustrator-диалог по dblclick на инструменте (диалоги — 15.x).
-- [x] Toolbar: 7 инструментов в слоте Width (как в Illustrator: Width + 7 Liquify + Puppet Warp),
-      7 новых иконок. Путь с width-профилем после деформации перестраивает конверт.
-- [ ] Отложено: диалог опций по dblclick на кнопке инструмента (15.x), деформация текста.
+- [x] **`src/state/liquify.js`** — brush options store, ONE brush for all 7 tools (as in
+      Illustrator): width/height/angle/intensity + simplify (warp group), twirlRate,
+      complexity/detail (texture group), wrinkleH/V, checkboxes affectAnchors/In/Out.
+      subscribe() — tools and Properties stay in sync (Alt-drag resize shows in the fields
+      immediately).
+- [x] **`operations/liquify.js`** — the core: elliptical brush weight (cos² falloff in
+      brush-local coordinates — angle/width/height respected), `subdivideUnderBrush` (adds anchor
+      points under the brush, spacing from Detail, cap 40 insertions/event), `liquifyStep` —
+      7 modes: warp (delta×weight), twirl (rotates points+handles around the brush center, signed
+      rate), pucker/bloat (toward/away from the brush center, handles shrink/grow),
+      scallop/crystallize (toward/away from the center with per-segment random stable for the
+      whole gesture — WeakMap in `newGesture`; Complexity = fraction of affected points, handles
+      retract per the checkboxes), wrinkle (fresh random every event — "wrinkles" while held;
+      H%/V% per axis).
+- [x] **`tools/liquifyTools.js`** — shared factory of 7 tools: the brush ellipse overlay follows
+      the mouse (hover and drag), drag = deformation (over the selection if any; otherwise
+      everything under the brush), **Alt-drag = on-canvas brush resize** (Shift+Alt = circular),
+      Delete/Escape/runAction — as in Reshape. Text/dimension/system items skipped (v1).
+- [x] **LiquifySection in Properties** (`components/Properties/LiquifySection.jsx`): renders when
+      a liquify tool is active (Properties got an `activeTool` prop), fields per mode:
+      Brush W/H/Angle/Intensity — always; Simplify — warp/twirl/pucker/bloat; Twirl Rate — twirl;
+      Complexity+Detail — scallop/crystallize/wrinkle; H/V — wrinkle; the 3 "Brush affects"
+      checkboxes — texture group. Replaces Illustrator's dblclick-on-tool dialog (dialogs — 15.x).
+- [x] Toolbar: 7 tools in the Width slot (as in Illustrator: Width + 7 Liquify + Puppet Warp),
+      7 new icons. A width-profiled path rebuilds its envelope after deformation.
+- [ ] Deferred: options dialog on tool-button dblclick (15.x), text deformation.
 
-Заметки / решения сессии 28:
-- **`path.simplify()` нельзя звать после жеста**: он пере-фитит ВЕСЬ путь — углы прямоугольника
-  вдали от кисти скруглялись, bounds уезжали. Вместо него `finishLiquify` (только warp-группа)
-  делает два локальных прохода: `pruneCollinear` (убирает без-ручечные точки на прямой между
-  соседями — снимает пере-субдивизию, углы/кривые не трогает; порог от Simplify) и
-  `smoothMovedRuns` (catmull-rom smooth только по непрерывным пробегам сдвинутых сегментов —
-  WeakSet `gesture.moved`). Итог: warp даёт гладкую выпуклость, 4 угла прямоугольника на месте.
-  Texture-группа (scallop/crystallize/wrinkle) не сглаживается — зубцы и есть результат.
-- Направления twirl/pucker/bloat/scallop/crystallize — от ЦЕНТРА КИСТИ (не центра фигуры), как в
-  Illustrator; в точке ровно под центром кисти dir≈0 → сегмент пропускается (guard 1e-6).
-- Грабли теста (не кода): `preview_click` по кнопкам с toggle-логикой (drawer, flyout тулбара)
-  срабатывает как ДВА клика — панель закрывается обратно. Выбирать инструмент через
-  `button.click()` в eval: flyout-toggle в одном eval, пункт flyout — в следующем.
+Session 28 notes / decisions:
+- **`path.simplify()` must not be called after a gesture**: it re-fits the WHOLE path — rectangle
+  corners far from the brush got rounded, bounds drifted. Instead `finishLiquify` (warp group
+  only) does two local passes: `pruneCollinear` (removes handle-less points lying on a straight
+  line between neighbors — undoes over-subdivision, doesn't touch corners/curves; threshold from
+  Simplify) and `smoothMovedRuns` (catmull-rom smooth only over contiguous runs of moved
+  segments — WeakSet `gesture.moved`). Result: warp gives a smooth bulge, the rectangle's 4
+  corners stay put. The texture group (scallop/crystallize/wrinkle) is not smoothed — the jags ARE
+  the result.
+- Directions for twirl/pucker/bloat/scallop/crystallize are from the BRUSH CENTER (not the shape
+  center), as in Illustrator; at the point exactly under the brush center dir≈0 → the segment is
+  skipped (guard 1e-6).
+- Test gotcha (not code): `preview_click` on buttons with toggle logic (drawer, toolbar flyout)
+  fires as TWO clicks — the panel closes back. Pick tools via `button.click()` in eval:
+  the flyout toggle in one eval, the flyout item in the next.
 
-> Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
-> Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
-> (прежний план шёл иначе), поэтому ранние фазы частично закрыты.
+> Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
+> Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
+> (the old plan went differently), so early phases are partially closed.
 
-- **1.1 (Layout):** ✅ ГОТОВО — Menu Bar (8 меню с дропдаунами/акселераторами), Control Bar (контекстный), Toolbar/Canvas/Properties/Status Bar, тёмная тема
-- **1.2 (Холст/навигация):** ✅ ГОТОВО — зум/пан, Rotate View (инструмент + меню View + статус-бар), Rectangle, Contextual Task Bar
-- **2.1 (Toolbar/выделение):** ✅ ГОТОВО — 1/2 колонки + flyout, Select/Direct/Group, Magic Wand, Lasso, Hand/Zoom, drawer (список всех инструментов)
-- **2.2 (Bounding box/трансформации):** 🟡 масштаб ручками, **поворот за угол** (Shift=15°), Shift-констрейн перемещения, **Alt-копия при drag**, **Alt-масштаб от центра**, **nudge стрелками** (Shift=10), **Reference Point (9 поз., в Transform-секции)**, **Transform Again (⌘D)** ✅ · ⬜ Reset BB + поворотный bounding-box, Drawing Modes, Screen Modes (F) — отложены (рефактор оверлея)
-- **3.1 (Примитивы):** 🟡 все фигуры ✅; **live rectangle — скругление углов виджетом на холсте** ✅; поворот любой фигуры за угол с курсором-стрелкой ✅ · ⬜ live-параметры polygon/star/ellipse (стороны/лучи/pie-углы) — отложено
-- **3.2 (Заливка/обводка):** ✅ ГОТОВО — заливка, обводка (цвет+толщина), тип линии (solid/dashed/dotted), концы (butt/round/square), углы (miter/round/bevel), настраиваемый пунктир (Dash/Gap), стрелки на концах (Start/End + размер; живые — следуют за путём), opacity, Fill/Stroke индикатор в Toolbar (X — фокус, Shift+X — swap)
-- **4.1 (Pen):** ✅ ГОТОВО (Pen, Add/Delete/Convert Anchor, Curvature)
-- **4.2 (Свободное рисование/резка):** ✅ ГОТОВО — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
-- **5.1 (Type):** ✅ ГОТОВО — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
-- **5.2 (Шрифты):** ✅ ГОТОВО — системные (детект), .ttf/.otf/.woff файлы, Google Fonts (+персист), менеджер (Type > Fonts…), превью, FontPicker в Properties · Retype → 18.2 (AI)
-- **5.3 (Типографика):** 🟡 почти всё ✅ — размер/leading/tracking/justification, bold/italic (вес 100–900), baseline shift, отступы параграфа (area), интервалы до/после, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: файлы/Google via Fontsource-WOFF/локальные via queryLocalFonts), **Find Font** (диалог замены), подменю в MenuBar · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs панели, кернинг пар (нужно посимвольное выделение)
-- **6.1 (Организация):** ✅ ГОТОВО — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, крошки, затемнение, adoption новых объектов), Layers панель (создание/удаление/переименование/глаз/замок/вложенность/drag между слоями), **единый стор выделения** (переживает смену инструмента; команды работают при любом инструменте)
-- **6.2 (Pathfinder):** ✅ ГОТОВО — все 9 операций (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; меню Object > Pathfinder + грид в Properties), Shape Builder Tool (клик/drag/Alt-удаление, подсветка регионов), Compound Path Make/Release (⌘8/⌥⌘8), path-ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · значения Offset/Grid пока через prompt (диалоги — 15.x)
-- **7.1 (Трансформации):** ✅ ГОТОВО — Transform-секция в Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), инструменты Rotate/Reflect/Scale/Shear (пивот кликом, Shift-констрейн, Alt-копия), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, с фолбэком duplicate), Object > Transform подменю · ⬜ поворотный бокс/Reset BB, Drawing/Screen Modes — отложены
-- **7.2 (Деформация/ширина):** ✅ ГОТОВО — Width Tool (точки ширины: drag/сдвиг/Alt-удаление), Variable Width Profiles (Uniform + 4 пресета в Properties), рендер конвертом (isWidthEnvelope), Puppet Warp (пины, rigid MLS, Shift-мультивыбор, A = все, Delete с сохранением деформации), Measure (D/∠/W/H ридаут), Dimension (размерная аннотация-артворк) · ⬜ Show Mesh/поворот пина, несимметричные точки ширины — отложены
-- **7.3 (Liquify):** ✅ ГОТОВО — 7 инструментов (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) в слоте Width, общая эллиптическая кисть (W/H/Angle/Intensity, Alt-drag ресайз на холсте, Shift+Alt = круглая), опции по инструментам в Properties-секции (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, чекбоксы Brush Affects Anchors/In/Out Tangents), субдивизия под кистью + prune/smooth на финише жеста · ⬜ диалог по dblclick на инструменте (15.x), деформация текста
-- **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
-- **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
-- **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
+### Reconciliation with the 20-phase plan
 
-Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
-**Undo/Redo** (фаза 20.1).
+- **1.1 (Layout):** ✅ DONE — Menu Bar (8 menus with dropdowns/accelerators), Control Bar (contextual), Toolbar/Canvas/Properties/Status Bar, dark theme
+- **1.2 (Canvas/navigation):** ✅ DONE — zoom/pan, Rotate View (tool + View menu + status bar), Rectangle, Contextual Task Bar
+- **2.1 (Toolbar/selection):** ✅ DONE — 1/2 columns + flyout, Select/Direct/Group, Magic Wand, Lasso, Hand/Zoom, drawer (list of all tools)
+- **2.2 (Bounding box/transforms):** 🟡 handle scaling, **rotate-by-corner** (Shift=15°), Shift move constrain, **Alt-copy on drag**, **Alt-scale from center**, **arrow nudge** (Shift=10), **Reference Point (9 pos., in the Transform section)**, **Transform Again (⌘D)** ✅ · ⬜ Reset BB + rotated bounding box, Drawing Modes, Screen Modes (F) — deferred (overlay refactor)
+- **3.1 (Primitives):** 🟡 all shapes ✅; **live rectangle — corner rounding via on-canvas widget** ✅; rotate any shape by corner with an arrow cursor ✅ · ⬜ live params for polygon/star/ellipse (sides/points/pie angles) — deferred
+- **3.2 (Fill/stroke):** ✅ DONE — fill, stroke (color+width), line type (solid/dashed/dotted), caps (butt/round/square), joins (miter/round/bevel), custom dash (Dash/Gap), end arrowheads (Start/End + size; live — follow the path), opacity, Fill/Stroke indicator in the Toolbar (X — focus, Shift+X — swap)
+- **4.1 (Pen):** ✅ DONE (Pen, Add/Delete/Convert Anchor, Curvature)
+- **4.2 (Freehand/cutting):** ✅ DONE — Pencil, Smooth, Path Eraser, Join, Paintbrush, Blob Brush, Shaper, Eraser, Scissors, Knife, Rectangular/Polar Grid
+- **5.1 (Type):** ✅ DONE — Point, Area, on a Path, Vertical (point/area/on-path), Touch Type
+- **5.2 (Fonts):** ✅ DONE — system (detection), .ttf/.otf/.woff files, Google Fonts (+persist), manager (Type > Fonts…), previews, FontPicker in Properties · Retype → 18.2 (AI)
+- **5.3 (Typography):** 🟡 almost everything ✅ — size/leading/tracking/justification, bold/italic (weight 100–900), baseline shift, paragraph indents (area), space before/after, Change Case, Smart Punctuation, Fit Headline, Show Hidden Characters, **Create Outlines** (opentype.js: files/Google via Fontsource WOFF/local via queryLocalFonts), **Find Font** (replacement dialog), MenuBar submenus · ⬜ Threaded Text, Text Wrap, Tabs/Glyphs panels, pair kerning (needs per-character selection)
+- **6.1 (Organization):** ✅ DONE — Arrange (z-order), Align + Distribute, Group/Ungroup, Lock/Unlock All (⌘2/⌥⌘2), Hide/Show All (⌘3/⌥⌘3), Isolation Mode (dblclick, breadcrumbs, dimming, adoption of new objects), Layers panel (create/delete/rename/eye/lock/nesting/drag between layers), **unified selection store** (survives tool switching; commands work under any tool)
+- **6.2 (Pathfinder):** ✅ DONE — all 9 ops (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; Object > Pathfinder menu + grid in Properties), Shape Builder Tool (click/drag/Alt-delete, region highlight), Compound Path Make/Release (⌘8/⌥⌘8), path ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · Offset/Grid values via prompt for now (dialogs — 15.x)
+- **7.1 (Transforms):** ✅ DONE — Transform section in Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), Rotate/Reflect/Scale/Shear tools (click-to-place pivot, Shift constrain, Alt-copy), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, with duplicate fallback), Object > Transform submenu · ⬜ rotated box/Reset BB, Drawing/Screen Modes — deferred
+- **7.2 (Distortion/width):** ✅ DONE — Width Tool (width points: drag/slide/Alt-delete), Variable Width Profiles (Uniform + 4 presets in Properties), envelope rendering (isWidthEnvelope), Puppet Warp (pins, rigid MLS, Shift multi-select, A = all, Delete keeps deformation), Measure (D/∠/W/H readout), Dimension (dimension annotation as artwork) · ⬜ Show Mesh/pin rotation, asymmetric width points — deferred
+- **7.3 (Liquify):** ✅ DONE — 7 tools (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) in the Width slot, shared elliptical brush (W/H/Angle/Intensity, Alt-drag on-canvas resize, Shift+Alt = circular), per-tool options in a Properties section (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, Brush Affects Anchors/In/Out Tangents checkboxes), subdivision under the brush + prune/smooth on gesture finish · ⬜ dblclick-on-tool dialog (15.x), text deformation
+- **8.1 (Color):** 🟡 fill/stroke/opacity in Properties · ⬜ Color panel (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
+- **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
+- **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
-**Следующее по плану (ранние пробелы):** 8.1 Цвет (Color панель RGB/HSB/CMYK/Hex/Lab,
-Color Picker, Eyedropper, Swatches, Document Color Mode). Отложено ранее: поворотный бокс + Reset BB,
-Drawing/Screen Modes (хвост 2.2/7.1); live-параметры polygon/star/ellipse (с 3.x);
-Delete-клавиша и автовыделение новой фигуры при не-selection инструментах;
-диалоги Offset/Grid/Move/Rotate/Scale/Shear/Transform Each вместо prompt — 15.x.
+Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
+**Undo/Redo** (phase 20.1).
 
-> Грабли Paper: `project.getItems(fn)` с голой функцией НЕ работает (трактует fn как класс) —
-> нужно `getItems({ match: fn })`. Иначе фильтр молча возвращает 0.
+**Next by plan (early gaps):** 8.1 Color (Color panel RGB/HSB/CMYK/Hex/Lab,
+Color Picker, Eyedropper, Swatches, Document Color Mode). Previously deferred: rotated box +
+Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for polygon/star/ellipse (from 3.x);
+Delete key and auto-select of a new shape under non-selection tools;
+Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead of prompt — 15.x.
 
-### Отложенные архитектурные решения
+> Paper gotcha: `project.getItems(fn)` with a bare function does NOT work (treats fn as a
+> class) — use `getItems({ match: fn })`. Otherwise the filter silently returns 0.
 
-- ~~Единый стор выделения~~ — **✅ СДЕЛАНО в 6.1 (сессия 22)**: `src/state/selection.js` +
-  постоянный экземпляр в Canvas; выделение переживает смену инструмента, команды меню/шорткаты
-  работают при любом инструменте (фолбэк `runSelectionAction`).
-- **Настройки выделения (фича) — фаза 15.2**, раздел Preferences → «Selection & Anchor Display»
-  (допуск клика, размер/вид опорных точек, выбор объекта только по контуру и т.п.). Смежное:
-  Select-меню (Same/Inverse/**Save Selection**/Above-Below) — 15.1.
-- **Контекстная чистка неприменимых кнопок (фидбек пользователя, TODO).** Сейчас Properties/Control
-  Bar/контекст-бар показывают весь набор операций при 2+ выделенных, даже если операция бессмысленна
-  (напр. Intersect/Exclude на смежных кусках ножа без перекрытия → пустой результат; align/distribute
-  при недостатке объектов). **Нужно прятать/дизейблить неприменимые действия по реальному состоянию
-  выделения.** Делать при доведении Pathfinder-панели (6.2) и общей шлифовке UI (20.2). Низкий приоритет,
-  но не забыть.
+### Deferred architectural decisions
+
+- ~~Unified selection store~~ — **✅ DONE in 6.1 (session 22)**: `src/state/selection.js` +
+  a permanent instance in Canvas; selection survives tool switching, menu commands/shortcuts
+  work under any tool (the `runSelectionAction` fallback).
+- **Selection preferences (feature) — phase 15.2**, Preferences → "Selection & Anchor Display"
+  (click tolerance, anchor size/style, contour-only object picking, etc.). Related:
+  Select menu (Same/Inverse/**Save Selection**/Above-Below) — 15.1.
+- **Contextual pruning of inapplicable buttons (user feedback, TODO).** Right now
+  Properties/Control Bar/task bar show the full operation set at 2+ selected even when an
+  operation is meaningless (e.g. Intersect/Exclude on adjacent knife pieces with no overlap →
+  empty result; align/distribute with too few objects). **Inapplicable actions must be
+  hidden/disabled based on the actual selection state.** Do it when polishing the Pathfinder
+  panel (6.2) and during general UI polish (20.2). Low priority, but don't forget.
 
 ---
 
-## Важно
+## Important
 
-Перед началом каждой сессии:
-1. Прочитай этот файл
-2. Проверь есть ли свежий чекпоинт в `_claude-notes/` (чекпоинты пишем в проект)
-3. Спроси что делаем сегодня если непонятно
-4. Идём по плану «20 фаз» по порядку, начиная с самой ранней незакрытой итерации
-   (см. «Сверка с планом 20 фаз»). Не забегать вперёд без явной просьбы.
+Before starting every session:
+1. Read this file
+2. Check for a fresh checkpoint in `_claude-notes/` (checkpoints are written into the project)
+3. Ask what we're doing today if unclear
+4. Follow the 20-phase plan in order, starting from the earliest unclosed iteration
+   (see "Reconciliation with the 20-phase plan"). Don't jump ahead without an explicit request.
 
 ---
 
 ## Obsidian checkpoint protocol
 
-Vault подключён к этому проекту (корень vault = корень OpenVector).
-Заметки пиши в `_claude-notes/` через `mcp__obsidian-vault__write_note`.
+The vault is connected to this project (vault root = OpenVector root).
+Write notes into `_claude-notes/` via `mcp__obsidian-vault__write_note`.
 
-**Когда писать чекпоинт:**
-- Перед тем как пользователь напишет `/compact`
-- После завершения любой значимой задачи (новый файл, баг, архитектурное решение)
-- Если сессия идёт дольше 30 минут
+Checkpoints are written in **English** (docs language rule; checkpoints written before
+2026-07-07 remain in Russian — read them as-is).
 
-**Формат файла:** `_claude-notes/checkpoint-YYYY-MM-DD-HH-MM.md`
+**When to write a checkpoint:**
+- Before the user is about to run `/compact`
+- After completing any significant task (new file, bug, architectural decision)
+- If the session runs longer than 30 minutes
 
-**Содержание чекпоинта (verbatim, без сокращений):**
+**File format:** `_claude-notes/checkpoint-YYYY-MM-DD-HH-MM.md`
+
+**Checkpoint content (verbatim, no abridging):**
 
 ```markdown
 ---
@@ -1357,31 +1394,31 @@ project: OpenVector
 date: [ISO datetime]
 ---
 
-Проект: [[CLAUDE]]
+Project: [[CLAUDE]]
 
 ## For future Claude
 
-## Текущая задача
-[Одно предложение — что именно делается прямо сейчас]
+## Current task
+[One sentence — what exactly is being done right now]
 
-## Файлы изменены в эту сессию
-- src/canvas/tools/pen.js:42 — [что именно сделано]
-- src/components/Toolbar/Toolbar.jsx:18 — [что именно сделано]
+## Files changed this session
+- src/canvas/tools/pen.js:42 — [what exactly was done]
+- src/components/Toolbar/Toolbar.jsx:18 — [what exactly was done]
 
-## Решения принятые в сессию
-- [Точное решение]: [точная причина почему]
+## Decisions made this session
+- [Exact decision]: [exact reason why]
 
-## Активные ошибки / баги
-[Точный текст ошибки из консоли если есть]
+## Active errors / bugs
+[Exact console error text if any]
 
-## Неочевидные вещи которые нужно знать
-[Всё что будущий Claude не найдёт в коде сам — порядок инициализации, side effects, причины странных решений]
+## Non-obvious things to know
+[Everything future Claude won't find in the code itself — init order, side effects, reasons for odd decisions]
 
-## Следующий шаг
-[Одно конкретное действие]
+## Next step
+[One concrete action]
 ```
 
-**Восстановление после /compact:**
-Пользователь напишет "восстанови контекст из обсидиана" — ты делаешь
-`search_notes` → `read_note` на последний чекпоинт → объявляешь что восстановлено.
-Читай дословно, не пересказывай и не интерпретируй.
+**Recovery after /compact:**
+The user will write "восстанови контекст из обсидиана" — you do
+`search_notes` → `read_note` on the latest checkpoint → announce what was restored.
+Read it verbatim, don't paraphrase or interpret.

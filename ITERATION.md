@@ -1,53 +1,54 @@
-# Текущая задача: итерация 8.1 — Базовый цвет и Swatches
+# Current task: iteration 8.1 — Base color and Swatches
 
-## Сделать:
-- [ ] Color панель: слайдеры RGB / HSB / CMYK / Grayscale, Hex-поле, Lab (по возможности);
-      переключение модели через меню панели; спектр-полоска снизу (как в Illustrator)
-- [ ] Color Picker (диалог по dblclick на свотче Fill/Stroke в тулбаре/панели): поле
-      насыщенность×яркость + полоса Hue, поля RGB/HSB/Hex, превью старый/новый цвет,
-      предупреждение out-of-gamut (для CMYK-режима документа)
-- [ ] Eyedropper (I): клик — взять fill/stroke/обводку/opacity с объекта и применить
-      к выделению; Alt-клик — наоборот (отдать стиль выделения объекту под курсором)
-- [ ] Swatches панель: список/сетка свотчей, добавить/удалить, дефолтная библиотека,
-      Global Colors (правка свотча меняет объекты, где он применён), Spot Colors (базово);
-      Pantone/Color Books — отложить, если не влезает
-- [ ] Document Color Mode (RGB/CMYK) — переключатель в File-меню, влияет на Color панель
-      и предупреждения gamut
-- [ ] Create Swatch из выделения; None/Registration свотчи
+## To do:
+- [ ] Color panel: RGB / HSB / CMYK / Grayscale sliders, Hex field, Lab (if feasible);
+      model switching via the panel menu; spectrum strip at the bottom (as in Illustrator)
+- [ ] Color Picker (dialog on dblclick of the Fill/Stroke swatch in the toolbar/panel):
+      saturation×brightness field + Hue bar, RGB/HSB/Hex fields, old/new color preview,
+      out-of-gamut warning (for CMYK document mode)
+- [ ] Eyedropper (I): click — pick fill/stroke/stroke width/opacity from an object and apply
+      to the selection; Alt-click — the reverse (give the selection's style to the object under
+      the cursor)
+- [ ] Swatches panel: swatch list/grid, add/remove, default library,
+      Global Colors (editing a swatch updates objects where it's applied), Spot Colors (basic);
+      Pantone/Color Books — defer if it doesn't fit
+- [ ] Document Color Mode (RGB/CMYK) — a toggle in the File menu, affects the Color panel
+      and gamut warnings
+- [ ] Create Swatch from selection; None/Registration swatches
 
-## Уже сделано (не трогать):
-- Итерации по 7.3 включительно (см. CLAUDE.md «Сверка с планом 20 фаз»):
-  выделение, фигуры, Pen, рисование/резка, текст 5.1–5.3, организация 6.1–6.2,
-  трансформации 7.1, Width/Puppet Warp/Measure/Dimension 7.2, Liquify 7.3
+## Already done (don't touch):
+- Iterations through 7.3 inclusive (see CLAUDE.md "Reconciliation with the 20-phase plan"):
+  selection, shapes, Pen, drawing/cutting, text 5.1–5.3, organization 6.1–6.2,
+  transforms 7.1, Width/Puppet Warp/Measure/Dimension 7.2, Liquify 7.3
 
-## Не трогать:
-- Всё что не в списке выше
-- Следующие итерации
+## Don't touch:
+- Anything not in the list above
+- Later iterations
 
-## Дополнения к плану из ресёрча Illustrator 2024–2026 (НЕ эта итерация — вписать в CLAUDE.md при шлифовке плана):
-- **Новые инструменты, которых нет в плане:** Objects on Path (v29.0, 2025 — раскладка
-  объектов вдоль пути с ручками spacing/alignment/orientation) → к фазе 7/11;
-  Intertwine (Make/Edit/Release) уже есть в 11.3 — ок.
-- **Dimension tool** (v28.3): у нас v1 сделан в 7.2; в Illustrator — Linear/Angular/Radial,
-  units/scale/precision, отдельный слой Dimensions → добить при 13.x.
-- **Contextual Task Bar** — в Illustrator это центральная поверхность (контекстные действия
-  для путей/фигур/текста/групп/масок + AI-действия). У нас есть зачаток с 1.2 — при 20.2
-  сделать общий реестр «команда → меню/Properties/Task Bar/виджет».
-- **On-canvas виджеты** — сверить наш набор со списком из ресёрча (Live Corners с типами
-  углов round/inverted/chamfer, gradient annotator, blend spine, repeat-виджеты,
-  9-point reference — частично есть); каждый виджет = переиспользуемый оверлей-компонент.
-- **Фаза 18 (AI) разбить на треки:** 18.0 архитектура (Generative Object data model,
-  variation management, Generation History) → генерация (Text to Vector, Shape Fill,
-  Expand) → редактирование (Prompt to Edit, Generative Recolor) → текст (Rewrite, Retype)
-  → Mockup/Turntable → AI Assistant. Adobe-фичи мапить на open-model эквиваленты
-  (пользовательские ключи).
-- **Transform Each** получил Relative/Absolute scaling (2026) — у нас заглушка prompt, учесть в 15.x.
-- **Blending modes:** канонический список 16 штук подтверждён (см. ресёрч, секция E) — для 11.1.
-- **Артборды:** лимит Illustrator — до 1000 (для 13.1 как ориентир, не обязательство).
+## Plan additions from Illustrator 2024–2026 research (NOT this iteration — fold into CLAUDE.md during plan polish):
+- **New tools missing from the plan:** Objects on Path (v29.0, 2025 — laying out objects
+  along a path with spacing/alignment/orientation handles) → phase 7/11;
+  Intertwine (Make/Edit/Release) is already in 11.3 — fine.
+- **Dimension tool** (v28.3): our v1 was done in 7.2; in Illustrator — Linear/Angular/Radial,
+  units/scale/precision, a dedicated Dimensions layer → finish at 13.x.
+- **Contextual Task Bar** — in Illustrator this is a central surface (contextual actions
+  for paths/shapes/text/groups/masks + AI actions). We have a seed since 1.2 — at 20.2
+  build a shared registry "command → menu/Properties/Task Bar/widget".
+- **On-canvas widgets** — check our set against the research list (Live Corners with corner
+  types round/inverted/chamfer, gradient annotator, blend spine, repeat widgets,
+  9-point reference — partially present); each widget = a reusable overlay component.
+- **Phase 18 (AI) split into tracks:** 18.0 architecture (Generative Object data model,
+  variation management, Generation History) → generation (Text to Vector, Shape Fill,
+  Expand) → editing (Prompt to Edit, Generative Recolor) → text (Rewrite, Retype)
+  → Mockup/Turntable → AI Assistant. Map Adobe features to open-model equivalents
+  (user-provided keys).
+- **Transform Each** got Relative/Absolute scaling (2026) — ours is a prompt stub, account for it in 15.x.
+- **Blending modes:** the canonical list of 16 confirmed (see research, section E) — for 11.1.
+- **Artboards:** Illustrator's limit is up to 1000 (a reference for 13.1, not an obligation).
 
-## Контекст:
-- Стек: Vite + React + Paper.js
-- Инструменты: src/canvas/tools/
-- Каждый инструмент = отдельный файл
-- Все строки UI через t('key') — никакого хардкода
-- Без console.log в продакшне
+## Context:
+- Stack: Vite + React + Paper.js
+- Tools: src/canvas/tools/
+- Each tool = a separate file
+- All UI strings via t('key') — no hardcoding
+- No console.log in production
