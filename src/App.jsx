@@ -1,10 +1,13 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import MenuBar from './components/MenuBar/MenuBar.jsx';
 import ControlBar from './components/ControlBar/ControlBar.jsx';
 import Toolbar from './components/Toolbar/Toolbar.jsx';
 import Canvas from './components/Canvas/Canvas.jsx';
 import Properties from './components/Properties/Properties.jsx';
 import LayersPanel from './components/Panels/LayersPanel.jsx';
+import ColorPanel from './components/Panels/ColorPanel.jsx';
+import SwatchesPanel from './components/Panels/SwatchesPanel.jsx';
+import ColorPickerDialog from './components/ColorPicker/ColorPickerDialog.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import FindFontDialog from './components/FindFontDialog/FindFontDialog.jsx';
@@ -14,6 +17,9 @@ import { readStyle, applyStyle } from './canvas/operations/itemStyle.js';
 import { setShowHiddenChars } from './canvas/operations/textLayout.js';
 import { changeCase, smartPunctuation, fitHeadline } from './canvas/operations/typography.js';
 import { createOutlines } from './canvas/operations/outlines.js';
+import {
+  subscribeColors, getColorMode, setColorMode, getDefaultPaint, setDefaultPaint,
+} from './state/colors.js';
 
 const emptySel = { count: 0, isGroup: false, isCompound: false, style: null };
 const TOOL_LABELS = Object.fromEntries(TOOL_ITEMS.map((i) => [i.id, i.label]));
@@ -30,6 +36,9 @@ export default function App() {
   const [findFontOpen, setFindFontOpen] = useState(false);
   const [hiddenChars, setHiddenChars] = useState(false);
   const [layersOpen, setLayersOpen] = useState(true);
+  const [colorOpen, setColorOpen] = useState(true);
+  const [swatchesOpen, setSwatchesOpen] = useState(true);
+  const [pickerTarget, setPickerTarget] = useState(null); // 'fill' | 'stroke'
   const [isoDepth, setIsoDepth] = useState(0); // isolation-mode nesting depth
   const selItemsRef = useRef([]);
   const refreshSelRef = useRef(null);
@@ -39,6 +48,11 @@ export default function App() {
   const paintRef = useRef(null); // X / Shift+X handlers, called from Canvas keydown
   const snapRef = useRef(snap);
   snapRef.current = snap;
+
+  // Colour state (document mode, default paint) lives in a plain store —
+  // re-render when it changes so the menu checkmarks and toolbar follow.
+  const [, setColorsTick] = useState(0);
+  useEffect(() => subscribeColors(() => setColorsTick((t) => t + 1)), []);
 
   const toggleSnap = useCallback((key) => {
     setSnap((s) => ({ ...s, [key]: !s[key] }));
@@ -54,9 +68,10 @@ export default function App() {
   }, []);
 
   const handleStyleChange = useCallback((patch) => {
-    const item = selItemsRef.current[0];
+    const items = selItemsRef.current;
+    const item = items[0];
     if (!item) return;
-    applyStyle(item, patch);
+    items.forEach((it) => applyStyle(it, patch));
     const fresh = readStyle(item);
     setSel((prev) => ({
       ...prev,
@@ -214,6 +229,18 @@ export default function App() {
         case 'toggleLayers':
           setLayersOpen((v) => !v);
           break;
+        case 'toggleColor':
+          setColorOpen((v) => !v);
+          break;
+        case 'toggleSwatches':
+          setSwatchesOpen((v) => !v);
+          break;
+        case 'colorModeRGB':
+          setColorMode('rgb');
+          break;
+        case 'colorModeCMYK':
+          setColorMode('cmyk');
+          break;
         case 'openFonts':
           setFontsOpen(true);
           break;
@@ -258,7 +285,17 @@ export default function App() {
           fill: sel.style.hasFill ? sel.style.fillColor : null,
           stroke: sel.style.hasStroke ? sel.style.strokeColor : null,
         }
-      : { fill: '#b9bcc0', stroke: '#7d8186' };
+      : getDefaultPaint();
+
+  // Picker (double-click on the toolbar paint proxy): recolour the selection,
+  // or — with nothing selected — the default paint for new shapes.
+  const applyPickedColor = useCallback(
+    (which, hex) => {
+      if (selItemsRef.current.length) handleStyleChange({ [`${which}Color`]: hex });
+      else setDefaultPaint({ [which]: hex });
+    },
+    [handleStyleChange],
+  );
 
   return (
     <div className="app">
@@ -269,6 +306,9 @@ export default function App() {
         hiddenChars={hiddenChars}
         layersOpen={layersOpen}
         isoDepth={isoDepth}
+        colorMode={getColorMode()}
+        colorOpen={colorOpen}
+        swatchesOpen={swatchesOpen}
         onCommand={handleCommand}
       />
       <ControlBar
@@ -285,6 +325,7 @@ export default function App() {
           paintFocus={paintFocus}
           onSetPaintFocus={setPaintFocus}
           onSwapPaint={swapFillStroke}
+          onOpenPicker={setPickerTarget}
           columns={columns}
           onToggleColumns={() => setColumns((c) => (c === 2 ? 1 : 2))}
         />
@@ -310,11 +351,24 @@ export default function App() {
             onManageFonts={() => setFontsOpen(true)}
             activeTool={activeTool}
           />
+          {colorOpen && <ColorPanel paintFocus={paintFocus} onSetPaintFocus={setPaintFocus} />}
+          {swatchesOpen && <SwatchesPanel paintFocus={paintFocus} />}
           {layersOpen && <LayersPanel />}
         </div>
       </div>
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
       {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}
+      {pickerTarget && (
+        <ColorPickerDialog
+          title={pickerTarget === 'fill' ? 'Fill Color' : 'Stroke Color'}
+          initial={paint[pickerTarget] || (pickerTarget === 'fill' ? '#b9bcc0' : '#7d8186')}
+          onApply={(hex) => {
+            applyPickedColor(pickerTarget, hex);
+            setPickerTarget(null);
+          }}
+          onClose={() => setPickerTarget(null)}
+        />
+      )}
       {findFontOpen && (
         <FindFontDialog
           onClose={() => setFindFontOpen(false)}

@@ -1304,6 +1304,69 @@ Session 28 notes / decisions:
   fires as TWO clicks — the panel closes back. Pick tools via `button.click()` in eval:
   the flyout toggle in one eval, the flyout item in the next.
 
+### Session 29 — progress (✅ iteration 8.1)
+
+Scope: **phase 8.1** — base color and Swatches. All v1 items closed (Pantone/Color Books
+and Create Swatch from image deferred).
+
+- [x] **`operations/colorConvert.js`** — pure math: hex↔RGB↔HSB↔CMYK (naive device),
+      Grayscale (K), **Lab** (D65), `isOutOfCmykGamut` (heuristic S>82 ∧ B>82; no ICC
+      profiles — 14.3), `nearestInGamut` (damp S/B into the safe zone + quantise via CMYK).
+- [x] **`state/colors.js`** — store: Document Color Mode (rgb/cmyk, persisted
+      `ov.colorMode`), swatch library (persisted `ov.swatches`; default = 13 muted colors
+      + neutrals), **default paint for new shapes** (`setDefaultPaint` mutates
+      SHAPE_STYLE/LINE_STYLE — tools read them at gesture time, so the panel/eyedropper
+      change the color of shapes drawn next).
+- [x] **`operations/swatchOps.js`** — paper side: `applySwatchTo` (paints + tags
+      `data.fillSwatch`/`strokeSwatch` for global swatches), `retintSwatch` (editing a
+      global swatch recolors every tagged object), `untagSwatch` (deletion bakes the
+      color), shared **`afterStyleEdit()`** (overlay draw + notifySelectionChanged +
+      bumpDocument + view.update) — used by the panels and the eyedropper.
+- [x] **Color panel** (`Panels/ColorPanel.jsx`): models RGB/HSB/CMYK/Grayscale/Lab
+      (select), sliders with gradient tracks (channel sampled through the model), number
+      fields, hex, fill/stroke proxy (click = focus, synced with the toolbar via App), a
+      spectrum bar (canvas; click/drag picks the pixel), gamut warning (⚠ + corrected-color
+      chip, click = snap) in CMYK mode. Edits apply to ALL selected items; with nothing
+      selected they edit the default paint.
+- [x] **Swatches panel** (`Panels/SwatchesPanel.jsx`): None (red slash) + Registration
+      (crosshair) + the library; click = apply to the focused paint of the selection
+      (global tags), "+" = new global swatch from the current paint, "−" = delete (objects
+      keep their color), dblclick = **Swatch Options** (picker + Name/Global/Spot;
+      spot ⇒ global). Indicators: white corner = global, dot in the corner = spot.
+- [x] **Color Picker dialog** (`ColorPicker/ColorPickerDialog.jsx`): SV field + hue strip
+      (pointer capture), H/S/B, R/G/B, C/M/Y/K, Hex fields, new/old preview, gamut
+      warning, optional swatch fields. Opens from: dblclick on the toolbar Fill/Stroke
+      proxy (edits the selection; with none — the default paint), dblclick on a swatch.
+- [x] **Eyedropper** (`tools/eyedropperTool.js`, slot with Measure/Dimension, custom SVG
+      cursor): click = sample an object's appearance (fill/stroke/width/caps/dash/opacity)
+      onto the selection; **Alt-click = give** (apply the selection's style to the clicked
+      object); nothing selected = sample into the default paint.
+- [x] **Document Color Mode**: File > Document Color Mode > RGB/CMYK (checkmarks), drives
+      the gamut warnings. Window > Color / Swatches — panel toggles (both open by default;
+      side-col: Properties → Color → Swatches → Layers).
+- [x] `state/selection.js`: **`notifySelectionChanged()`** — pushes to listeners without
+      changing the selection set (panels re-read style after edits made outside App).
+- [x] App.handleStyleChange now applies the patch to ALL selected items (was: first only).
+- [ ] Deferred: Pantone/Color Books, Create Swatch from image (Object Mosaic — needs
+      raster from 12.1), true spot channels (v1: spot = global with a badge), ICC gamut.
+
+Session 29 notes / decisions:
+- **Paper gotcha (session-4 relapse)**: `applyStyle` assigned colors as STRINGS → the
+  second assignment before a render threw `Cannot create property '_canvasStyle' on
+  string`, and the exception died inside the React handler (invisible to the console —
+  only `window.onerror` sees it), aborting `afterStyleEdit` BEFORE notify: the canvas
+  changed, the panels didn't. Fix: `applyStyle` wraps fill/strokeColor in
+  `new paper.Color(...)`. Lesson: debug "silent desyncs" via
+  `window.addEventListener('error')` in eval.
+- The swatch grid is `flex-wrap`; its max-content (all swatches on one line) stretched
+  the side-col to 367px (side-col has no width — it takes the children's max intrinsic).
+  The Color/Swatches panels got an explicit `width: 220px`.
+- Library swatches are global:false (as in Illustrator); swatches created with "+" are
+  global:true so the retint feature is visible immediately.
+- Test gotchas (not code): React `onBlur` listens to `focusout` (bubbles) — a bare
+  `FocusEvent('blur')` doesn't trigger it. `button.click()` returns undefined, so
+  `?? 'no button'` in eval gives a false report.
+
 > Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
 > Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
 > (the old plan went differently), so early phases are partially closed.
@@ -1326,18 +1389,19 @@ Session 28 notes / decisions:
 - **7.1 (Transforms):** ✅ DONE — Transform section in Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), Rotate/Reflect/Scale/Shear tools (click-to-place pivot, Shift constrain, Alt-copy), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, with duplicate fallback), Object > Transform submenu · ⬜ rotated box/Reset BB, Drawing/Screen Modes — deferred
 - **7.2 (Distortion/width):** ✅ DONE — Width Tool (width points: drag/slide/Alt-delete), Variable Width Profiles (Uniform + 4 presets in Properties), envelope rendering (isWidthEnvelope), Puppet Warp (pins, rigid MLS, Shift multi-select, A = all, Delete keeps deformation), Measure (D/∠/W/H readout), Dimension (dimension annotation as artwork) · ⬜ Show Mesh/pin rotation, asymmetric width points — deferred
 - **7.3 (Liquify):** ✅ DONE — 7 tools (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) in the Width slot, shared elliptical brush (W/H/Angle/Intensity, Alt-drag on-canvas resize, Shift+Alt = circular), per-tool options in a Properties section (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, Brush Affects Anchors/In/Out Tangents checkboxes), subdivision under the brush + prune/smooth on gesture finish · ⬜ dblclick-on-tool dialog (15.x), text deformation
-- **8.1 (Color):** 🟡 fill/stroke/opacity in Properties · ⬜ Color panel (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
+- **8.1 (Color):** ✅ DONE — Color panel (RGB/HSB/CMYK/Grayscale/Lab sliders with gradient tracks, hex, spectrum bar, fill/stroke proxy), Color Picker dialog (SV field + hue strip, HSB/RGB/CMYK/Hex, new/old, gamut warning; dblclick on toolbar proxy / swatch), Eyedropper (take / Alt-give / sample-to-default), Swatches panel (None/Registration, library, "+"/"−", Global Colors with retint, Spot basic, Swatch Options), Document Color Mode RGB/CMYK (File menu, gamut warnings), default paint for new shapes · ⬜ Pantone/Color Books, Create Swatch from image (needs 12.1), ICC profiles
 - **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
 - **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
 Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
 **Undo/Redo** (phase 20.1).
 
-**Next by plan (early gaps):** 8.1 Color (Color panel RGB/HSB/CMYK/Hex/Lab,
-Color Picker, Eyedropper, Swatches, Document Color Mode). Previously deferred: rotated box +
-Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for polygon/star/ellipse (from 3.x);
-Delete key and auto-select of a new shape under non-selection tools;
-Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead of prompt — 15.x.
+**Next by plan (early gaps):** 8.2 Harmonies and Recolor (Color Guide: harmony rules +
+variations; Recolor Artwork dialog; color wheels, H/S/B sliders). Previously deferred:
+rotated box + Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for
+polygon/star/ellipse (from 3.x); Delete key and auto-select of a new shape under
+non-selection tools; Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead
+of prompt — 15.x; Pantone/Color Books + Create Swatch from image (8.1 tail, needs 12.1).
 
 > Paper gotcha: `project.getItems(fn)` with a bare function does NOT work (treats fn as a
 > class) — use `getItems({ match: fn })`. Otherwise the filter silently returns 0.

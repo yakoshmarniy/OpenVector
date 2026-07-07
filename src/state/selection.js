@@ -50,6 +50,12 @@ export function clearSelection() {
   notify();
 }
 
+// Style edits don't change WHICH items are selected, but the panels that
+// mirror the selection (App, Color panel) need to re-read it — fire listeners.
+export function notifySelectionChanged() {
+  notify();
+}
+
 // Drop selected items that are no longer selectable (hidden / locked / on a
 // hidden or locked layer). Used after Layers-panel toggles and Lock/Hide.
 export function pruneSelection() {

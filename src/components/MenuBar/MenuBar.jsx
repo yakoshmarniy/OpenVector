@@ -4,7 +4,9 @@ import styles from './MenuBar.module.css';
 // Top menu bar. Items map to app commands (onCommand). Features that belong to
 // later phases are shown disabled so the structure is honest. Labels are plain
 // text for now; they move to i18next t() when i18n lands.
-function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
+function buildMenus({
+  sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
+}) {
   const has = sel.count >= 1;
   const multi = sel.count >= 2;
   const group = sel.count === 1 && sel.isGroup;
@@ -21,6 +23,14 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
         { label: 'Open…', enabled: false },
         { label: 'Save', enabled: false },
         { label: 'Export…', enabled: false },
+        sep,
+        {
+          label: 'Document Color Mode',
+          items: [
+            { label: 'RGB Color', cmd: 'colorModeRGB', checked: colorMode !== 'cmyk' },
+            { label: 'CMYK Color', cmd: 'colorModeCMYK', checked: colorMode === 'cmyk' },
+          ],
+        },
       ],
     },
     {
@@ -186,17 +196,23 @@ function buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth }) {
         sep,
         { label: 'Properties', enabled: false },
         { label: 'Layers', cmd: 'toggleLayers', checked: !!layersOpen },
-        { label: 'Color', enabled: false },
+        { label: 'Color', cmd: 'toggleColor', checked: !!colorOpen },
+        { label: 'Swatches', cmd: 'toggleSwatches', checked: !!swatchesOpen },
       ],
     },
   ];
 }
 
-export default function MenuBar({ sel, snap, columns, hiddenChars, layersOpen, isoDepth, onCommand }) {
+export default function MenuBar({
+  sel, snap, columns, hiddenChars, layersOpen, isoDepth,
+  colorMode, colorOpen, swatchesOpen, onCommand,
+}) {
   const [open, setOpen] = useState(null);
   const [sub, setSub] = useState(null); // index of the item whose submenu is open
   const barRef = useRef(null);
-  const menus = buildMenus({ sel, snap, columns, hiddenChars, layersOpen, isoDepth });
+  const menus = buildMenus({
+    sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
+  });
 
   useEffect(() => {
     setSub(null);

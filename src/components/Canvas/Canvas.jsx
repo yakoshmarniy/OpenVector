@@ -62,6 +62,7 @@ import {
   createWrinkleTool,
 } from '../../canvas/tools/liquifyTools.js';
 import { createPuppetWarpTool } from '../../canvas/tools/puppetWarpTool.js';
+import { createEyedropperTool } from '../../canvas/tools/eyedropperTool.js';
 import { createMeasureTool } from '../../canvas/tools/measureTool.js';
 import { createDimensionTool } from '../../canvas/tools/dimensionTool.js';
 import { createEraserTool } from '../../canvas/tools/eraserTool.js';
@@ -118,6 +119,7 @@ const TOOL_FACTORIES = {
   [TOOLS.CRYSTALLIZE]: createCrystallizeTool,
   [TOOLS.WRINKLE]: createWrinkleTool,
   [TOOLS.PUPPET_WARP]: createPuppetWarpTool,
+  [TOOLS.EYEDROPPER]: createEyedropperTool,
   [TOOLS.MEASURE]: createMeasureTool,
   [TOOLS.DIMENSION]: createDimensionTool,
   [TOOLS.ERASER]: createEraserTool,

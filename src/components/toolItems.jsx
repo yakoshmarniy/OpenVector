@@ -531,6 +531,15 @@ function DimensionIcon() {
   );
 }
 
+function EyedropperIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 20l1-4 8.5-8.5 3 3L8 19l-4 1z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M13 4.5L15 2.5a1.9 1.9 0 0 1 2.7 0l3.8 3.8a1.9 1.9 0 0 1 0 2.7l-2 2-6.5-6.5z" fill="currentColor" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
@@ -566,6 +575,7 @@ export const TOOL_ITEMS = [
   { id: TOOLS.CRYSTALLIZE, label: 'Crystallize', Icon: CrystallizeIcon },
   { id: TOOLS.WRINKLE, label: 'Wrinkle', Icon: WrinkleIcon },
   { id: TOOLS.PUPPET_WARP, label: 'Puppet Warp', Icon: PuppetWarpIcon },
+  { id: TOOLS.EYEDROPPER, label: 'Eyedropper', Icon: EyedropperIcon },
   { id: TOOLS.MEASURE, label: 'Measure', Icon: MeasureIcon },
   { id: TOOLS.DIMENSION, label: 'Dimension', Icon: DimensionIcon },
   { id: TOOLS.ERASER, label: 'Eraser', Icon: EraserIcon },

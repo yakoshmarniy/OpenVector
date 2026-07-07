@@ -22,7 +22,7 @@ const GROUPS = [
     TOOLS.WIDTH, TOOLS.WARP, TOOLS.TWIRL, TOOLS.PUCKER, TOOLS.BLOAT,
     TOOLS.SCALLOP, TOOLS.CRYSTALLIZE, TOOLS.WRINKLE, TOOLS.PUPPET_WARP,
   ],
-  [TOOLS.MEASURE, TOOLS.DIMENSION],
+  [TOOLS.EYEDROPPER, TOOLS.MEASURE, TOOLS.DIMENSION],
   [TOOLS.TEXT, TOOLS.VERTICAL_TEXT, TOOLS.TOUCH_TYPE],
   [TOOLS.RECTANGLE, TOOLS.ELLIPSE, TOOLS.POLYGON, TOOLS.STAR, TOOLS.FLARE],
   [TOOLS.LINE, TOOLS.ARC, TOOLS.SPIRAL, TOOLS.RECTANGULAR_GRID, TOOLS.POLAR_GRID],
@@ -37,6 +37,7 @@ export default function Toolbar({
   paintFocus = 'fill',
   onSetPaintFocus,
   onSwapPaint,
+  onOpenPicker,
   columns,
   onToggleColumns,
 }) {
@@ -150,7 +151,7 @@ export default function Toolbar({
       </div>
 
       <div className={styles.footer}>
-        <div className={styles.paint} title="Fill / Stroke — X switches focus, Shift+X swaps">
+        <div className={styles.paint} title="Fill / Stroke — X switches focus, Shift+X swaps, double-click opens picker">
           <button
             type="button"
             aria-label="Stroke (X to focus)"
@@ -158,6 +159,7 @@ export default function Toolbar({
             className={paintFocus === 'stroke' ? `${styles.stroke} ${styles.paintActive}` : styles.stroke}
             style={{ borderColor: paint?.stroke || 'var(--ov-text-dim)' }}
             onClick={() => onSetPaintFocus?.('stroke')}
+            onDoubleClick={() => onOpenPicker?.('stroke')}
           />
           <button
             type="button"
@@ -166,6 +168,7 @@ export default function Toolbar({
             className={paintFocus === 'fill' ? `${styles.fill} ${styles.paintActive}` : styles.fill}
             style={{ background: paint?.fill || 'transparent' }}
             onClick={() => onSetPaintFocus?.('fill')}
+            onDoubleClick={() => onOpenPicker?.('fill')}
           />
           <button
             type="button"

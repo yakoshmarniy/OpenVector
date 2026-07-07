@@ -1,25 +1,26 @@
-# Current task: iteration 8.1 — Base color and Swatches
+# Current task: iteration 8.2 — Harmonies and Recolor
 
 ## To do:
-- [ ] Color panel: RGB / HSB / CMYK / Grayscale sliders, Hex field, Lab (if feasible);
-      model switching via the panel menu; spectrum strip at the bottom (as in Illustrator)
-- [ ] Color Picker (dialog on dblclick of the Fill/Stroke swatch in the toolbar/panel):
-      saturation×brightness field + Hue bar, RGB/HSB/Hex fields, old/new color preview,
-      out-of-gamut warning (for CMYK document mode)
-- [ ] Eyedropper (I): click — pick fill/stroke/stroke width/opacity from an object and apply
-      to the selection; Alt-click — the reverse (give the selection's style to the object under
-      the cursor)
-- [ ] Swatches panel: swatch list/grid, add/remove, default library,
-      Global Colors (editing a swatch updates objects where it's applied), Spot Colors (basic);
-      Pantone/Color Books — defer if it doesn't fit
-- [ ] Document Color Mode (RGB/CMYK) — a toggle in the File menu, affects the Color panel
-      and gamut warnings
-- [ ] Create Swatch from selection; None/Registration swatches
+- [ ] Color Guide panel: Harmony Rules (Complementary, Monochromatic, Triad, Analogous,
+      High Contrast, Pentagram) derived from a base color; variation rows Tints/Shades,
+      Warm/Cool, Vivid/Muted; click on a variation = apply to the focused paint
+- [ ] Recolor Artwork (dialog, Edit > Edit Colors or a Color Guide button):
+      extract the selection's colors, Harmony Rules, base color change, Link/Unlink
+      harmony (linked rotation of all colors), randomize order and saturation/brightness,
+      Add/Remove Color, limit to a swatch library
+- [ ] Color wheel in Recolor: smooth / segmented modes + color bars; color markers on
+      the wheel, dragging a marker = hue shift (linked = all together)
+- [ ] H/S/B sliders for the selected color inside Recolor
+- [ ] Apply: replace colors across the whole selection (fill/stroke, including text)
 
 ## Already done (don't touch):
-- Iterations through 7.3 inclusive (see CLAUDE.md "Reconciliation with the 20-phase plan"):
-  selection, shapes, Pen, drawing/cutting, text 5.1–5.3, organization 6.1–6.2,
-  transforms 7.1, Width/Puppet Warp/Measure/Dimension 7.2, Liquify 7.3
+- Iterations through 8.1 inclusive (see CLAUDE.md "Reconciliation"): selection, shapes,
+  Pen, drawing/cutting, text 5.1–5.3, organization 6.1–6.2, transforms 7.1–7.3,
+  color 8.1 (Color panel, Picker, Eyedropper, Swatches, Document Color Mode)
+- Color conversions — `src/canvas/operations/colorConvert.js` (hex/RGB/HSB/CMYK/Lab,
+  gamut) — reuse, don't duplicate
+- Style edits from panels — via `applyStyle` + `afterStyleEdit()` from
+  `operations/swatchOps.js` (redraw + notify + bump)
 
 ## Don't touch:
 - Anything not in the list above

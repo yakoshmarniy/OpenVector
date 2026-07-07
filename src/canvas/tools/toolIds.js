@@ -34,6 +34,7 @@ export const TOOLS = {
   CRYSTALLIZE: 'crystallize',
   WRINKLE: 'wrinkle',
   PUPPET_WARP: 'puppetWarp',
+  EYEDROPPER: 'eyedropper',
   MEASURE: 'measure',
   DIMENSION: 'dimension',
   ERASER: 'eraser',

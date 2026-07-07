@@ -57,8 +57,10 @@ export function applyStyle(item, patch) {
     applyTextStyle(item, patch);
     return;
   }
-  if ('fillColor' in patch) item.fillColor = patch.fillColor;
-  if ('strokeColor' in patch) item.strokeColor = patch.strokeColor;
+  // Wrap CSS strings in paper.Color: assigning a string stores it lazily, and
+  // a second assignment before a render throws ("_canvasStyle on string").
+  if ('fillColor' in patch) item.fillColor = patch.fillColor ? new paper.Color(patch.fillColor) : null;
+  if ('strokeColor' in patch) item.strokeColor = patch.strokeColor ? new paper.Color(patch.strokeColor) : null;
   if ('strokeWidth' in patch) {
     if (hasWidthProfile(item)) setBaseWidth(item, patch.strokeWidth);
     else item.strokeWidth = patch.strokeWidth;

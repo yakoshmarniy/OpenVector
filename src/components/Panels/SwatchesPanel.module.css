@@ -1,0 +1,124 @@
+.panel {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px 10px;
+  background: var(--ov-panel);
+  border-left: 1px solid var(--ov-panel-border);
+  border-top: 1px solid var(--ov-panel-border);
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ov-text);
+}
+
+.headBtn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  background: none;
+  color: var(--ov-text-dim);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.headBtn:hover:not(:disabled) {
+  color: var(--ov-text);
+  border-color: var(--ov-accent);
+}
+
+.headBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-height: 96px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.cell {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 2px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.cell:hover {
+  outline: 1px solid var(--ov-accent);
+}
+
+.cellSelected {
+  outline: 1.5px solid var(--ov-accent-active);
+  outline-offset: 1px;
+}
+
+/* Global swatch: white corner triangle (bottom-right), like Illustrator. */
+.cellGlobal::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  border-style: solid;
+  border-width: 0 0 8px 8px;
+  border-color: transparent transparent #e6e8ea transparent;
+}
+
+/* Spot swatch: dot inside the corner triangle. */
+.cellSpot::before {
+  content: '';
+  position: absolute;
+  right: 1.5px;
+  bottom: 1.5px;
+  z-index: 1;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #55585c;
+}
+
+.noneSlash {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to top right,
+      transparent 45%, #a05252 45%, #a05252 55%, transparent 55%
+    ),
+    #fff;
+}
+
+.regMark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

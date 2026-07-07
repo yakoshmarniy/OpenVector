@@ -1,0 +1,204 @@
+.panel {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  background: var(--ov-panel);
+  border-left: 1px solid var(--ov-panel-border);
+  border-top: 1px solid var(--ov-panel-border);
+  font-size: 13px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ov-text);
+}
+
+.modelSelect {
+  padding: 2px 4px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.body {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Small fill/stroke proxy, mirrors the toolbar indicator. */
+.proxy {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.proxyFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 3px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.proxyStroke {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 4px solid;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.proxyActive {
+  outline: 1.5px solid var(--ov-accent-active);
+  outline-offset: 1px;
+  z-index: 1;
+}
+
+.noneSlash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top right,
+    transparent 44%, #a05252 44%, #a05252 56%, transparent 56%
+  );
+}
+
+.sliders {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chLabel {
+  width: 12px;
+  flex-shrink: 0;
+  color: var(--ov-text-dim);
+  font-size: 11px;
+}
+
+.slider {
+  flex: 1;
+  min-width: 0;
+  height: 10px;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  background-size: 100% 100%;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.chValue {
+  width: 44px;
+  flex-shrink: 0;
+  padding: 2px 4px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.hexRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.hexInput {
+  width: 70px;
+  padding: 2px 5px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.noneNote {
+  font-size: 10px;
+  color: var(--ov-text-dim);
+}
+
+.gamut {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 4px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  background: var(--ov-bg);
+  cursor: pointer;
+}
+
+.gamutMark {
+  color: #b08d4f;
+  font-size: 11px;
+}
+
+.gamutChip {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 2px;
+}
+
+.spectrum {
+  width: 100%;
+  height: 16px;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  cursor: crosshair;
+  touch-action: none;
+}
