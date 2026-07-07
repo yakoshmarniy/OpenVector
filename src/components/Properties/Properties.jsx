@@ -1,6 +1,9 @@
 import styles from './Properties.module.css';
 import FontPicker from '../FontPicker/FontPicker.jsx';
 import TransformSection from './TransformSection.jsx';
+import LiquifySection from './LiquifySection.jsx';
+
+const LIQUIFY_MODES = ['warp', 'twirl', 'pucker', 'bloat', 'scallop', 'crystallize', 'wrinkle'];
 
 // labels are plain text for now; will move to i18next t() when i18n lands.
 
@@ -371,19 +374,26 @@ function StyleControls({ style, onChange, onManageFonts }) {
  * Right-hand panel. Adapts to the selection: nothing, a single item (style
  * controls), a group (ungroup), or several items (group + boolean ops).
  */
-export default function Properties({ sel, onChange, onAction, onManageFonts }) {
+export default function Properties({ sel, onChange, onAction, onManageFonts, activeTool }) {
   const { count, isGroup, style } = sel;
+
+  // Tool-options section: the seven Liquify tools share one brush whose
+  // options live here while such a tool is active (dialogs come with 15.x).
+  const liquifyMode = LIQUIFY_MODES.includes(activeTool) ? activeTool : null;
 
   if (count === 0) {
     return (
       <aside className={styles.panel} aria-label="Properties">
-        <p className={styles.empty}>Nothing selected</p>
+        {liquifyMode ? <LiquifySection mode={liquifyMode} /> : (
+          <p className={styles.empty}>Nothing selected</p>
+        )}
       </aside>
     );
   }
 
   return (
     <aside className={styles.panel} aria-label="Properties">
+      {liquifyMode && <LiquifySection mode={liquifyMode} />}
       <TransformSection />
       {count >= 2 && (
         <div className={styles.actions}>

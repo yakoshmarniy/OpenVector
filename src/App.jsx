@@ -308,6 +308,7 @@ export default function App() {
             onChange={handleStyleChange}
             onAction={handleAction}
             onManageFonts={() => setFontsOpen(true)}
+            activeTool={activeTool}
           />
           {layersOpen && <LayersPanel />}
         </div>

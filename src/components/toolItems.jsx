@@ -442,6 +442,75 @@ function PuppetWarpIcon() {
   );
 }
 
+function WarpIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 19c3 0 4-3 4-6 0-4 2-4 4-4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 9h6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M18 9l-2.2-1.8M18 9l-2.2 1.8" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="4" cy="19" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+function TwirlIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 12m-1.5 0a1.5 1.5 0 1 0 3 0 1.5 1.5 0 1 0-3 0" fill="currentColor" />
+      <path d="M12 4a8 8 0 0 1 8 8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 20a8 8 0 0 1-8-8" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 7.5a4.5 4.5 0 0 1 4.5 4.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M12 16.5A4.5 4.5 0 0 1 7.5 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PuckerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+      <path d="M12 3v5M12 21v-5M3 12h5M21 12h-5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M12 8l-1.6-1.6M12 8l1.6-1.6M12 16l-1.6 1.6M12 16l1.6 1.6M8 12l-1.6-1.6M8 12l-1.6 1.6M16 12l1.6-1.6M16 12l1.6 1.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BloatIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M12 9V4M12 15v5M9 12H4M15 12h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M12 4l-1.6 1.6M12 4l1.6 1.6M12 20l-1.6-1.6M12 20l1.6-1.6M4 12l1.6-1.6M4 12l1.6 1.6M20 12l-1.6-1.6M20 12l-1.6 1.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ScallopIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 15c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M3 9h18" stroke="currentColor" strokeWidth="1" strokeDasharray="2.5 2" />
+    </svg>
+  );
+}
+
+function CrystallizeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 3l2 5.5L20 7l-3.5 4.5L21 15l-6 .5L13 21l-2.5-5L5 17.5 7.5 12 4 8l6 .5z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WrinkleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9l2.5-2 2.5 3 2.5-3.5 2.5 3 2.5-2.5 2.5 2 3-2" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3 16l2.5-1.5 2.5 2 2.5-2.5 2.5 2 2.5-1.5 2.5 1.5 3-1.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function MeasureIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -489,6 +558,13 @@ export const TOOL_ITEMS = [
   { id: TOOLS.RESHAPE, label: 'Reshape', Icon: ReshapeIcon },
   { id: TOOLS.FREE_TRANSFORM, label: 'Free Transform', Icon: FreeTransformIcon },
   { id: TOOLS.WIDTH, label: 'Width', Icon: WidthIcon },
+  { id: TOOLS.WARP, label: 'Warp', Icon: WarpIcon },
+  { id: TOOLS.TWIRL, label: 'Twirl', Icon: TwirlIcon },
+  { id: TOOLS.PUCKER, label: 'Pucker', Icon: PuckerIcon },
+  { id: TOOLS.BLOAT, label: 'Bloat', Icon: BloatIcon },
+  { id: TOOLS.SCALLOP, label: 'Scallop', Icon: ScallopIcon },
+  { id: TOOLS.CRYSTALLIZE, label: 'Crystallize', Icon: CrystallizeIcon },
+  { id: TOOLS.WRINKLE, label: 'Wrinkle', Icon: WrinkleIcon },
   { id: TOOLS.PUPPET_WARP, label: 'Puppet Warp', Icon: PuppetWarpIcon },
   { id: TOOLS.MEASURE, label: 'Measure', Icon: MeasureIcon },
   { id: TOOLS.DIMENSION, label: 'Dimension', Icon: DimensionIcon },

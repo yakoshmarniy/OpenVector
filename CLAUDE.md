@@ -1229,6 +1229,49 @@ i18next пока не подключаем — это отдельный пун�
   не добегает). Слот тулбара после выбора из drawer показывает выбранный инструмент — кнопки
   `aria-label="Width"` в рейле может не быть, брать из drawer.
 
+### Сессия 28 — прогресс (✅ итерация 7.3)
+
+Объём: **фаза 7.3** — Liquify. Все 7 инструментов + общая кисть + опции (v1).
+
+- [x] **`src/state/liquify.js`** — стор опций кисти, ОДНА кисть на все 7 инструментов (как в
+      Illustrator): width/height/angle/intensity + simplify (warp-группа), twirlRate,
+      complexity/detail (texture-группа), wrinkleH/V, чекбоксы affectAnchors/In/Out.
+      subscribe() — тулзы и Properties синхронны (Alt-drag ресайз сразу виден в полях).
+- [x] **`operations/liquify.js`** — ядро: эллиптический вес кисти (cos²-falloff в brush-локальных
+      координатах — angle/width/height учитываются), `subdivideUnderBrush` (добавление опорных
+      точек под кистью, spacing от Detail, cap 40 вставок/событие), `liquifyStep` — 7 режимов:
+      warp (delta×вес), twirl (поворот точек+ручек вокруг центра кисти, rate со знаком),
+      pucker/bloat (к/от центра кисти, ручки сжимаются/растут), scallop/crystallize (к/от центра
+      с per-segment стабильным рандомом на весь жест — WeakMap в `newGesture`; Complexity = доля
+      затронутых точек, ручки втягиваются по чекбоксам), wrinkle (свежий рандом каждое событие —
+      «морщит» пока держишь; H%/V% по осям).
+- [x] **`tools/liquifyTools.js`** — общая фабрика 7 инструментов: оверлей-эллипс кисти следует за
+      мышью (hover и drag), drag = деформация (по выделению, если есть; иначе всё под кистью),
+      **Alt-drag = ресайз кисти на холсте** (Shift+Alt = круглая), Delete/Escape/runAction — как
+      у Reshape. Текст/dimension/системные айтемы пропускаются (v1).
+- [x] **LiquifySection в Properties** (`components/Properties/LiquifySection.jsx`): рендерится при
+      активном liquify-инструменте (Properties получил проп `activeTool`), поля по режиму:
+      Brush W/H/Angle/Intensity — всегда; Simplify — warp/twirl/pucker/bloat; Twirl Rate — twirl;
+      Complexity+Detail — scallop/crystallize/wrinkle; H/V — wrinkle; 3 чекбокса «Brush affects» —
+      texture-группа. Заменяет Illustrator-диалог по dblclick на инструменте (диалоги — 15.x).
+- [x] Toolbar: 7 инструментов в слоте Width (как в Illustrator: Width + 7 Liquify + Puppet Warp),
+      7 новых иконок. Путь с width-профилем после деформации перестраивает конверт.
+- [ ] Отложено: диалог опций по dblclick на кнопке инструмента (15.x), деформация текста.
+
+Заметки / решения сессии 28:
+- **`path.simplify()` нельзя звать после жеста**: он пере-фитит ВЕСЬ путь — углы прямоугольника
+  вдали от кисти скруглялись, bounds уезжали. Вместо него `finishLiquify` (только warp-группа)
+  делает два локальных прохода: `pruneCollinear` (убирает без-ручечные точки на прямой между
+  соседями — снимает пере-субдивизию, углы/кривые не трогает; порог от Simplify) и
+  `smoothMovedRuns` (catmull-rom smooth только по непрерывным пробегам сдвинутых сегментов —
+  WeakSet `gesture.moved`). Итог: warp даёт гладкую выпуклость, 4 угла прямоугольника на месте.
+  Texture-группа (scallop/crystallize/wrinkle) не сглаживается — зубцы и есть результат.
+- Направления twirl/pucker/bloat/scallop/crystallize — от ЦЕНТРА КИСТИ (не центра фигуры), как в
+  Illustrator; в точке ровно под центром кисти dir≈0 → сегмент пропускается (guard 1e-6).
+- Грабли теста (не кода): `preview_click` по кнопкам с toggle-логикой (drawer, flyout тулбара)
+  срабатывает как ДВА клика — панель закрывается обратно. Выбирать инструмент через
+  `button.click()` в eval: flyout-toggle в одном eval, пункт flyout — в следующем.
+
 > Старые сессии 1–7 делались по прежним планам (теги `iter-*`, `np-*` — история).
 > Ниже — соответствие текущему плану «20 фаз». Многое сделано НЕ по порядку фаз
 > (прежний план шёл иначе), поэтому ранние фазы частично закрыты.
@@ -1248,6 +1291,7 @@ i18next пока не подключаем — это отдельный пун�
 - **6.2 (Pathfinder):** ✅ ГОТОВО — все 9 операций (Unite/Subtract/Intersect/Exclude + Divide/Trim/Merge/Crop/Outline; меню Object > Pathfinder + грид в Properties), Shape Builder Tool (клик/drag/Alt-удаление, подсветка регионов), Compound Path Make/Release (⌘8/⌥⌘8), path-ops: Join (⌘J), Average ×3, Outline Stroke, Offset Path, Simplify, Split Into Grid, Clean Up · значения Offset/Grid пока через prompt (диалоги — 15.x)
 - **7.1 (Трансформации):** ✅ ГОТОВО — Transform-секция в Properties (Reference Point 3×3, X/Y/W/H, Rotate/Shear Δ°, Flip H/V, Scale Strokes & Effects), инструменты Rotate/Reflect/Scale/Shear (пивот кликом, Shift-констрейн, Alt-копия), Reshape (falloff), Free Transform (scale/⌘ distort/⌘⇧ perspective/⌘ skew), Transform Each…, Transform Again (⌘D, с фолбэком duplicate), Object > Transform подменю · ⬜ поворотный бокс/Reset BB, Drawing/Screen Modes — отложены
 - **7.2 (Деформация/ширина):** ✅ ГОТОВО — Width Tool (точки ширины: drag/сдвиг/Alt-удаление), Variable Width Profiles (Uniform + 4 пресета в Properties), рендер конвертом (isWidthEnvelope), Puppet Warp (пины, rigid MLS, Shift-мультивыбор, A = все, Delete с сохранением деформации), Measure (D/∠/W/H ридаут), Dimension (размерная аннотация-артворк) · ⬜ Show Mesh/поворот пина, несимметричные точки ширины — отложены
+- **7.3 (Liquify):** ✅ ГОТОВО — 7 инструментов (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) в слоте Width, общая эллиптическая кисть (W/H/Angle/Intensity, Alt-drag ресайз на холсте, Shift+Alt = круглая), опции по инструментам в Properties-секции (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, чекбоксы Brush Affects Anchors/In/Out Tangents), субдивизия под кистью + prune/smooth на финише жеста · ⬜ диалог по dblclick на инструменте (15.x), деформация текста
 - **8.1 (Цвет):** 🟡 заливка/обводка/opacity в Properties · ⬜ Color панель (RGB/HSB/CMYK/Hex/Lab), Picker, Eyedropper, Swatches, Document Color Mode
 - **9.2 (Stroke/Appearance):** 🟡 толщина обводки · ⬜ полная Stroke-панель, Appearance, Graphic Styles
 - **13.2 (Привязка):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
@@ -1255,8 +1299,8 @@ i18next пока не подключаем — это отдельный пун�
 Общие подсистемы ещё не сделаны: **i18n (EN/RU)**, **экспорт (SVG/PNG/…)**,
 **Undo/Redo** (фаза 20.1).
 
-**Следующее по плану (ранние пробелы):** 7.3 Liquify (Warp, Twirl, Pucker, Bloat, Scallop,
-Crystallize, Wrinkle + опции кистей). Отложено ранее: поворотный бокс + Reset BB,
+**Следующее по плану (ранние пробелы):** 8.1 Цвет (Color панель RGB/HSB/CMYK/Hex/Lab,
+Color Picker, Eyedropper, Swatches, Document Color Mode). Отложено ранее: поворотный бокс + Reset BB,
 Drawing/Screen Modes (хвост 2.2/7.1); live-параметры polygon/star/ellipse (с 3.x);
 Delete-клавиша и автовыделение новой фигуры при не-selection инструментах;
 диалоги Offset/Grid/Move/Rotate/Scale/Shear/Transform Each вместо prompt — 15.x.

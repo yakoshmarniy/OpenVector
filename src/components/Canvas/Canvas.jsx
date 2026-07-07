@@ -52,6 +52,15 @@ import {
 import { createReshapeTool } from '../../canvas/tools/reshapeTool.js';
 import { createFreeTransformTool } from '../../canvas/tools/freeTransformTool.js';
 import { createWidthTool } from '../../canvas/tools/widthTool.js';
+import {
+  createWarpTool,
+  createTwirlTool,
+  createPuckerTool,
+  createBloatTool,
+  createScallopTool,
+  createCrystallizeTool,
+  createWrinkleTool,
+} from '../../canvas/tools/liquifyTools.js';
 import { createPuppetWarpTool } from '../../canvas/tools/puppetWarpTool.js';
 import { createMeasureTool } from '../../canvas/tools/measureTool.js';
 import { createDimensionTool } from '../../canvas/tools/dimensionTool.js';
@@ -101,6 +110,13 @@ const TOOL_FACTORIES = {
   [TOOLS.RESHAPE]: createReshapeTool,
   [TOOLS.FREE_TRANSFORM]: createFreeTransformTool,
   [TOOLS.WIDTH]: createWidthTool,
+  [TOOLS.WARP]: createWarpTool,
+  [TOOLS.TWIRL]: createTwirlTool,
+  [TOOLS.PUCKER]: createPuckerTool,
+  [TOOLS.BLOAT]: createBloatTool,
+  [TOOLS.SCALLOP]: createScallopTool,
+  [TOOLS.CRYSTALLIZE]: createCrystallizeTool,
+  [TOOLS.WRINKLE]: createWrinkleTool,
   [TOOLS.PUPPET_WARP]: createPuppetWarpTool,
   [TOOLS.MEASURE]: createMeasureTool,
   [TOOLS.DIMENSION]: createDimensionTool,

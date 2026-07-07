@@ -1,24 +1,24 @@
-# Текущая задача: итерация 7.3 — Liquify
+# Текущая задача: итерация 8.1 — Базовый цвет и Swatches
 
 ## Сделать:
-- [ ] 7 инструментов Liquify: Warp, Twirl, Pucker, Bloat, Scallop, Crystallize, Wrinkle
-      (в Illustrator это одна группа тулбара, Warp = Shift-R)
-- [ ] Общая кисть: Width/Height (эллиптическая), Angle, Intensity; Alt-drag = изменить размер
-      кисти на холсте, курсор показывает контур кисти
-- [ ] Опции по инструментам: Simplify (Warp/Pucker/Bloat/Twirl), Twirl Rate (Twirl),
-      Complexity + Detail (Scallop/Crystallize/Wrinkle), Horizontal/Vertical % (Wrinkle)
-- [ ] Чекбоксы «Brush Affects Anchor Points / In Tangent Handles / Out Tangent Handles»
-      (Scallop/Crystallize/Wrinkle)
-- [ ] Диалог опций по двойному клику на инструмент в тулбаре (как в Illustrator);
-      пока диалогов нет (15.x) — допустим prompt/секция в Properties
-- [ ] Liquify работает по выделению, если оно есть; иначе — по всему, что под кистью;
-      деформирует только Path-геометрию (текст/растр пропускаем, v1)
-- [ ] Toolbar: группа из 7 инструментов + иконки
+- [ ] Color панель: слайдеры RGB / HSB / CMYK / Grayscale, Hex-поле, Lab (по возможности);
+      переключение модели через меню панели; спектр-полоска снизу (как в Illustrator)
+- [ ] Color Picker (диалог по dblclick на свотче Fill/Stroke в тулбаре/панели): поле
+      насыщенность×яркость + полоса Hue, поля RGB/HSB/Hex, превью старый/новый цвет,
+      предупреждение out-of-gamut (для CMYK-режима документа)
+- [ ] Eyedropper (I): клик — взять fill/stroke/обводку/opacity с объекта и применить
+      к выделению; Alt-клик — наоборот (отдать стиль выделения объекту под курсором)
+- [ ] Swatches панель: список/сетка свотчей, добавить/удалить, дефолтная библиотека,
+      Global Colors (правка свотча меняет объекты, где он применён), Spot Colors (базово);
+      Pantone/Color Books — отложить, если не влезает
+- [ ] Document Color Mode (RGB/CMYK) — переключатель в File-меню, влияет на Color панель
+      и предупреждения gamut
+- [ ] Create Swatch из выделения; None/Registration свотчи
 
 ## Уже сделано (не трогать):
-- Итерации по 7.2 включительно (см. CLAUDE.md «Сверка с планом 20 фаз»):
+- Итерации по 7.3 включительно (см. CLAUDE.md «Сверка с планом 20 фаз»):
   выделение, фигуры, Pen, рисование/резка, текст 5.1–5.3, организация 6.1–6.2,
-  трансформации 7.1, Width Tool / Puppet Warp / Measure / Dimension 7.2
+  трансформации 7.1, Width/Puppet Warp/Measure/Dimension 7.2, Liquify 7.3
 
 ## Не трогать:
 - Всё что не в списке выше
