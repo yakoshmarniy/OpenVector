@@ -2,6 +2,7 @@ import paper from 'paper';
 import { hitRegion, isTextItem } from './textLayout.js';
 import { refreshArrowheads } from './arrowheads.js';
 import { refreshWidthEnvelope, isWidthEnvelope } from './widthProfile.js';
+import { refreshGradientFill } from './gradients.js';
 import {
   subscribeSelection,
   getSelectedItems,
@@ -283,6 +284,7 @@ function drawOverlay() {
   targets.forEach((t) => {
     refreshArrowheads(t);
     refreshWidthEnvelope(t);
+    refreshGradientFill(t);
   });
   if (!targets.length) {
     reportBounds();

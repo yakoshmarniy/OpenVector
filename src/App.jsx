@@ -8,6 +8,7 @@ import LayersPanel from './components/Panels/LayersPanel.jsx';
 import ColorPanel from './components/Panels/ColorPanel.jsx';
 import SwatchesPanel from './components/Panels/SwatchesPanel.jsx';
 import ColorGuidePanel from './components/Panels/ColorGuidePanel.jsx';
+import GradientPanel from './components/Panels/GradientPanel.jsx';
 import ColorPickerDialog from './components/ColorPicker/ColorPickerDialog.jsx';
 import RecolorDialog from './components/RecolorDialog/RecolorDialog.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
@@ -41,6 +42,7 @@ export default function App() {
   const [colorOpen, setColorOpen] = useState(true);
   const [swatchesOpen, setSwatchesOpen] = useState(true);
   const [colorGuideOpen, setColorGuideOpen] = useState(false);
+  const [gradientOpen, setGradientOpen] = useState(false);
   const [recolorOpen, setRecolorOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null); // 'fill' | 'stroke'
   const [isoDepth, setIsoDepth] = useState(0); // isolation-mode nesting depth
@@ -242,6 +244,9 @@ export default function App() {
         case 'toggleColorGuide':
           setColorGuideOpen((v) => !v);
           break;
+        case 'toggleGradient':
+          setGradientOpen((v) => !v);
+          break;
         case 'openRecolor':
           if (selItemsRef.current.length) setRecolorOpen(true);
           break;
@@ -320,6 +325,7 @@ export default function App() {
         colorOpen={colorOpen}
         swatchesOpen={swatchesOpen}
         colorGuideOpen={colorGuideOpen}
+        gradientOpen={gradientOpen}
         onCommand={handleCommand}
       />
       <ControlBar
@@ -364,6 +370,7 @@ export default function App() {
           />
           {colorOpen && <ColorPanel paintFocus={paintFocus} onSetPaintFocus={setPaintFocus} />}
           {swatchesOpen && <SwatchesPanel paintFocus={paintFocus} />}
+          {gradientOpen && <GradientPanel />}
           {colorGuideOpen && (
             <ColorGuidePanel
               paintFocus={paintFocus}

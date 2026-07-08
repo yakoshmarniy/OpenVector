@@ -4,6 +4,7 @@ import { groupItems, ungroupItems, booleanOp } from './booleans.js';
 import { alignItems, distributeItems } from './align.js';
 import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
 import { clearWidthEnvelope, refreshWidthEnvelope } from './widthProfile.js';
+import { clearGradientFill } from './gradients.js';
 import { unlockAllItems, showAllItems } from './visibility.js';
 import { pathfinderOp } from './pathfinder.js';
 import { makeCompoundPath, releaseCompoundPath } from './compound.js';
@@ -166,6 +167,7 @@ export function runSelectionAction(selection, rawName) {
       items.forEach((t) => {
         clearArrowheads(t);
         clearWidthEnvelope(t);
+        clearGradientFill(t);
         t.remove();
       });
       selection.clear();

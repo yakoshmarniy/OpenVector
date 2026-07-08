@@ -8,6 +8,7 @@ import {
   applyWidthPreset,
   refreshWidthEnvelope,
 } from './widthProfile.js';
+import { getGradient, clearGradient, refreshGradientFill } from './gradients.js';
 
 // Read/write the visual style of a Paper.js item as plain serialisable values,
 // so React (the Properties panel) can drive it without touching paper directly.
@@ -15,6 +16,14 @@ import {
 
 const DEFAULT_FILL = '#b9bcc0';
 const DEFAULT_STROKE = '#7d8186';
+
+// A plain hex for the paint swatch: a gradient has none, so fall back to its
+// first stop; a solid Color gives its CSS hex.
+function solidHex(color, gradient, fallback) {
+  if (gradient && gradient.stops && gradient.stops.length) return gradient.stops[0].color;
+  if (color && color.type !== 'gradient') return color.toCSS(true);
+  return fallback;
+}
 
 // Classify the dash pattern back into the three UI presets.
 function lineTypeOf(dashArray, cap) {
@@ -29,11 +38,16 @@ export function readStyle(item) {
   const dashArray = item.dashArray && item.dashArray.length ? item.dashArray.slice() : [];
   const strokeCap = item.strokeCap || 'butt';
   const arrows = (item.data && item.data.arrows) || {};
+  const fillGradient = getGradient(item, 'fill');
+  const strokeGradient = getGradient(item, 'stroke');
   return {
     hasFill: !!item.fillColor,
-    fillColor: item.fillColor ? item.fillColor.toCSS(true) : DEFAULT_FILL,
+    // A gradient Color has no single hex — report the first stop for the swatch.
+    fillColor: solidHex(item.fillColor, fillGradient, DEFAULT_FILL),
+    fillGradient,
     hasStroke: !!item.strokeColor,
-    strokeColor: item.strokeColor ? item.strokeColor.toCSS(true) : DEFAULT_STROKE,
+    strokeColor: solidHex(item.strokeColor, strokeGradient, DEFAULT_STROKE),
+    strokeGradient,
     // With a width profile the native strokeWidth is 0 — report the nominal.
     strokeWidth: hasWidthProfile(item) ? getWidthProfile(item).base : (item.strokeWidth ?? 0),
     widthPreset: hasWidthProfile(item) ? (getWidthProfile(item).preset || 'custom') : 'uniform',
@@ -59,8 +73,15 @@ export function applyStyle(item, patch) {
   }
   // Wrap CSS strings in paper.Color: assigning a string stores it lazily, and
   // a second assignment before a render throws ("_canvasStyle on string").
-  if ('fillColor' in patch) item.fillColor = patch.fillColor ? new paper.Color(patch.fillColor) : null;
-  if ('strokeColor' in patch) item.strokeColor = patch.strokeColor ? new paper.Color(patch.strokeColor) : null;
+  // A solid paint replaces any gradient that was on that channel.
+  if ('fillColor' in patch) {
+    clearGradient(item, 'fill');
+    item.fillColor = patch.fillColor ? new paper.Color(patch.fillColor) : null;
+  }
+  if ('strokeColor' in patch) {
+    clearGradient(item, 'stroke');
+    item.strokeColor = patch.strokeColor ? new paper.Color(patch.strokeColor) : null;
+  }
   if ('strokeWidth' in patch) {
     if (hasWidthProfile(item)) setBaseWidth(item, patch.strokeWidth);
     else item.strokeWidth = patch.strokeWidth;
@@ -83,4 +104,6 @@ export function applyStyle(item, patch) {
   refreshArrowheads(item);
   // Same for the variable-width envelope (colour, weight, opacity, preset).
   refreshWidthEnvelope(item);
+  // Same for the conic gradient companion fan.
+  refreshGradientFill(item);
 }

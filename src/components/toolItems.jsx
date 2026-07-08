@@ -540,6 +540,20 @@ function EyedropperIcon() {
   );
 }
 
+function GradientIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="ovGradIcon" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="currentColor" stopOpacity="0.15" />
+          <stop offset="1" stopColor="currentColor" stopOpacity="0.95" />
+        </linearGradient>
+      </defs>
+      <rect x="3" y="4" width="18" height="16" rx="1.5" fill="url(#ovGradIcon)" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
@@ -575,6 +589,7 @@ export const TOOL_ITEMS = [
   { id: TOOLS.CRYSTALLIZE, label: 'Crystallize', Icon: CrystallizeIcon },
   { id: TOOLS.WRINKLE, label: 'Wrinkle', Icon: WrinkleIcon },
   { id: TOOLS.PUPPET_WARP, label: 'Puppet Warp', Icon: PuppetWarpIcon },
+  { id: TOOLS.GRADIENT, label: 'Gradient', Icon: GradientIcon },
   { id: TOOLS.EYEDROPPER, label: 'Eyedropper', Icon: EyedropperIcon },
   { id: TOOLS.MEASURE, label: 'Measure', Icon: MeasureIcon },
   { id: TOOLS.DIMENSION, label: 'Dimension', Icon: DimensionIcon },

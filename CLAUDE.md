@@ -1417,6 +1417,60 @@ Session 30 notes / decisions:
   .prototype, 'value').set.call(el, v)`) + dispatching `change`/`input` with
   `bubbles: true` — a plain `el.value = v` is swallowed by React's value tracker.
 
+### Session 31 — progress (✅ 9.1a — Gradients; Mesh deferred to 9.1b)
+
+Scope: **phase 9.1**, gradients half (user chose to split 9.1: gradients first, Mesh next).
+Linear/Radial/Conic gradients as fill (+ stroke for linear/radial), on-canvas annotator,
+panel, presets, interpolation/dither options.
+
+- [x] **`operations/gradients.js`** — the core. Linear/Radial are Paper.js NATIVE gradient
+      Colors (`new paper.Gradient(stops, radial)` + `new paper.Color(gradient, origin,
+      destination)`); Paper transforms their geometry together with the item, so they follow
+      move/scale/**rotate** on their own (verified: translate carries origin). Conic has no
+      Paper primitive → rendered the arrowheads/width-envelope way: a companion **clipped
+      wedge-fan Group** (96 wedges, flat-shaded from `sampleRamp`, hairline same-colour stroke
+      hides seams), tagged `data.isGradientFill` + `data.ownerId`, rebuilt by
+      `refreshGradientFill` (called from `selection.drawOverlay` and `applyStyle`), so it
+      tracks the path. The conic path itself keeps an opaque first-stop backdrop so it still
+      hit-tests. **Perceptual interpolation** (`renderStops`): inserts linear-light midpoints
+      so Paper's sRGB interpolation approximates a perceptual ramp; **dither** stored as a flag
+      (no vector equivalent, v1). `readGeometry` reads live origin/destination for the tool;
+      `rampColorAt` samples the ramp for new stops.
+- [x] **Gradient Tool** (`tools/gradientTool.js`, own Toolbar slot, first in the
+      Eyedropper/Measure/Dimension group) — on-canvas annotator: drag the shape = (re)define
+      the axis start→end, drag square origin / round destination = move endpoint, drag a diamond
+      stop = slide its offset, click the axis = add a stop (colour from the ramp), Alt-click a
+      stop = remove (min 2). Radial shows the radius circle; conic shows a centre ring + a
+      start-angle handle (drag rotates). Edits the FILL gradient of the first selected path (v1).
+- [x] **Gradient panel** (`Panels/GradientPanel.jsx`, Window > Gradient, off by default): type
+      Linear/Radial/Conic, a ramp bar with draggable diamond stops (click empty = add,
+      Alt-click = remove), preview, Reverse, Stop colour / Opacity / Location, Angle,
+      Interpolation (Classic/Perceptual) + Dither, 6 presets. Applies live to every selected
+      path (each keeps its own axis geometry); re-reads on selection/document change so the
+      on-canvas tool and panel stay in sync.
+- [x] **itemStyle integration**: `readStyle` exposes `fillGradient`/`strokeGradient` and reports
+      the first stop as the swatch hex (a gradient Color has no single `toCSS`); `applyStyle`
+      clears the gradient when a solid paint is set and calls `refreshGradientFill`. Delete and
+      `isTransientItem` handle the conic fan like envelopes/arrowheads.
+- [ ] Deferred to **9.1b**: Mesh Tool + Create Gradient Mesh (heavy subsystem, no Paper
+      primitive); gradient on stroke *along/across* the path (v1 stroke gradient is a plain
+      linear/radial paint); conic annotator centre drag + conic start-angle rotation-follow;
+      the big Color Picker for stop colours (v1 uses a native colour input).
+
+Session 31 notes / decisions:
+- **Paper transforms native gradient geometry with the item** (confirmed in the browser) — so
+  linear/radial need applying only once; only conic is rebuilt on redraw. This avoids a
+  bounds-fraction model that would wrongly keep the axis axis-aligned under rotation.
+- Conic fan is flat-shaded per wedge with a matching hairline stroke to kill anti-alias seams;
+  96 segments read as smooth. v1 limitation: the fan follows translation/scale (via bounds) but
+  its start angle does not rotate with the shape — noted in the module header.
+- Test gotcha (not code): the Menu Bar dropdown does NOT open under synthetic/CDP clicks in the
+  headless preview (opens for real users; verified in earlier sessions). To visually verify a
+  panel that is off by default, temporarily flip its `useState` default to `true`, reload, screenshot, revert.
+- `new paper.Path.Rectangle(...).fillColor = '#hex'` (string) followed by another colour write
+  before a render still throws the session-4 `_canvasStyle on string` — in tests build the fill
+  through `applyGradient` (which wraps in `new paper.Color`) instead of a placeholder string.
+
 > Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
 > Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
 > (the old plan went differently), so early phases are partially closed.
@@ -1441,15 +1495,17 @@ Session 30 notes / decisions:
 - **7.3 (Liquify):** ✅ DONE — 7 tools (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) in the Width slot, shared elliptical brush (W/H/Angle/Intensity, Alt-drag on-canvas resize, Shift+Alt = circular), per-tool options in a Properties section (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, Brush Affects Anchors/In/Out Tangents checkboxes), subdivision under the brush + prune/smooth on gesture finish · ⬜ dblclick-on-tool dialog (15.x), text deformation
 - **8.1 (Color):** ✅ DONE — Color panel (RGB/HSB/CMYK/Grayscale/Lab sliders with gradient tracks, hex, spectrum bar, fill/stroke proxy), Color Picker dialog (SV field + hue strip, HSB/RGB/CMYK/Hex, new/old, gamut warning; dblclick on toolbar proxy / swatch), Eyedropper (take / Alt-give / sample-to-default), Swatches panel (None/Registration, library, "+"/"−", Global Colors with retint, Spot basic, Swatch Options), Document Color Mode RGB/CMYK (File menu, gamut warnings), default paint for new shapes · ⬜ Pantone/Color Books, Create Swatch from image (needs 12.1), ICC profiles
 - **8.2 (Harmonies/Recolor):** ✅ DONE — Color Guide panel (6 harmony rules, base chip from current paint, Tints/Shades + Warm/Cool + Vivid/Muted variation grid, apply to focused paint, Window > Color Guide), Recolor Artwork dialog (Edit > Edit Colors; extract selection colours incl. text, current→new rows, live preview + Cancel restore, harmony rules, Link/Unlink hue rotation, Shuffle, Vary S/B, Add/Remove Color with use-merge, Limit to swatch library), colour wheel smooth/segmented/bars with draggable markers, HSB sliders · ⬜ colour groups in Swatches, bars drag-reorder
+- **9.1 (Gradients/Mesh):** 🟡 Gradients ✅ — Gradient panel (Linear/Radial/Conic, ramp bar with draggable/add/remove stops, preview, Reverse, Stop colour/Opacity/Location, Angle, Interpolation Classic/Perceptual, Dither, presets), Gradient Tool with on-canvas annotator (redefine axis, endpoints, slide/add/remove stops), fill (+ linear/radial stroke), conic via companion wedge-fan (`operations/gradients.js`), native geometry follows transforms · ⬜ **9.1b: Mesh Tool + Create Gradient Mesh** (deferred), stroke gradient along/across path, conic angle rotation-follow
 - **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
 - **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
 Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
 **Undo/Redo** (phase 20.1).
 
-**Next by plan (early gaps):** 9.1 Gradients and Mesh (Gradient panel + Gradient Tool:
-linear/radial/conical, presets, dither, perceptual interpolation; Mesh Tool, Create
-Gradient Mesh). Previously deferred:
+**Next by plan (early gaps):** 9.1b Mesh — Mesh Tool + Create Gradient Mesh (Object menu;
+rows×columns, appearance flat/to edge/to center, highlight). Heavy subsystem, no Paper
+primitive — budget a v1 approximation (a grid of blended colour patches). Gradients half of
+9.1 is done (session 31). Previously deferred:
 rotated box + Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for
 polygon/star/ellipse (from 3.x); Delete key and auto-select of a new shape under
 non-selection tools; Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead

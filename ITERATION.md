@@ -1,41 +1,42 @@
-# Current task: iteration 9.1 — Gradients and Mesh
+# Current task: iteration 9.1b — Gradient Mesh (Mesh Tool + Create Gradient Mesh)
+
+> 9.1 was split (user directive, session 31): gradients first (done), Mesh next.
 
 ## To do:
-- [ ] Gradient panel + Gradient Tool: linear, radial, conical (angular) gradients;
-      on-canvas gradient annotator (drag the axis, move/add/delete stops, angle, aspect)
-- [ ] Gradient presets, dither, perceptual interpolation (option)
-- [ ] Mesh Tool, Create Gradient Mesh (Object menu; rows×columns, appearance flat/to
-      edge/to center, highlight)
-- [ ] Gradient works as fill AND stroke (along/across stroke); reverse, opacity stops
+- [ ] Mesh Tool: click a filled object to add mesh points forming a lattice of colour
+      patches; select a patch/point, edit its colour (Color panel / picker)
+- [ ] Create Gradient Mesh (Object menu): dialog Rows × Columns, Appearance
+      (Flat / To Edge / To Center), Highlight %
+- [ ] Mesh follows transforms (move/scale/rotate); works with selection + Layers
 
 ## Already done (don't touch):
-- Iterations through 8.2 inclusive (see CLAUDE.md "Reconciliation"): selection, shapes,
-  Pen, drawing/cutting, text 5.1–5.3, organization 6.1–6.2, transforms 7.1–7.3,
-  color 8.1 (Color panel, Picker, Eyedropper, Swatches, Document Color Mode),
-  color 8.2 (Color Guide harmonies + variations, Recolor Artwork dialog with wheel)
-- Color conversions — `src/canvas/operations/colorConvert.js` (hex/RGB/HSB/CMYK/Lab,
-  gamut) — reuse, don't duplicate
-- Harmony math — `src/canvas/operations/harmony.js` (harmonyColors/variationRow/
-  nearestColor/toHsb/toHex) — reuse for any colour-generation need
-- Style edits from panels — via `applyStyle` + `afterStyleEdit()` from
-  `operations/swatchOps.js` (redraw + notify + bump)
-- Colour selection extraction — `operations/recolor.js` (collectColors) — reuse if a
-  future feature needs to walk the selection's colours
+- Iterations through 9.1a inclusive (see CLAUDE.md "Reconciliation").
+- **Gradients (9.1a, session 31)** — `src/canvas/operations/gradients.js` (linear/radial
+  native, conic wedge-fan companion; `applyGradient`/`getGradient`/`readGeometry`/
+  `refreshGradientFill`/`clearGradient`; perceptual interpolation via `renderStops`).
+  REUSE for mesh colour sampling / patch fills. Gradient Tool `tools/gradientTool.js`
+  (annotator overlay pattern), panel `Panels/GradientPanel.jsx`, Window > Gradient.
+- Companion-item pattern (ownerId/locked/insertAbove, rebuilt in `selection.drawOverlay`
+  + `applyStyle`, in `isTransientItem`, cleared on delete) — arrowheads / width envelope /
+  conic fan. A mesh raster (if chosen) follows the same wiring.
+- Color conversions — `operations/colorConvert.js`; style edits — `applyStyle` +
+  `afterStyleEdit()` (`operations/swatchOps.js`).
 
 ## Don't touch:
 - Anything not in the list above
 - Later iterations
 
-## Notes for 9.1:
-- Paper.js DOES support gradients natively (`new paper.Gradient`, `GradientStop`,
-  `Color({ gradient, origin, destination, radial })`) — but NOT conical/angular; that
-  will need a custom render (like width envelopes / arrowheads pattern) or a raster fill.
-- Gradient Mesh has no Paper.js primitive — it's a real subsystem (a lattice of colour
-  patches). Budget it as the heavy item; consider a v1 that approximates (e.g. a grid of
-  blended paths) if a full mesh is too big for one iteration.
-- The on-canvas gradient annotator is another overlay widget — follow the pattern of the
-  Free Transform quad / Puppet Warp pins (draw immediately in the tool factory, redraw on
-  view change).
+## Notes for 9.1b:
+- Paper.js has NO mesh primitive. A real gradient mesh is a Coons-patch lattice; a v1 that
+  supports a grid of points with per-point colours and bilinear-interpolated patches is a
+  reasonable first cut.
+- Rendering a bilinear-blended quad: either subdivide each patch into many flat-shaded
+  micro-quads (the conic fan already proves this reads smooth) or render to an offscreen
+  canvas → Raster clipped to the shape. Prefer vector patches if feasible.
+- Store the mesh model in `item.data.mesh = { rows, cols, points:[[{x,y,color}]] }` and
+  rebuild the companion via the established refresh hook.
+- The Mesh Tool overlay follows the Gradient Tool / Free Transform pattern (draw the widget
+  immediately in the factory, redraw on `onViewChange`).
 
 ## Plan additions from Illustrator 2024–2026 research (fold into CLAUDE.md during plan polish):
 - **New tools missing from the plan:** Objects on Path (v29.0, 2025) → phase 7/11;
