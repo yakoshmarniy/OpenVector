@@ -54,6 +54,12 @@ iteration, implements its items, commits, updates status, stops. Do not start th
 iteration without an explicit request. The order of items within an iteration may be
 changed if it makes more sense.
 
+> 📣 **Iteration-reporting rule (user directive, 2026-07-08) — ALWAYS:**
+> 1. At the **very start of every reply**, state which iteration we are working on **now**
+>    and which iteration comes **next** (e.g. "Now: 9.1b — Mesh. Next: 9.2 — Stroke/Appearance").
+> 2. When all the work for the iteration is **done**, end with a **vertical checklist** (one
+>    item per line) of everything that was added, so the user knows exactly what to review.
+
 > The checklists below are the task list. **The actual completion state right now** is in
 > "Current status → Reconciliation with the 20-phase plan". To avoid double bookkeeping,
 > the checkboxes in the plan itself are left empty.
@@ -1539,6 +1545,9 @@ Before starting every session:
 3. Ask what we're doing today if unclear
 4. Follow the 20-phase plan in order, starting from the earliest unclosed iteration
    (see "Reconciliation with the 20-phase plan"). Don't jump ahead without an explicit request.
+5. ALWAYS open every reply by stating the current and next iteration; when an iteration is
+   finished, close with a vertical checklist of what was added (see the Iteration-reporting
+   rule under "Development plan").
 
 ---
 
