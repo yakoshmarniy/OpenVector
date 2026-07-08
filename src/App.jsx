@@ -7,7 +7,9 @@ import Properties from './components/Properties/Properties.jsx';
 import LayersPanel from './components/Panels/LayersPanel.jsx';
 import ColorPanel from './components/Panels/ColorPanel.jsx';
 import SwatchesPanel from './components/Panels/SwatchesPanel.jsx';
+import ColorGuidePanel from './components/Panels/ColorGuidePanel.jsx';
 import ColorPickerDialog from './components/ColorPicker/ColorPickerDialog.jsx';
+import RecolorDialog from './components/RecolorDialog/RecolorDialog.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import FindFontDialog from './components/FindFontDialog/FindFontDialog.jsx';
@@ -38,6 +40,8 @@ export default function App() {
   const [layersOpen, setLayersOpen] = useState(true);
   const [colorOpen, setColorOpen] = useState(true);
   const [swatchesOpen, setSwatchesOpen] = useState(true);
+  const [colorGuideOpen, setColorGuideOpen] = useState(false);
+  const [recolorOpen, setRecolorOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null); // 'fill' | 'stroke'
   const [isoDepth, setIsoDepth] = useState(0); // isolation-mode nesting depth
   const selItemsRef = useRef([]);
@@ -235,6 +239,12 @@ export default function App() {
         case 'toggleSwatches':
           setSwatchesOpen((v) => !v);
           break;
+        case 'toggleColorGuide':
+          setColorGuideOpen((v) => !v);
+          break;
+        case 'openRecolor':
+          if (selItemsRef.current.length) setRecolorOpen(true);
+          break;
         case 'colorModeRGB':
           setColorMode('rgb');
           break;
@@ -309,6 +319,7 @@ export default function App() {
         colorMode={getColorMode()}
         colorOpen={colorOpen}
         swatchesOpen={swatchesOpen}
+        colorGuideOpen={colorGuideOpen}
         onCommand={handleCommand}
       />
       <ControlBar
@@ -353,11 +364,18 @@ export default function App() {
           />
           {colorOpen && <ColorPanel paintFocus={paintFocus} onSetPaintFocus={setPaintFocus} />}
           {swatchesOpen && <SwatchesPanel paintFocus={paintFocus} />}
+          {colorGuideOpen && (
+            <ColorGuidePanel
+              paintFocus={paintFocus}
+              onOpenRecolor={() => selItemsRef.current.length && setRecolorOpen(true)}
+            />
+          )}
           {layersOpen && <LayersPanel />}
         </div>
       </div>
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
       {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}
+      {recolorOpen && <RecolorDialog onClose={() => setRecolorOpen(false)} />}
       {pickerTarget && (
         <ColorPickerDialog
           title={pickerTarget === 'fill' ? 'Fill Color' : 'Stroke Color'}

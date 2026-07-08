@@ -1367,6 +1367,56 @@ Session 29 notes / decisions:
   `FocusEvent('blur')` doesn't trigger it. `button.click()` returns undefined, so
   `?? 'no button'` in eval gives a false report.
 
+### Session 30 — progress (✅ iteration 8.2)
+
+Scope: **phase 8.2** — Harmonies and Recolor. All checklist items closed (v1).
+
+- [x] **`operations/harmony.js`** — pure math on top of colorConvert: `harmonyColors(base,
+      rule)` for the 6 rules (Complementary incl. a tonal bridge pair, Monochromatic = tonal
+      steps, Triad, Analogous ±15/±30, High Contrast = tetrad 90/180/270, Pentagram = 72°
+      spins), `variationRow(hex, kind)` — 4 steps left + base + 4 right for Tints/Shades
+      (darker ← → lighter+desat), Warm/Cool (RGB mix toward red / blue), Vivid/Muted
+      (toward gray ← → saturated); `nearestColor` (RGB distance) for the library limit.
+- [x] **Color Guide panel** (`Panels/ColorGuidePanel.jsx`, Window > Color Guide, off by
+      default): harmony rule select, base chip (click = re-seed from the current focused
+      paint), harmony colour chips, variation kind select + grid (one row per harmony
+      colour, 9 cells); any chip/cell click applies to the focused paint of the whole
+      selection (or the default paint when nothing selected). "Edit Colors…" opens Recolor.
+- [x] **`operations/recolor.js`** — `collectColors(items)`: walks the selection (groups
+      recursively, text groups are leaves read via readStyle, isTransientItem skipped),
+      returns distinct hex entries with uses `[{item, key}]`, sorted by hue with grays
+      last; `applyAssignments` / `restoreOriginals` write through applyStyle (text,
+      arrowheads, width envelopes follow).
+- [x] **Recolor Artwork dialog** (`RecolorDialog/`, Edit > Edit Colors > Recolor Artwork…,
+      enabled with a selection): current → new assign rows (use counts, click = select),
+      **live preview** (every edit paints the canvas immediately; Cancel restores from the
+      snapshot), harmony rule select re-derives all colours from the selected row
+      (auto-links), **Link/Unlink** (linked = wheel/H-slider hue changes rotate ALL colours
+      by the same Δh), Shuffle (random order), Vary S/B (random jitter), **Add** (a free
+      colour row — no artwork; becomes a library swatch on OK) / **Remove** (merges the
+      row's artwork into the neighbour row — palette reduction), **Limit to swatch
+      library** (snaps all news to the nearest library colour, keeps snapping while on).
+- [x] **Colour wheel**: smooth (createConicGradient + radial saturation overlay; falls
+      back to segmented when unsupported), segmented (24 sectors × 6 rings), bars (one bar
+      per colour, click = select). Hue 0 at top, clockwise; marker radius = saturation.
+      Markers drag with pointer capture; linked = rigid rotation (the dragged one also
+      takes its own saturation).
+- [x] **HSB sliders** for the selected new colour (H respects the link, S/B individual).
+- [ ] Deferred: drag-reorder in bars mode, saving colour groups into Swatches, per-row
+      hex input in the dialog, brightness dimension on the wheel (wheel shows B=100).
+
+Session 30 notes / decisions:
+- The dialog previews LIVE and cancels from a snapshot (`restoreOriginals` over the
+  originals array captured at open) — no undo system needed yet (20.1).
+- Free rows (Add Color) participate in linked rotation and land in the swatch library on
+  OK — that's the v1 semantics of Illustrator's Add Color.
+- `toHex` in harmony.js normalises h into [0,360) and clamps s/b — rotation math can be
+  sloppy about ranges.
+- Test gotcha (not code): setting a React-controlled `<select>`/`<input>` in eval needs
+  the native prototype setter (`Object.getOwnPropertyDescriptor(HTMLSelectElement
+  .prototype, 'value').set.call(el, v)`) + dispatching `change`/`input` with
+  `bubbles: true` — a plain `el.value = v` is swallowed by React's value tracker.
+
 > Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
 > Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
 > (the old plan went differently), so early phases are partially closed.
@@ -1390,14 +1440,16 @@ Session 29 notes / decisions:
 - **7.2 (Distortion/width):** ✅ DONE — Width Tool (width points: drag/slide/Alt-delete), Variable Width Profiles (Uniform + 4 presets in Properties), envelope rendering (isWidthEnvelope), Puppet Warp (pins, rigid MLS, Shift multi-select, A = all, Delete keeps deformation), Measure (D/∠/W/H readout), Dimension (dimension annotation as artwork) · ⬜ Show Mesh/pin rotation, asymmetric width points — deferred
 - **7.3 (Liquify):** ✅ DONE — 7 tools (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) in the Width slot, shared elliptical brush (W/H/Angle/Intensity, Alt-drag on-canvas resize, Shift+Alt = circular), per-tool options in a Properties section (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, Brush Affects Anchors/In/Out Tangents checkboxes), subdivision under the brush + prune/smooth on gesture finish · ⬜ dblclick-on-tool dialog (15.x), text deformation
 - **8.1 (Color):** ✅ DONE — Color panel (RGB/HSB/CMYK/Grayscale/Lab sliders with gradient tracks, hex, spectrum bar, fill/stroke proxy), Color Picker dialog (SV field + hue strip, HSB/RGB/CMYK/Hex, new/old, gamut warning; dblclick on toolbar proxy / swatch), Eyedropper (take / Alt-give / sample-to-default), Swatches panel (None/Registration, library, "+"/"−", Global Colors with retint, Spot basic, Swatch Options), Document Color Mode RGB/CMYK (File menu, gamut warnings), default paint for new shapes · ⬜ Pantone/Color Books, Create Swatch from image (needs 12.1), ICC profiles
+- **8.2 (Harmonies/Recolor):** ✅ DONE — Color Guide panel (6 harmony rules, base chip from current paint, Tints/Shades + Warm/Cool + Vivid/Muted variation grid, apply to focused paint, Window > Color Guide), Recolor Artwork dialog (Edit > Edit Colors; extract selection colours incl. text, current→new rows, live preview + Cancel restore, harmony rules, Link/Unlink hue rotation, Shuffle, Vary S/B, Add/Remove Color with use-merge, Limit to swatch library), colour wheel smooth/segmented/bars with draggable markers, HSB sliders · ⬜ colour groups in Swatches, bars drag-reorder
 - **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
 - **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
 Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
 **Undo/Redo** (phase 20.1).
 
-**Next by plan (early gaps):** 8.2 Harmonies and Recolor (Color Guide: harmony rules +
-variations; Recolor Artwork dialog; color wheels, H/S/B sliders). Previously deferred:
+**Next by plan (early gaps):** 9.1 Gradients and Mesh (Gradient panel + Gradient Tool:
+linear/radial/conical, presets, dither, perceptual interpolation; Mesh Tool, Create
+Gradient Mesh). Previously deferred:
 rotated box + Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for
 polygon/star/ellipse (from 3.x); Delete key and auto-select of a new shape under
 non-selection tools; Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead

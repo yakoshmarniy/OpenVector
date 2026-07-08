@@ -6,6 +6,7 @@ import styles from './MenuBar.module.css';
 // text for now; they move to i18next t() when i18n lands.
 function buildMenus({
   sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
+  colorGuideOpen,
 }) {
   const has = sel.count >= 1;
   const multi = sel.count >= 2;
@@ -48,6 +49,19 @@ function buildMenus({
         sep,
         { label: 'Select All', cmd: 'selectAll', accel: '⌘A' },
         { label: 'Deselect', cmd: 'deselect', enabled: has, accel: '⌘⇧A' },
+        sep,
+        {
+          label: 'Edit Colors',
+          enabled: has,
+          items: [
+            { label: 'Recolor Artwork…', cmd: 'openRecolor' },
+            sep,
+            { label: 'Adjust Color Balance…', enabled: false },
+            { label: 'Saturate…', enabled: false },
+            { label: 'Convert to Grayscale', enabled: false },
+            { label: 'Invert Colors', enabled: false },
+          ],
+        },
       ],
     },
     {
@@ -197,6 +211,7 @@ function buildMenus({
         { label: 'Properties', enabled: false },
         { label: 'Layers', cmd: 'toggleLayers', checked: !!layersOpen },
         { label: 'Color', cmd: 'toggleColor', checked: !!colorOpen },
+        { label: 'Color Guide', cmd: 'toggleColorGuide', checked: !!colorGuideOpen },
         { label: 'Swatches', cmd: 'toggleSwatches', checked: !!swatchesOpen },
       ],
     },
@@ -205,13 +220,14 @@ function buildMenus({
 
 export default function MenuBar({
   sel, snap, columns, hiddenChars, layersOpen, isoDepth,
-  colorMode, colorOpen, swatchesOpen, onCommand,
+  colorMode, colorOpen, swatchesOpen, colorGuideOpen, onCommand,
 }) {
   const [open, setOpen] = useState(null);
   const [sub, setSub] = useState(null); // index of the item whose submenu is open
   const barRef = useRef(null);
   const menus = buildMenus({
     sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
+    colorGuideOpen,
   });
 
   useEffect(() => {

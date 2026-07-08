@@ -1,51 +1,53 @@
-# Current task: iteration 8.2 — Harmonies and Recolor
+# Current task: iteration 9.1 — Gradients and Mesh
 
 ## To do:
-- [ ] Color Guide panel: Harmony Rules (Complementary, Monochromatic, Triad, Analogous,
-      High Contrast, Pentagram) derived from a base color; variation rows Tints/Shades,
-      Warm/Cool, Vivid/Muted; click on a variation = apply to the focused paint
-- [ ] Recolor Artwork (dialog, Edit > Edit Colors or a Color Guide button):
-      extract the selection's colors, Harmony Rules, base color change, Link/Unlink
-      harmony (linked rotation of all colors), randomize order and saturation/brightness,
-      Add/Remove Color, limit to a swatch library
-- [ ] Color wheel in Recolor: smooth / segmented modes + color bars; color markers on
-      the wheel, dragging a marker = hue shift (linked = all together)
-- [ ] H/S/B sliders for the selected color inside Recolor
-- [ ] Apply: replace colors across the whole selection (fill/stroke, including text)
+- [ ] Gradient panel + Gradient Tool: linear, radial, conical (angular) gradients;
+      on-canvas gradient annotator (drag the axis, move/add/delete stops, angle, aspect)
+- [ ] Gradient presets, dither, perceptual interpolation (option)
+- [ ] Mesh Tool, Create Gradient Mesh (Object menu; rows×columns, appearance flat/to
+      edge/to center, highlight)
+- [ ] Gradient works as fill AND stroke (along/across stroke); reverse, opacity stops
 
 ## Already done (don't touch):
-- Iterations through 8.1 inclusive (see CLAUDE.md "Reconciliation"): selection, shapes,
+- Iterations through 8.2 inclusive (see CLAUDE.md "Reconciliation"): selection, shapes,
   Pen, drawing/cutting, text 5.1–5.3, organization 6.1–6.2, transforms 7.1–7.3,
-  color 8.1 (Color panel, Picker, Eyedropper, Swatches, Document Color Mode)
+  color 8.1 (Color panel, Picker, Eyedropper, Swatches, Document Color Mode),
+  color 8.2 (Color Guide harmonies + variations, Recolor Artwork dialog with wheel)
 - Color conversions — `src/canvas/operations/colorConvert.js` (hex/RGB/HSB/CMYK/Lab,
   gamut) — reuse, don't duplicate
+- Harmony math — `src/canvas/operations/harmony.js` (harmonyColors/variationRow/
+  nearestColor/toHsb/toHex) — reuse for any colour-generation need
 - Style edits from panels — via `applyStyle` + `afterStyleEdit()` from
   `operations/swatchOps.js` (redraw + notify + bump)
+- Colour selection extraction — `operations/recolor.js` (collectColors) — reuse if a
+  future feature needs to walk the selection's colours
 
 ## Don't touch:
 - Anything not in the list above
 - Later iterations
 
-## Plan additions from Illustrator 2024–2026 research (NOT this iteration — fold into CLAUDE.md during plan polish):
-- **New tools missing from the plan:** Objects on Path (v29.0, 2025 — laying out objects
-  along a path with spacing/alignment/orientation handles) → phase 7/11;
-  Intertwine (Make/Edit/Release) is already in 11.3 — fine.
-- **Dimension tool** (v28.3): our v1 was done in 7.2; in Illustrator — Linear/Angular/Radial,
-  units/scale/precision, a dedicated Dimensions layer → finish at 13.x.
-- **Contextual Task Bar** — in Illustrator this is a central surface (contextual actions
-  for paths/shapes/text/groups/masks + AI actions). We have a seed since 1.2 — at 20.2
-  build a shared registry "command → menu/Properties/Task Bar/widget".
-- **On-canvas widgets** — check our set against the research list (Live Corners with corner
-  types round/inverted/chamfer, gradient annotator, blend spine, repeat widgets,
-  9-point reference — partially present); each widget = a reusable overlay component.
-- **Phase 18 (AI) split into tracks:** 18.0 architecture (Generative Object data model,
-  variation management, Generation History) → generation (Text to Vector, Shape Fill,
-  Expand) → editing (Prompt to Edit, Generative Recolor) → text (Rewrite, Retype)
-  → Mockup/Turntable → AI Assistant. Map Adobe features to open-model equivalents
-  (user-provided keys).
-- **Transform Each** got Relative/Absolute scaling (2026) — ours is a prompt stub, account for it in 15.x.
-- **Blending modes:** the canonical list of 16 confirmed (see research, section E) — for 11.1.
-- **Artboards:** Illustrator's limit is up to 1000 (a reference for 13.1, not an obligation).
+## Notes for 9.1:
+- Paper.js DOES support gradients natively (`new paper.Gradient`, `GradientStop`,
+  `Color({ gradient, origin, destination, radial })`) — but NOT conical/angular; that
+  will need a custom render (like width envelopes / arrowheads pattern) or a raster fill.
+- Gradient Mesh has no Paper.js primitive — it's a real subsystem (a lattice of colour
+  patches). Budget it as the heavy item; consider a v1 that approximates (e.g. a grid of
+  blended paths) if a full mesh is too big for one iteration.
+- The on-canvas gradient annotator is another overlay widget — follow the pattern of the
+  Free Transform quad / Puppet Warp pins (draw immediately in the tool factory, redraw on
+  view change).
+
+## Plan additions from Illustrator 2024–2026 research (fold into CLAUDE.md during plan polish):
+- **New tools missing from the plan:** Objects on Path (v29.0, 2025) → phase 7/11;
+  Intertwine (Make/Edit/Release) already in 11.3.
+- **Dimension tool** (v28.3): v1 done in 7.2; full Linear/Angular/Radial + a Dimensions
+  layer → finish at 13.x.
+- **Contextual Task Bar** — build a shared registry "command → menu/Properties/Task
+  Bar/widget" at 20.2.
+- **Phase 18 (AI) split into tracks:** 18.0 architecture → generation → editing (incl.
+  Generative Recolor — note it reuses 8.2's Recolor) → text → Mockup → AI Assistant.
+- **Transform Each** Relative/Absolute (2026) — ours is a prompt stub, account for it in 15.x.
+- **Blending modes:** canonical 16 confirmed — for 11.1.
 
 ## Context:
 - Stack: Vite + React + Paper.js
