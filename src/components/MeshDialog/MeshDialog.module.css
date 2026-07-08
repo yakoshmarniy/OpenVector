@@ -1,0 +1,112 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--ov-panel);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  font-size: 13px;
+  color: var(--ov-text);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ov-panel-border);
+}
+
+.title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.close {
+  padding: 2px 6px;
+  border: none;
+  background: none;
+  color: var(--ov-text-dim);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: var(--ov-text);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field > span:first-child {
+  width: 84px;
+  color: var(--ov-text-dim);
+}
+
+.field input[type='number'],
+.field select {
+  flex: 1;
+  padding: 3px 6px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.field input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.val {
+  width: 36px;
+  text-align: right;
+  color: var(--ov-text-dim);
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ov-panel-border);
+}
+
+.btn {
+  padding: 5px 14px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--ov-accent-active);
+  border-color: var(--ov-accent-active);
+  color: #fff;
+}

@@ -1,42 +1,49 @@
-# Current task: iteration 9.1b — Gradient Mesh (Mesh Tool + Create Gradient Mesh)
+# Current task: iteration 9.2 — Stroke, Appearance, Graphic Styles
 
-> 9.1 was split (user directive, session 31): gradients first (done), Mesh next.
+> Phase 9.1 (Gradients + Mesh) is done, sessions 31–32.
 
 ## To do:
-- [ ] Mesh Tool: click a filled object to add mesh points forming a lattice of colour
-      patches; select a patch/point, edit its colour (Color panel / picker)
-- [ ] Create Gradient Mesh (Object menu): dialog Rows × Columns, Appearance
-      (Flat / To Edge / To Center), Highlight %
-- [ ] Mesh follows transforms (move/scale/rotate); works with selection + Layers
+- [ ] Full **Stroke panel** (Window > Stroke): width, cap, join, miter limit, dashes (dash/gap
+      pairs), align stroke (center/inside/outside), variable width profiles, arrowheads with
+      INDEPENDENT start/end scale, "Corners" (Adobe: scale corners with dashes). Much stroke
+      logic already exists in Properties / `itemStyle.js` / `widthProfile.js` / `arrowheads.js`
+      — this promotes it into a proper panel and adds align-stroke + independent arrow scale.
+- [ ] **Appearance panel** (Window > Appearance): multiple fills and strokes per object, each
+      its own colour/opacity/blend, reorderable; add/remove fill/stroke rows; live edit.
+- [ ] **Graphic Styles panel** (Window > Graphic Styles): save the current object's appearance
+      as a named style, apply to a selection, default library, thumbnails.
 
 ## Already done (don't touch):
-- Iterations through 9.1a inclusive (see CLAUDE.md "Reconciliation").
-- **Gradients (9.1a, session 31)** — `src/canvas/operations/gradients.js` (linear/radial
-  native, conic wedge-fan companion; `applyGradient`/`getGradient`/`readGeometry`/
-  `refreshGradientFill`/`clearGradient`; perceptual interpolation via `renderStops`).
-  REUSE for mesh colour sampling / patch fills. Gradient Tool `tools/gradientTool.js`
-  (annotator overlay pattern), panel `Panels/GradientPanel.jsx`, Window > Gradient.
+- Iterations through 9.1 inclusive (see CLAUDE.md "Reconciliation").
+- Stroke basics — `operations/itemStyle.js` (cap/join/dash/lineType), Properties stroke-detail
+  block, arrowheads `operations/arrowheads.js` (companion triangles), variable width
+  `operations/widthProfile.js` (envelope). REUSE — the Stroke panel wraps these.
+- Gradients + Mesh (sessions 31–32) — `operations/gradients.js`, `operations/mesh.js`,
+  `tools/gradientTool.js`, `tools/meshTool.js`, panels/dialog. Multiple-fill Appearance may
+  need to coexist with gradient/mesh fills — keep that in mind.
 - Companion-item pattern (ownerId/locked/insertAbove, rebuilt in `selection.drawOverlay`
   + `applyStyle`, in `isTransientItem`, cleared on delete) — arrowheads / width envelope /
-  conic fan. A mesh raster (if chosen) follows the same wiring.
-- Color conversions — `operations/colorConvert.js`; style edits — `applyStyle` +
-  `afterStyleEdit()` (`operations/swatchOps.js`).
+  conic fan / mesh.
+- Panels live in the right side-col (Window > … toggles); pattern: `Panels/*.jsx` + Window menu
+  item + App open-state + gradientOpen/colorGuideOpen threading through MenuBar.
+- Style edits — `applyStyle` + `afterStyleEdit()` (`operations/swatchOps.js`).
 
 ## Don't touch:
 - Anything not in the list above
 - Later iterations
 
-## Notes for 9.1b:
-- Paper.js has NO mesh primitive. A real gradient mesh is a Coons-patch lattice; a v1 that
-  supports a grid of points with per-point colours and bilinear-interpolated patches is a
-  reasonable first cut.
-- Rendering a bilinear-blended quad: either subdivide each patch into many flat-shaded
-  micro-quads (the conic fan already proves this reads smooth) or render to an offscreen
-  canvas → Raster clipped to the shape. Prefer vector patches if feasible.
-- Store the mesh model in `item.data.mesh = { rows, cols, points:[[{x,y,color}]] }` and
-  rebuild the companion via the established refresh hook.
-- The Mesh Tool overlay follows the Gradient Tool / Free Transform pattern (draw the widget
-  immediately in the factory, redraw on `onViewChange`).
+## Notes for 9.2:
+- Appearance with MULTIPLE fills/strokes has no Paper primitive on a single Path — model it as
+  `item.data.appearance = { fills:[...], strokes:[...] }` and render extra fills/strokes as
+  companion items (the arrowheads/mesh pattern), or as a Group of stacked clones. Decide early;
+  it interacts with gradient/mesh fills (which are already companions).
+- Graphic Styles = serialise the appearance model (+ base stroke/fill/opacity/effects later) to
+  a named preset in a store (like swatches in `state/colors.js`); apply = write it onto the
+  selection via applyStyle + the appearance model.
+- Align-stroke inside/outside on an arbitrary path ≈ Offset Path on the stroke outline
+  (`paperjs-offset` is already a dep, used by Outline Stroke / Offset Path).
+- New floating panels follow the overlay/panel patterns from sessions 29–32 (side-col aside,
+  Window menu toggle, App open-state, subscribe to selection + document stores).
 
 ## Plan additions from Illustrator 2024–2026 research (fold into CLAUDE.md during plan polish):
 - **New tools missing from the plan:** Objects on Path (v29.0, 2025) → phase 7/11;

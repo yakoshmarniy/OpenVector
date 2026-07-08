@@ -11,6 +11,7 @@ import ColorGuidePanel from './components/Panels/ColorGuidePanel.jsx';
 import GradientPanel from './components/Panels/GradientPanel.jsx';
 import ColorPickerDialog from './components/ColorPicker/ColorPickerDialog.jsx';
 import RecolorDialog from './components/RecolorDialog/RecolorDialog.jsx';
+import MeshDialog from './components/MeshDialog/MeshDialog.jsx';
 import StatusBar from './components/StatusBar/StatusBar.jsx';
 import FontsDialog from './components/FontsDialog/FontsDialog.jsx';
 import FindFontDialog from './components/FindFontDialog/FindFontDialog.jsx';
@@ -44,6 +45,7 @@ export default function App() {
   const [colorGuideOpen, setColorGuideOpen] = useState(false);
   const [gradientOpen, setGradientOpen] = useState(false);
   const [recolorOpen, setRecolorOpen] = useState(false);
+  const [meshOpen, setMeshOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null); // 'fill' | 'stroke'
   const [isoDepth, setIsoDepth] = useState(0); // isolation-mode nesting depth
   const selItemsRef = useRef([]);
@@ -250,6 +252,9 @@ export default function App() {
         case 'openRecolor':
           if (selItemsRef.current.length) setRecolorOpen(true);
           break;
+        case 'openMeshDialog':
+          if (selItemsRef.current.length) setMeshOpen(true);
+          break;
         case 'colorModeRGB':
           setColorMode('rgb');
           break;
@@ -383,6 +388,7 @@ export default function App() {
       <StatusBar zoom={zoom} rotation={rotation} sel={sel} />
       {fontsOpen && <FontsDialog onClose={() => setFontsOpen(false)} />}
       {recolorOpen && <RecolorDialog onClose={() => setRecolorOpen(false)} />}
+      {meshOpen && <MeshDialog onClose={() => setMeshOpen(false)} />}
       {pickerTarget && (
         <ColorPickerDialog
           title={pickerTarget === 'fill' ? 'Fill Color' : 'Stroke Color'}

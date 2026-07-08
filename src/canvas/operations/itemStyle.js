@@ -9,6 +9,7 @@ import {
   refreshWidthEnvelope,
 } from './widthProfile.js';
 import { getGradient, clearGradient, refreshGradientFill } from './gradients.js';
+import { clearMesh, refreshMesh } from './mesh.js';
 
 // Read/write the visual style of a Paper.js item as plain serialisable values,
 // so React (the Properties panel) can drive it without touching paper directly.
@@ -76,6 +77,7 @@ export function applyStyle(item, patch) {
   // A solid paint replaces any gradient that was on that channel.
   if ('fillColor' in patch) {
     clearGradient(item, 'fill');
+    clearMesh(item);
     item.fillColor = patch.fillColor ? new paper.Color(patch.fillColor) : null;
   }
   if ('strokeColor' in patch) {
@@ -106,4 +108,6 @@ export function applyStyle(item, patch) {
   refreshWidthEnvelope(item);
   // Same for the conic gradient companion fan.
   refreshGradientFill(item);
+  // Same for the gradient-mesh companion.
+  refreshMesh(item);
 }

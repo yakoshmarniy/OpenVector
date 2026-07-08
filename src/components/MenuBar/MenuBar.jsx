@@ -136,6 +136,8 @@ function buildMenus({
           ],
         },
         sep,
+        { label: 'Create Gradient Mesh…', cmd: 'openMeshDialog', enabled: sel.count === 1 && !sel.isGroup && !text },
+        sep,
         { label: 'Isolate Selected Group', cmd: 'isolate', enabled: group },
         { label: 'Exit Isolation Mode', cmd: 'exitIsolation', enabled: isoDepth > 0 },
         sep,

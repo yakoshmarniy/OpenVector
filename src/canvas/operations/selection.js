@@ -3,6 +3,7 @@ import { hitRegion, isTextItem } from './textLayout.js';
 import { refreshArrowheads } from './arrowheads.js';
 import { refreshWidthEnvelope, isWidthEnvelope } from './widthProfile.js';
 import { refreshGradientFill } from './gradients.js';
+import { refreshMesh } from './mesh.js';
 import {
   subscribeSelection,
   getSelectedItems,
@@ -285,6 +286,7 @@ function drawOverlay() {
     refreshArrowheads(t);
     refreshWidthEnvelope(t);
     refreshGradientFill(t);
+    refreshMesh(t);
   });
   if (!targets.length) {
     reportBounds();

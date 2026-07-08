@@ -2,6 +2,7 @@ import styles from './Properties.module.css';
 import FontPicker from '../FontPicker/FontPicker.jsx';
 import TransformSection from './TransformSection.jsx';
 import LiquifySection from './LiquifySection.jsx';
+import MeshSection from './MeshSection.jsx';
 
 const LIQUIFY_MODES = ['warp', 'twirl', 'pucker', 'bloat', 'scallop', 'crystallize', 'wrinkle'];
 
@@ -380,13 +381,14 @@ export default function Properties({ sel, onChange, onAction, onManageFonts, act
   // Tool-options section: the seven Liquify tools share one brush whose
   // options live here while such a tool is active (dialogs come with 15.x).
   const liquifyMode = LIQUIFY_MODES.includes(activeTool) ? activeTool : null;
+  const meshActive = activeTool === 'mesh';
 
   if (count === 0) {
     return (
       <aside className={styles.panel} aria-label="Properties">
-        {liquifyMode ? <LiquifySection mode={liquifyMode} /> : (
-          <p className={styles.empty}>Nothing selected</p>
-        )}
+        {liquifyMode && <LiquifySection mode={liquifyMode} />}
+        {meshActive && <MeshSection />}
+        {!liquifyMode && !meshActive && <p className={styles.empty}>Nothing selected</p>}
       </aside>
     );
   }
@@ -394,6 +396,7 @@ export default function Properties({ sel, onChange, onAction, onManageFonts, act
   return (
     <aside className={styles.panel} aria-label="Properties">
       {liquifyMode && <LiquifySection mode={liquifyMode} />}
+      {meshActive && <MeshSection />}
       <TransformSection />
       {count >= 2 && (
         <div className={styles.actions}>

@@ -1477,6 +1477,52 @@ Session 31 notes / decisions:
   before a render still throws the session-4 `_canvasStyle on string` — in tests build the fill
   through `applyGradient` (which wraps in `new paper.Color`) instead of a placeholder string.
 
+### Session 32 — progress (✅ 9.1b — Gradient Mesh; closes phase 9.1)
+
+Scope: **phase 9.1**, mesh half. Mesh Tool + Create Gradient Mesh. With session 31 (gradients)
+this closes 9.1.
+
+- [x] **`operations/mesh.js`** — the core. Model on `item.data.mesh = { rows, cols, points:
+      [[{u,v,color}]] }` with node positions PARAMETRIC (u,v in 0..1 of the path bounds) so the
+      mesh follows translate/scale (v1: not rotation, like the conic fan). Render = companion
+      **clipped group of flat-shaded micro-quads** (each cell subdivided 6×6, bilinearly
+      interpolated in BOTH position and colour), tagged `data.isMeshFill` + `data.ownerId`,
+      rebuilt by `refreshMesh` from `selection.drawOverlay` + `applyStyle` (arrowheads/envelope/
+      conic-fan pattern). The path keeps an opaque backdrop so it still hit-tests.
+      `createMesh(item, rows, cols, appearance, highlight)` — appearance flat / toCenter /
+      toEdge shades nodes (highlight = white mix by centre distance). `pointPosition`/
+      `setPointPosition` (project↔parametric), `getPointColor`/`setPointColor`, `hitPoint`.
+- [x] **Mesh Tool** (`tools/meshTool.js`, in the Gradient toolbar slot): click a filled path with
+      no mesh → default 3×3 flat mesh; click a node → select it (handle highlights); drag a node
+      → warp (live rebuild). Overlay = mesh lines + square node handles (drawn immediately + on
+      onViewChange). Selected node published to `state/mesh.js`.
+- [x] **`state/mesh.js`** — active-mesh-point store (item + r,c), like state/liquify. The
+      Properties **MeshSection** subscribes and shows a "Node color" input that recolours the
+      selected node and rebuilds; else a hint. Rendered when the Mesh tool is active.
+- [x] **Create Gradient Mesh dialog** (`components/MeshDialog/`, Object > Create Gradient Mesh…,
+      enabled for a single non-group/non-text selection): Rows, Columns, Appearance
+      (Flat/To Center/To Edge), Highlight slider. Live preview; Cancel restores the original fill.
+- [x] Wiring: toolIds MESH, Canvas factory, toolItems (MeshIcon), Toolbar (Gradient slot),
+      isTransientItem `isMeshFill`, delete cleanup, `applyStyle` clears the mesh on a solid fill +
+      refreshes the companion, App meshOpen state + `openMeshDialog` command + MeshDialog mount.
+- [ ] Deferred: true Coons-patch mesh with tangent handles (v1 is bilinear); add/remove mesh
+      rows/cols by clicking (v1 = fixed grid from the tool default or the dialog); mesh rotation
+      of node positions (axis-aligned only, v1); Color-panel integration for node colours.
+
+Session 32 notes / decisions:
+- Mesh render reuses the conic-fan approach (subdivided flat-shaded quads + hairline same-colour
+  strokes to hide seams). A 4×4 mesh = 3×3 cells × 36 = 324 quads (verified render).
+- Bilinear colour AND position interpolation per cell (`bilerp`): corner colours blend across
+  each patch; node positions define the warp — moving an interior node bends the lattice
+  (verified: drag warps + patches follow; recolour bleeds the new colour bilinearly).
+- Node positions are parametric to bounds → follow translate/scale; recolour/warp rebuild via the
+  shared refresh hook. Same v1 rotation caveat as the conic fan.
+- The MeshSection reads the active node from `state/mesh.js` (set by the tool), so recolouring
+  targets one node without a bespoke selection type.
+- The Create Gradient Mesh dialog UI wasn't screenshotted (Object-menu dropdown doesn't open under
+  headless CDP clicks — see the session-31 note); its actions `createMesh`/`clearMesh` are
+  browser-verified and it is a thin component over them.
+
 > Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
 > Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
 > (the old plan went differently), so early phases are partially closed.
@@ -1501,17 +1547,17 @@ Session 31 notes / decisions:
 - **7.3 (Liquify):** ✅ DONE — 7 tools (Warp/Twirl/Pucker/Bloat/Scallop/Crystallize/Wrinkle) in the Width slot, shared elliptical brush (W/H/Angle/Intensity, Alt-drag on-canvas resize, Shift+Alt = circular), per-tool options in a Properties section (Simplify, Twirl Rate, Complexity/Detail, Wrinkle H/V, Brush Affects Anchors/In/Out Tangents checkboxes), subdivision under the brush + prune/smooth on gesture finish · ⬜ dblclick-on-tool dialog (15.x), text deformation
 - **8.1 (Color):** ✅ DONE — Color panel (RGB/HSB/CMYK/Grayscale/Lab sliders with gradient tracks, hex, spectrum bar, fill/stroke proxy), Color Picker dialog (SV field + hue strip, HSB/RGB/CMYK/Hex, new/old, gamut warning; dblclick on toolbar proxy / swatch), Eyedropper (take / Alt-give / sample-to-default), Swatches panel (None/Registration, library, "+"/"−", Global Colors with retint, Spot basic, Swatch Options), Document Color Mode RGB/CMYK (File menu, gamut warnings), default paint for new shapes · ⬜ Pantone/Color Books, Create Swatch from image (needs 12.1), ICC profiles
 - **8.2 (Harmonies/Recolor):** ✅ DONE — Color Guide panel (6 harmony rules, base chip from current paint, Tints/Shades + Warm/Cool + Vivid/Muted variation grid, apply to focused paint, Window > Color Guide), Recolor Artwork dialog (Edit > Edit Colors; extract selection colours incl. text, current→new rows, live preview + Cancel restore, harmony rules, Link/Unlink hue rotation, Shuffle, Vary S/B, Add/Remove Color with use-merge, Limit to swatch library), colour wheel smooth/segmented/bars with draggable markers, HSB sliders · ⬜ colour groups in Swatches, bars drag-reorder
-- **9.1 (Gradients/Mesh):** 🟡 Gradients ✅ — Gradient panel (Linear/Radial/Conic, ramp bar with draggable/add/remove stops, preview, Reverse, Stop colour/Opacity/Location, Angle, Interpolation Classic/Perceptual, Dither, presets), Gradient Tool with on-canvas annotator (redefine axis, endpoints, slide/add/remove stops), fill (+ linear/radial stroke), conic via companion wedge-fan (`operations/gradients.js`), native geometry follows transforms · ⬜ **9.1b: Mesh Tool + Create Gradient Mesh** (deferred), stroke gradient along/across path, conic angle rotation-follow
+- **9.1 (Gradients/Mesh):** ✅ DONE — Gradients (session 31): Gradient panel (Linear/Radial/Conic, ramp bar with draggable/add/remove stops, preview, Reverse, Stop colour/Opacity/Location, Angle, Interpolation Classic/Perceptual, Dither, presets), Gradient Tool with on-canvas annotator, fill (+ linear/radial stroke), conic via companion wedge-fan, native geometry follows transforms. Mesh (session 32): Mesh Tool (click to mesh a filled path, node grid overlay, drag-warp nodes, recolour via Properties Mesh section), Create Gradient Mesh dialog (Rows×Cols, Appearance Flat/To Center/To Edge, Highlight), bilinear patch render via companion clipped micro-quads (`operations/mesh.js`) · ⬜ Coons-patch handles, add/remove mesh lines, stroke gradient along/across path, conic/mesh rotation-follow, node colour via the Color panel
 - **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
 - **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
 Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
 **Undo/Redo** (phase 20.1).
 
-**Next by plan (early gaps):** 9.1b Mesh — Mesh Tool + Create Gradient Mesh (Object menu;
-rows×columns, appearance flat/to edge/to center, highlight). Heavy subsystem, no Paper
-primitive — budget a v1 approximation (a grid of blended colour patches). Gradients half of
-9.1 is done (session 31). Previously deferred:
+**Next by plan (early gaps):** 9.2 Stroke, Appearance, styles (full Stroke panel with width
+profiles + independently sized arrowheads; Appearance panel with multiple fills/strokes per
+object; Graphic Styles panel to save/apply a set). Phase 9.1 (Gradients + Mesh) is done
+(sessions 31–32). Previously deferred:
 rotated box + Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for
 polygon/star/ellipse (from 3.x); Delete key and auto-select of a new shape under
 non-selection tools; Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead

@@ -5,6 +5,7 @@ import { alignItems, distributeItems } from './align.js';
 import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
 import { clearWidthEnvelope, refreshWidthEnvelope } from './widthProfile.js';
 import { clearGradientFill } from './gradients.js';
+import { clearMeshFill } from './mesh.js';
 import { unlockAllItems, showAllItems } from './visibility.js';
 import { pathfinderOp } from './pathfinder.js';
 import { makeCompoundPath, releaseCompoundPath } from './compound.js';
@@ -168,6 +169,7 @@ export function runSelectionAction(selection, rawName) {
         clearArrowheads(t);
         clearWidthEnvelope(t);
         clearGradientFill(t);
+        clearMeshFill(t);
         t.remove();
       });
       selection.clear();

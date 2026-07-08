@@ -554,6 +554,16 @@ function GradientIcon() {
   );
 }
 
+function MeshIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M12 3.5v17M3.5 12h17" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="12" cy="12" r="1.7" fill="currentColor" />
+    </svg>
+  );
+}
+
 // label is plain text for now; will move to i18next t() when i18n lands.
 export const TOOL_ITEMS = [
   { id: TOOLS.SELECT, label: 'Select', Icon: SelectIcon },
@@ -590,6 +600,7 @@ export const TOOL_ITEMS = [
   { id: TOOLS.WRINKLE, label: 'Wrinkle', Icon: WrinkleIcon },
   { id: TOOLS.PUPPET_WARP, label: 'Puppet Warp', Icon: PuppetWarpIcon },
   { id: TOOLS.GRADIENT, label: 'Gradient', Icon: GradientIcon },
+  { id: TOOLS.MESH, label: 'Mesh', Icon: MeshIcon },
   { id: TOOLS.EYEDROPPER, label: 'Eyedropper', Icon: EyedropperIcon },
   { id: TOOLS.MEASURE, label: 'Measure', Icon: MeasureIcon },
   { id: TOOLS.DIMENSION, label: 'Dimension', Icon: DimensionIcon },

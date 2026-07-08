@@ -64,6 +64,7 @@ import {
 import { createPuppetWarpTool } from '../../canvas/tools/puppetWarpTool.js';
 import { createEyedropperTool } from '../../canvas/tools/eyedropperTool.js';
 import { createGradientTool } from '../../canvas/tools/gradientTool.js';
+import { createMeshTool } from '../../canvas/tools/meshTool.js';
 import { createMeasureTool } from '../../canvas/tools/measureTool.js';
 import { createDimensionTool } from '../../canvas/tools/dimensionTool.js';
 import { createEraserTool } from '../../canvas/tools/eraserTool.js';
@@ -122,6 +123,7 @@ const TOOL_FACTORIES = {
   [TOOLS.PUPPET_WARP]: createPuppetWarpTool,
   [TOOLS.EYEDROPPER]: createEyedropperTool,
   [TOOLS.GRADIENT]: createGradientTool,
+  [TOOLS.MESH]: createMeshTool,
   [TOOLS.MEASURE]: createMeasureTool,
   [TOOLS.DIMENSION]: createDimensionTool,
   [TOOLS.ERASER]: createEraserTool,

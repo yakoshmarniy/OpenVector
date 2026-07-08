@@ -35,6 +35,7 @@ export const TOOLS = {
   WRINKLE: 'wrinkle',
   PUPPET_WARP: 'puppetWarp',
   GRADIENT: 'gradient',
+  MESH: 'mesh',
   EYEDROPPER: 'eyedropper',
   MEASURE: 'measure',
   DIMENSION: 'dimension',
