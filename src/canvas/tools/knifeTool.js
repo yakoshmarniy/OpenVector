@@ -2,6 +2,7 @@ import paper from 'paper';
 import { overlayed } from '../operations/freehand.js';
 import { createSelection } from '../operations/selection.js';
 import { runSelectionAction } from '../operations/selectionActions.js';
+import { clearAllCompanions } from '../operations/companions.js';
 
 // Knife — drag a freehand line across closed shapes to slice each into two
 // pieces along the cut. For each crossed shape we take the chord of the knife
@@ -65,6 +66,7 @@ function sliceTarget(target, knife) {
     if (Math.abs(arc1.area) > 0.5 && Math.abs(arc2.area) > 0.5) {
       copyStyle(target, arc1);
       copyStyle(target, arc2);
+      clearAllCompanions(target);
       target.remove();
       return [arc1, arc2];
     }

@@ -3,7 +3,7 @@ import { createSelection, addOverlay, pickItem } from '../operations/selection.j
 import { runSelectionAction } from '../operations/selectionActions.js';
 import { atomicRegions } from '../operations/pathfinder.js';
 import { isDegenerate } from '../operations/booleans.js';
-import { clearArrowheads } from '../operations/arrowheads.js';
+import { clearAllCompanions } from '../operations/companions.js';
 
 // Shape Builder — select a few shapes, then click a region to break it out,
 // drag across regions to merge them, Alt+click/drag to delete regions.
@@ -134,7 +134,7 @@ export function createShapeBuilderTool(ctx = {}) {
       }
       parent = parent || p.parent;
       const rest = p.subtract(uni);
-      clearArrowheads(p);
+      clearAllCompanions(p);
       p.remove();
       if (isDegenerate(rest)) rest?.remove();
       else {

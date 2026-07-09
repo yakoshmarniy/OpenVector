@@ -1,6 +1,7 @@
 import paper from 'paper';
 import { PaperOffset } from 'paperjs-offset';
 import { clearArrowheads } from './arrowheads.js';
+import { clearAllCompanions } from './companions.js';
 import { artworkLayers, isOverlayItem } from './selection.js';
 
 // Object > Path operations: Join, Average, Outline Stroke, Offset Path,
@@ -41,7 +42,7 @@ export function joinPaths(items) {
   if (best.ra) a.reverse();
   if (best.rb) b.reverse();
   clearArrowheads(a);
-  clearArrowheads(b);
+  clearAllCompanions(b);
   a.addSegments(b.segments);
   b.remove();
   return a;
@@ -109,7 +110,7 @@ export function outlineStrokes(items) {
       result = new paper.Group([fill, shape]);
     }
     if (parent && result.parent !== parent) parent.addChild(result);
-    clearArrowheads(p);
+    clearAllCompanions(p);
     p.remove();
     out.push(result);
   });
@@ -181,7 +182,7 @@ export function splitIntoGrid(items, rows, cols, gutter = 0) {
         cells.push(rect);
       }
     }
-    clearArrowheads(p);
+    clearAllCompanions(p);
     p.remove();
     out.push(...cells);
   });
@@ -211,7 +212,7 @@ export function cleanUpDocument() {
         const stray = it.segments.length < 2;
         const unpainted = !it.fillColor && !it.strokeColor;
         if (stray || unpainted) {
-          clearArrowheads(it);
+          clearAllCompanions(it);
           it.remove();
           removed += 1;
         }
@@ -219,6 +220,7 @@ export function cleanUpDocument() {
       }
       if (it.className === 'CompoundPath') {
         if (!it.children.length || (!it.fillColor && !it.strokeColor)) {
+          clearAllCompanions(it);
           it.remove();
           removed += 1;
         }

@@ -1,4 +1,5 @@
 import paper from 'paper';
+import { clearAllCompanions, stripCompanionData } from './companions.js';
 
 // Group / ungroup and the four boolean path operations (Paper.js does these
 // natively). Booleans run on Path/CompoundPath only — text groups and plain
@@ -61,6 +62,9 @@ export function booleanOp(items, op) {
     return null;
   }
 
-  paths.forEach((p) => p.remove());
+  // Clean the originals' companions before removing them, and strip stale
+  // companion config the result inherited from the cloned bottom operand.
+  paths.forEach((p) => { clearAllCompanions(p); p.remove(); });
+  stripCompanionData(acc);
   return acc;
 }

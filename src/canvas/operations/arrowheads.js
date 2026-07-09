@@ -42,8 +42,8 @@ export function refreshArrowheads(item) {
 
   const cfg = item.data && item.data.arrows;
   if (!cfg || (!cfg.start && !cfg.end)) return;
-  // Only open, stroked paths carry arrowheads.
-  if (!(item instanceof paper.Path) || item.closed) return;
+  // Only open, stroked, visible paths carry arrowheads.
+  if (!(item instanceof paper.Path) || item.closed || !item.visible) return;
   if (!item.strokeColor || item.segments.length < 2) return;
 
   const color = item.strokeColor;

@@ -1,6 +1,6 @@
 import paper from 'paper';
 import { isDegenerate } from './booleans.js';
-import { clearArrowheads } from './arrowheads.js';
+import { clearAllCompanions } from './companions.js';
 
 // Pathfinder operations beyond the four plain booleans: Divide, Trim, Merge,
 // Crop, Outline. All of them work on the atomic-region decomposition of the
@@ -27,7 +27,7 @@ function finishOp(pieces, originals) {
   const top = originals.reduce((a, b) => (b.index > a.index ? b : a));
   const parent = top.parent;
   originals.forEach((p) => {
-    clearArrowheads(p);
+    clearAllCompanions(p);
     p.remove();
   });
   const g = new paper.Group(pieces);

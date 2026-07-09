@@ -1,5 +1,6 @@
 import paper from 'paper';
 import { col, overlayed } from '../operations/freehand.js';
+import { clearAllCompanions } from '../operations/companions.js';
 
 const RADIUS = 10; // eraser radius in project units
 
@@ -75,6 +76,7 @@ export function createEraserTool() {
             r.fillColor = t.fillColor;
             r.strokeColor = t.strokeColor;
             r.strokeWidth = t.strokeWidth;
+            clearAllCompanions(t);
             t.remove();
             if (!r.area) r.remove();
           }

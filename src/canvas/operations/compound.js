@@ -1,5 +1,5 @@
 import paper from 'paper';
-import { clearArrowheads } from './arrowheads.js';
+import { clearAllCompanions } from './companions.js';
 
 // Compound Path Make / Release (Object > Compound Path). A compound path
 // renders its children with one style and the even-odd rule, so fully
@@ -30,7 +30,7 @@ export function makeCompoundPath(items) {
 
   const kids = [];
   paths.forEach((p) => {
-    clearArrowheads(p);
+    clearAllCompanions(p);
     p.data = {};
     if (p.className === 'CompoundPath') kids.push(...p.removeChildren());
     else kids.push(p);
@@ -81,6 +81,7 @@ export function releaseCompoundPath(item) {
     k.opacity = style.opacity;
   });
   parent.insertChildren(at, kids);
+  clearAllCompanions(item);
   item.remove();
   return kids;
 }
