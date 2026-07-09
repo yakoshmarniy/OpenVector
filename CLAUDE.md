@@ -1523,6 +1523,56 @@ Session 32 notes / decisions:
   headless CDP clicks — see the session-31 note); its actions `createMesh`/`clearMesh` are
   browser-verified and it is a thin component over them.
 
+### Session 33 — progress (✅ iteration 9.2 — Stroke, Appearance, Graphic Styles)
+
+Scope: **phase 9.2** — full Stroke panel, Appearance panel (multiple fills/strokes), Graphic
+Styles panel. All three checklist items closed (v1).
+
+- [x] **`operations/appearance.js`** — multiple fills/strokes on one object. The object's own
+      paint is the BOTTOM Fill+Stroke; every EXTRA fill/stroke lives in
+      `item.data.appearance = [ layer, … ]` (index 0 = TOP of the stack) and renders as a companion
+      clone stacked above the item (arrowheads / width-envelope pattern: `data.isAppearanceLayer`
+      + `ownerId`, rebuilt — never moved — on every overlay redraw and style edit, so it tracks
+      moves/transforms). `addFill`/`addStroke`/`setLayer`/`removeLayer`/`moveLayer`/`refreshAppearance`.
+      Companions insert bottom-of-list first so index 0 ends topmost; group recursion + stale-clone
+      sweep like the width envelope.
+- [x] **Independent arrowhead sizes** — `arrowheads.js` reads `cfg.startScale`/`cfg.endScale`
+      (back-compat `cfg.scale`); `itemStyle` exposes `arrowStartScale`/`arrowEndScale`/`miterLimit`
+      and routes the patches. Start and end heads size separately.
+- [x] **Stroke panel** (`Panels/StrokePanel.jsx`, Window > Stroke): Weight, Cap (3 seg buttons),
+      Corner/Join (3) + Miter Limit (miter only), Dashed line with 3 dash/gap pairs, Width Profile
+      dropdown (Uniform + 4 presets), Arrowheads (Start/End toggles + independent scale fields +
+      Swap ⇄, open paths only). Applies live to every selected path via `applyStyle` + `afterStyleEdit`.
+- [x] **Appearance panel** (`Panels/AppearancePanel.jsx`, Window > Appearance): the stacked list —
+      extra layers (eye/colour/weight/opacity/▲▼/✕) then base Stroke, base Fill, object Opacity;
+      Add Fill / Add Stroke. Reads `getAppearance` + `readStyle`, edits through appearance.js /
+      applyStyle.
+- [x] **Graphic Styles panel** (`Panels/GraphicStylesPanel.jsx` + `state/graphicStyles.js` +
+      `operations/graphicStyles.js`): a library of appearance bundles (localStorage `ov.graphicStyles`,
+      4 defaults incl. a double-stroke that carries an appearance extra). Click a swatch = apply to
+      the selection (replaces prior appearance extras), New Style = capture the selected object's
+      appearance, double-click = rename, right-click = delete. `captureStyle`/`applyGraphicStyle`
+      bundle fill/stroke/attrs/opacity/arrows/widthPreset + extra appearance layers.
+- [x] Wiring: itemStyle/selection.drawOverlay/isolation `isAppearanceLayer`/selectionActions
+      delete+duplicate all refresh/clean the appearance companions; App panel toggles + MenuBar
+      Window items (Appearance, Graphic Styles, Stroke). `.side-col` now `overflow-y: auto` (more
+      panels can be open at once).
+- [ ] Deferred: align stroke inside/outside (needs offset geometry), extra arrowhead shapes
+      (v1 = one triangle), appearance on groups/text, drag-reorder in the Appearance list.
+
+Session 33 notes / decisions:
+- Appearance = companion stacked clones, exactly the arrowheads/width-envelope/gradient-fan
+  pattern: paper items carry ONE fill + ONE stroke, so extras must be separate rendered items.
+  A geometry clone (`clone({insert:false})`, paint stripped) is painted with just the layer's
+  fill OR stroke, locked, inserted above the base. Verified in the browser: a rect with 2 fills +
+  2 strokes renders correctly, companions sit above the base and follow a move (Δx 50 → companion
+  Δx 50).
+- `applyGraphicStyle` REPLACES the object's appearance extras wholesale (clearAppearance + rebuild
+  with fresh ids), so applying a plain style over a multi-fill object resets it — verified: Clay
+  style over the 2-extra rect → extras 0. Capture/apply round-trips the full bundle (grey rect's
+  appearance copied onto a circle → identical stack).
+- Independent arrow sizes verified: start 0.5× / end 2× → head bounds 6px vs 24px.
+
 > Old sessions 1–7 were done under previous plans (tags `iter-*`, `np-*` — history).
 > Below is the mapping to the current 20-phase plan. Much was done OUT of phase order
 > (the old plan went differently), so early phases are partially closed.
@@ -1548,16 +1598,16 @@ Session 32 notes / decisions:
 - **8.1 (Color):** ✅ DONE — Color panel (RGB/HSB/CMYK/Grayscale/Lab sliders with gradient tracks, hex, spectrum bar, fill/stroke proxy), Color Picker dialog (SV field + hue strip, HSB/RGB/CMYK/Hex, new/old, gamut warning; dblclick on toolbar proxy / swatch), Eyedropper (take / Alt-give / sample-to-default), Swatches panel (None/Registration, library, "+"/"−", Global Colors with retint, Spot basic, Swatch Options), Document Color Mode RGB/CMYK (File menu, gamut warnings), default paint for new shapes · ⬜ Pantone/Color Books, Create Swatch from image (needs 12.1), ICC profiles
 - **8.2 (Harmonies/Recolor):** ✅ DONE — Color Guide panel (6 harmony rules, base chip from current paint, Tints/Shades + Warm/Cool + Vivid/Muted variation grid, apply to focused paint, Window > Color Guide), Recolor Artwork dialog (Edit > Edit Colors; extract selection colours incl. text, current→new rows, live preview + Cancel restore, harmony rules, Link/Unlink hue rotation, Shuffle, Vary S/B, Add/Remove Color with use-merge, Limit to swatch library), colour wheel smooth/segmented/bars with draggable markers, HSB sliders · ⬜ colour groups in Swatches, bars drag-reorder
 - **9.1 (Gradients/Mesh):** ✅ DONE — Gradients (session 31): Gradient panel (Linear/Radial/Conic, ramp bar with draggable/add/remove stops, preview, Reverse, Stop colour/Opacity/Location, Angle, Interpolation Classic/Perceptual, Dither, presets), Gradient Tool with on-canvas annotator, fill (+ linear/radial stroke), conic via companion wedge-fan, native geometry follows transforms. Mesh (session 32): Mesh Tool (click to mesh a filled path, node grid overlay, drag-warp nodes, recolour via Properties Mesh section), Create Gradient Mesh dialog (Rows×Cols, Appearance Flat/To Center/To Edge, Highlight), bilinear patch render via companion clipped micro-quads (`operations/mesh.js`) · ⬜ Coons-patch handles, add/remove mesh lines, stroke gradient along/across path, conic/mesh rotation-follow, node colour via the Color panel
-- **9.2 (Stroke/Appearance):** 🟡 stroke width · ⬜ full Stroke panel, Appearance, Graphic Styles
+- **9.2 (Stroke/Appearance):** ✅ DONE (session 33) — Stroke panel (Window > Stroke: weight, cap, corner/join + miter limit, dashed pattern with 3 dash/gap pairs, width profile dropdown, arrowheads with **independent start/end sizes** + Swap), Appearance panel (Window > Appearance: multiple fills/strokes per object via companion layers — visibility/colour/weight/opacity/reorder/delete, base Fill+Stroke rows, object opacity, Add Fill/Add Stroke), Graphic Styles panel (Window > Graphic Styles: library of appearance bundles incl. extra fills/strokes, click to apply, New Style from selection, rename/delete, localStorage, 4 defaults). Engine: `operations/appearance.js` (companion stacked clones), `operations/graphicStyles.js` (capture/apply bundle), `state/graphicStyles.js`; itemStyle exposes `arrowStartScale`/`arrowEndScale`/`miterLimit`; `.side-col` scrolls · ⬜ align stroke inside/outside, extra arrowhead shapes, appearance on groups/text, drag-reorder
 - **13.2 (Snapping):** 🟡 Snap to Grid, Snap to Object · ⬜ Rulers, Guides, Smart Guides, Snap to Pixel/Point/Glyph/Tangent
 
 Shared subsystems not yet built: **i18n (EN/RU)**, **export (SVG/PNG/…)**,
 **Undo/Redo** (phase 20.1).
 
-**Next by plan (early gaps):** 9.2 Stroke, Appearance, styles (full Stroke panel with width
-profiles + independently sized arrowheads; Appearance panel with multiple fills/strokes per
-object; Graphic Styles panel to save/apply a set). Phase 9.1 (Gradients + Mesh) is done
-(sessions 31–32). Previously deferred:
+**Next by plan:** 10.1 Effects — architecture and Stylize (raster vs vector effects, Document
+Raster Effects Settings dpi, editing via Appearance, Apply Last Effect; Stylize: Drop Shadow,
+Inner/Outer Glow, Feather, Round Corners, Scribble, Add Arrowheads). Phase 9 (Gradients, Mesh,
+Stroke, Appearance, Graphic Styles) is done (sessions 31–33). Previously deferred:
 rotated box + Reset BB, Drawing/Screen Modes (2.2/7.1 tail); live params for
 polygon/star/ellipse (from 3.x); Delete key and auto-select of a new shape under
 non-selection tools; Offset/Grid/Move/Rotate/Scale/Shear/Transform Each dialogs instead

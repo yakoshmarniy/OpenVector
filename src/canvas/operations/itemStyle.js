@@ -10,6 +10,7 @@ import {
 } from './widthProfile.js';
 import { getGradient, clearGradient, refreshGradientFill } from './gradients.js';
 import { clearMesh, refreshMesh } from './mesh.js';
+import { refreshAppearance } from './appearance.js';
 
 // Read/write the visual style of a Paper.js item as plain serialisable values,
 // so React (the Properties panel) can drive it without touching paper directly.
@@ -62,6 +63,9 @@ export function readStyle(item) {
     arrowStart: !!arrows.start,
     arrowEnd: !!arrows.end,
     arrowScale: arrows.scale || 1,
+    arrowStartScale: arrows.startScale ?? arrows.scale ?? 1,
+    arrowEndScale: arrows.endScale ?? arrows.scale ?? 1,
+    miterLimit: item.miterLimit ?? 10,
     isText: false,
   };
 }
@@ -91,14 +95,18 @@ export function applyStyle(item, patch) {
   if ('widthPreset' in patch) applyWidthPreset(item, patch.widthPreset);
   if ('strokeCap' in patch) item.strokeCap = patch.strokeCap;
   if ('strokeJoin' in patch) item.strokeJoin = patch.strokeJoin;
+  if ('miterLimit' in patch) item.miterLimit = patch.miterLimit;
   if ('dashArray' in patch) item.dashArray = patch.dashArray || [];
   if ('opacity' in patch) item.opacity = patch.opacity;
 
-  if ('arrowStart' in patch || 'arrowEnd' in patch || 'arrowScale' in patch) {
+  if (['arrowStart', 'arrowEnd', 'arrowScale', 'arrowStartScale', 'arrowEndScale']
+    .some((k) => k in patch)) {
     const arrows = { ...(item.data.arrows || {}) };
     if ('arrowStart' in patch) arrows.start = patch.arrowStart;
     if ('arrowEnd' in patch) arrows.end = patch.arrowEnd;
-    if ('arrowScale' in patch) arrows.scale = patch.arrowScale;
+    if ('arrowScale' in patch) { arrows.scale = patch.arrowScale; arrows.startScale = patch.arrowScale; arrows.endScale = patch.arrowScale; }
+    if ('arrowStartScale' in patch) arrows.startScale = patch.arrowStartScale;
+    if ('arrowEndScale' in patch) arrows.endScale = patch.arrowEndScale;
     item.data.arrows = arrows;
   }
 
@@ -110,4 +118,6 @@ export function applyStyle(item, patch) {
   refreshGradientFill(item);
   // Same for the gradient-mesh companion.
   refreshMesh(item);
+  // Same for extra appearance fills/strokes.
+  refreshAppearance(item);
 }

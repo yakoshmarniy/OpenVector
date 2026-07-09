@@ -6,6 +6,7 @@ import { clearArrowheads, refreshArrowheads } from './arrowheads.js';
 import { clearWidthEnvelope, refreshWidthEnvelope } from './widthProfile.js';
 import { clearGradientFill } from './gradients.js';
 import { clearMeshFill } from './mesh.js';
+import { clearAppearanceCompanions, refreshAppearance } from './appearance.js';
 import { unlockAllItems, showAllItems } from './visibility.js';
 import { pathfinderOp } from './pathfinder.js';
 import { makeCompoundPath, releaseCompoundPath } from './compound.js';
@@ -170,6 +171,7 @@ export function runSelectionAction(selection, rawName) {
         clearWidthEnvelope(t);
         clearGradientFill(t);
         clearMeshFill(t);
+        clearAppearanceCompanions(t);
         t.remove();
       });
       selection.clear();
@@ -180,6 +182,7 @@ export function runSelectionAction(selection, rawName) {
         c.position = c.position.add(new paper.Point(12, 12));
         refreshArrowheads(c); // build the clone's own heads (config is copied)
         refreshWidthEnvelope(c);
+        refreshAppearance(c);
         return c;
       });
       selection.setTargets(clones);

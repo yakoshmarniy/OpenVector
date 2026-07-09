@@ -9,6 +9,9 @@ import ColorPanel from './components/Panels/ColorPanel.jsx';
 import SwatchesPanel from './components/Panels/SwatchesPanel.jsx';
 import ColorGuidePanel from './components/Panels/ColorGuidePanel.jsx';
 import GradientPanel from './components/Panels/GradientPanel.jsx';
+import StrokePanel from './components/Panels/StrokePanel.jsx';
+import AppearancePanel from './components/Panels/AppearancePanel.jsx';
+import GraphicStylesPanel from './components/Panels/GraphicStylesPanel.jsx';
 import ColorPickerDialog from './components/ColorPicker/ColorPickerDialog.jsx';
 import RecolorDialog from './components/RecolorDialog/RecolorDialog.jsx';
 import MeshDialog from './components/MeshDialog/MeshDialog.jsx';
@@ -44,6 +47,9 @@ export default function App() {
   const [swatchesOpen, setSwatchesOpen] = useState(true);
   const [colorGuideOpen, setColorGuideOpen] = useState(false);
   const [gradientOpen, setGradientOpen] = useState(false);
+  const [strokeOpen, setStrokeOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
+  const [stylesOpen, setStylesOpen] = useState(false);
   const [recolorOpen, setRecolorOpen] = useState(false);
   const [meshOpen, setMeshOpen] = useState(false);
   const [pickerTarget, setPickerTarget] = useState(null); // 'fill' | 'stroke'
@@ -249,6 +255,15 @@ export default function App() {
         case 'toggleGradient':
           setGradientOpen((v) => !v);
           break;
+        case 'toggleStroke':
+          setStrokeOpen((v) => !v);
+          break;
+        case 'toggleAppearance':
+          setAppearanceOpen((v) => !v);
+          break;
+        case 'toggleGraphicStyles':
+          setStylesOpen((v) => !v);
+          break;
         case 'openRecolor':
           if (selItemsRef.current.length) setRecolorOpen(true);
           break;
@@ -331,6 +346,9 @@ export default function App() {
         swatchesOpen={swatchesOpen}
         colorGuideOpen={colorGuideOpen}
         gradientOpen={gradientOpen}
+        strokeOpen={strokeOpen}
+        appearanceOpen={appearanceOpen}
+        stylesOpen={stylesOpen}
         onCommand={handleCommand}
       />
       <ControlBar
@@ -376,6 +394,9 @@ export default function App() {
           {colorOpen && <ColorPanel paintFocus={paintFocus} onSetPaintFocus={setPaintFocus} />}
           {swatchesOpen && <SwatchesPanel paintFocus={paintFocus} />}
           {gradientOpen && <GradientPanel />}
+          {strokeOpen && <StrokePanel />}
+          {appearanceOpen && <AppearancePanel />}
+          {stylesOpen && <GraphicStylesPanel />}
           {colorGuideOpen && (
             <ColorGuidePanel
               paintFocus={paintFocus}

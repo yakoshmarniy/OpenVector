@@ -47,10 +47,12 @@ export function refreshArrowheads(item) {
   if (!item.strokeColor || item.segments.length < 2) return;
 
   const color = item.strokeColor;
-  const scale = cfg.scale || 1;
-  const size = Math.max(6, (item.strokeWidth || 1) * 4) * scale;
+  const base = Math.max(6, (item.strokeWidth || 1) * 4);
+  // Start and end heads scale independently (Illustrator's Stroke panel).
+  const startScale = cfg.startScale ?? cfg.scale ?? 1;
+  const endScale = cfg.endScale ?? cfg.scale ?? 1;
 
-  const make = (tip, dir) => {
+  const make = (tip, dir, size) => {
     if (!dir || dir.length < 1e-4) return;
     const head = arrowPath(tip, dir.normalize(), size, color);
     head.data[ARROW_FLAG] = true;
@@ -59,6 +61,6 @@ export function refreshArrowheads(item) {
     head.insertAbove(item);
   };
 
-  if (cfg.end) make(item.lastSegment.point, item.getTangentAt(item.length));
-  if (cfg.start) make(item.firstSegment.point, item.getTangentAt(0).multiply(-1));
+  if (cfg.end) make(item.lastSegment.point, item.getTangentAt(item.length), base * endScale);
+  if (cfg.start) make(item.firstSegment.point, item.getTangentAt(0).multiply(-1), base * startScale);
 }

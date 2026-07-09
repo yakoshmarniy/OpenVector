@@ -15,7 +15,8 @@ export function isTransientItem(it) {
   const d = it.data;
   return !!(d && (
     d.isSelectionOverlay || d.isTextOverlay || d.isPenOverlay
-    || d.isArrow || d.isWidthEnvelope || d.isGradientFill || d.isMeshFill || d.hiddenMark
+    || d.isArrow || d.isWidthEnvelope || d.isGradientFill || d.isMeshFill
+    || d.isAppearanceLayer || d.hiddenMark
   ));
 }
 

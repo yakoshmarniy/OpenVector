@@ -1,0 +1,134 @@
+.panel {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  background: var(--ov-panel);
+  border-left: 1px solid var(--ov-panel-border);
+  border-top: 1px solid var(--ov-panel-border);
+  font-size: 13px;
+}
+
+.header { display: flex; }
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ov-text);
+}
+
+.hint { font-size: 11px; color: var(--ov-text-dim); }
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowLayer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 3px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.rowLayer:hover { background: var(--ov-bg); border-color: var(--ov-panel-border); }
+
+.eye {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 11px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: var(--ov-text-dim);
+  cursor: pointer;
+}
+
+.kind {
+  width: 44px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--ov-text);
+}
+
+.kindWide {
+  flex: 1;
+  font-size: 11px;
+  color: var(--ov-text-dim);
+}
+
+.swatch {
+  width: 26px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 3px;
+  background: var(--ov-bg);
+  cursor: pointer;
+}
+
+.swatch:disabled { opacity: 0.4; }
+
+.wnum,
+.onum {
+  width: 40px;
+  box-sizing: border-box;
+  padding: 2px 3px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.pct { font-size: 11px; color: var(--ov-text-dim); }
+
+.rowBtns {
+  display: flex;
+  gap: 1px;
+  margin-left: auto;
+}
+
+.mini {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  font-size: 9px;
+  line-height: 1;
+  color: var(--ov-text-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.mini:hover:not(:disabled) { border-color: var(--ov-panel-border); color: var(--ov-text); }
+.mini:disabled { opacity: 0.3; cursor: default; }
+
+.actions {
+  display: flex;
+  gap: 5px;
+  padding-top: 6px;
+  border-top: 1px solid var(--ov-panel-border);
+}
+
+.btn {
+  flex: 1;
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--ov-text);
+  background: var(--ov-bg);
+  border: 1px solid var(--ov-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn:hover { border-color: var(--ov-accent-active); }

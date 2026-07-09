@@ -4,6 +4,7 @@ import { refreshArrowheads } from './arrowheads.js';
 import { refreshWidthEnvelope, isWidthEnvelope } from './widthProfile.js';
 import { refreshGradientFill } from './gradients.js';
 import { refreshMesh } from './mesh.js';
+import { refreshAppearance } from './appearance.js';
 import {
   subscribeSelection,
   getSelectedItems,
@@ -287,6 +288,7 @@ function drawOverlay() {
     refreshWidthEnvelope(t);
     refreshGradientFill(t);
     refreshMesh(t);
+    refreshAppearance(t);
   });
   if (!targets.length) {
     reportBounds();

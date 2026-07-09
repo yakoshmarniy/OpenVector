@@ -5,7 +5,7 @@ import styles from './MenuBar.module.css';
 // later phases are shown disabled so the structure is honest. Labels are plain
 // text for now; they move to i18next t() when i18n lands.
 function buildMenus({
-  gradientOpen,
+  gradientOpen, strokeOpen, appearanceOpen, stylesOpen,
   sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
   colorGuideOpen,
 }) {
@@ -212,10 +212,14 @@ function buildMenus({
         { label: 'Two-Column Toolbar', cmd: 'toggleColumns', checked: columns === 2 },
         sep,
         { label: 'Properties', enabled: false },
+        { label: 'Appearance', cmd: 'toggleAppearance', checked: !!appearanceOpen },
+        { label: 'Graphic Styles', cmd: 'toggleGraphicStyles', checked: !!stylesOpen },
+        sep,
         { label: 'Layers', cmd: 'toggleLayers', checked: !!layersOpen },
         { label: 'Color', cmd: 'toggleColor', checked: !!colorOpen },
         { label: 'Color Guide', cmd: 'toggleColorGuide', checked: !!colorGuideOpen },
         { label: 'Gradient', cmd: 'toggleGradient', checked: !!gradientOpen },
+        { label: 'Stroke', cmd: 'toggleStroke', checked: !!strokeOpen },
         { label: 'Swatches', cmd: 'toggleSwatches', checked: !!swatchesOpen },
       ],
     },
@@ -224,14 +228,15 @@ function buildMenus({
 
 export default function MenuBar({
   sel, snap, columns, hiddenChars, layersOpen, isoDepth,
-  colorMode, colorOpen, swatchesOpen, colorGuideOpen, gradientOpen, onCommand,
+  colorMode, colorOpen, swatchesOpen, colorGuideOpen, gradientOpen,
+  strokeOpen, appearanceOpen, stylesOpen, onCommand,
 }) {
   const [open, setOpen] = useState(null);
   const [sub, setSub] = useState(null); // index of the item whose submenu is open
   const barRef = useRef(null);
   const menus = buildMenus({
     sel, snap, columns, hiddenChars, layersOpen, isoDepth, colorMode, colorOpen, swatchesOpen,
-    colorGuideOpen, gradientOpen,
+    colorGuideOpen, gradientOpen, strokeOpen, appearanceOpen, stylesOpen,
   });
 
   useEffect(() => {
