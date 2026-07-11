@@ -185,6 +185,26 @@ export default function GradientPanel() {
         ))}
       </div>
 
+      {/* One editable colour box per stop, in ramp order — so both ends of a
+          two-colour gradient are visible and changeable at once (no need to
+          hunt for the right diamond first). */}
+      <div className={styles.stopSwatches}>
+        {sortedIdx().map(({ s, i }) => (
+          <label
+            key={i}
+            className={i === sel ? styles.stopSwatchOn : styles.stopSwatch}
+            title={`Stop ${Math.round(s.offset * 100)}%`}
+          >
+            <input
+              type="color"
+              value={s.color}
+              disabled={!hasSelection}
+              onChange={(e) => { setSel(i); setStop(i, { color: e.target.value }); }}
+            />
+          </label>
+        ))}
+      </div>
+
       <div className={styles.previewRow}>
         <span className={styles.preview} style={{ background: cssRamp(desc) }} />
         <button type="button" className={styles.smallBtn} onClick={reverse} disabled={!hasSelection}>
